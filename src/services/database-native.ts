@@ -5,9 +5,10 @@ import {
 } from '@capacitor-community/sqlite'
 import type { DatabaseAdapter } from './database-adapter'
 import type { FuelRecord, SyncPayload, Vehicle } from '../types'
+import { shouldAcceptRemote } from './conflict-resolution'
 
 const DATABASE_NAME = 'fuel-track'
-const DATABASE_VERSION = 1
+const DATABASE_VERSION = 2
 
 const VEHICLE_UPSERT = `
   INSERT INTO vehicles (id, name, plate, fuelType, initialOdometer, createdAt, updatedAt, deletedAt)
@@ -81,6 +82,9 @@ async function init() {
       );`,
       'CREATE INDEX IF NOT EXISTS idx_records_vehicle_date ON fuel_records(vehicleId, date);',
     ],
+  }, {
+    toVersion: 2,
+    statements: ['CREATE INDEX IF NOT EXISTS idx_records_vehicle_date ON fuel_records(vehicleId, date);'],
   }])
 
   const consistency = await sqlite.checkConnectionsConsistency()
@@ -135,11 +139,11 @@ export const nativeDatabase: DatabaseAdapter = {
       const localRecords = new Map((await records(true)).map((item) => [item.id, item]))
       for (const item of remote.vehicles) {
         const local = localVehicles.get(item.id)
-        if (!local || item.updatedAt > local.updatedAt) await connection.run(VEHICLE_UPSERT, vehicleValues(item), false)
+        if (shouldAcceptRemote(local, item)) await connection.run(VEHICLE_UPSERT, vehicleValues(item), false)
       }
       for (const item of remote.records) {
         const local = localRecords.get(item.id)
-        if (!local || item.updatedAt > local.updatedAt) await connection.run(RECORD_UPSERT, recordValues(item), false)
+        if (shouldAcceptRemote(local, item)) await connection.run(RECORD_UPSERT, recordValues(item), false)
       }
       await connection.commitTransaction()
     } catch (error) {

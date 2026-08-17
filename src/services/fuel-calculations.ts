@@ -1,4 +1,5 @@
 import type { FuelRecord } from '../types'
+import { localDateKey } from './local-date'
 
 export interface ConsumptionInterval {
   record: FuelRecord
@@ -55,7 +56,7 @@ export interface RecordDraft {
   isFull: boolean
 }
 
-export function fuelRecordWarnings(draft: RecordDraft, records: FuelRecord[], today = new Date().toISOString().slice(0, 10)) {
+export function fuelRecordWarnings(draft: RecordDraft, records: FuelRecord[], today = localDateKey()) {
   const warnings: string[] = []
   const others = records.filter((record) => !record.deletedAt && record.id !== draft.id)
   const before = others.filter((record) => record.date <= draft.date).sort((a, b) => b.date.localeCompare(a.date) || b.odometer - a.odometer)[0]

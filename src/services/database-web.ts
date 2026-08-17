@@ -2,13 +2,14 @@ import initSqlJs, { type Database, type SqlValue } from 'sql.js'
 import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url'
 import type { DatabaseAdapter } from './database-adapter'
 import type { FuelRecord, SyncPayload, Vehicle } from '../types'
+import { shouldAcceptRemote } from './conflict-resolution'
 
 const LEGACY_DB_KEY = 'fuel-track-sqlite-v1'
 const STORAGE_NAME = 'fuel-track-storage'
 const STORAGE_VERSION = 1
 const STORAGE_STORE = 'databases'
 const STORAGE_KEY = 'main'
-const SCHEMA_VERSION = 1
+const SCHEMA_VERSION = 2
 
 let db: Database
 let storagePromise: Promise<IDBDatabase> | undefined
@@ -152,12 +153,35 @@ function migrateSchema() {
         PRAGMA user_version = 1;
       `)
     }
+    if (version < 2) {
+      db.run(`
+        CREATE TABLE fuel_records_v2 (
+          id TEXT PRIMARY KEY, vehicleId TEXT NOT NULL, date TEXT NOT NULL,
+          odometer REAL NOT NULL CHECK (odometer >= 0),
+          liters REAL NOT NULL CHECK (liters > 0),
+          amount REAL NOT NULL CHECK (amount >= 0),
+          pricePerLiter REAL NOT NULL CHECK (pricePerLiter >= 0),
+          isFull INTEGER NOT NULL DEFAULT 1 CHECK (isFull IN (0, 1)),
+          station TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '',
+          createdAt TEXT NOT NULL, updatedAt TEXT NOT NULL, deletedAt TEXT,
+          FOREIGN KEY (vehicleId) REFERENCES vehicles(id)
+        );
+        INSERT INTO fuel_records_v2 SELECT * FROM fuel_records;
+        DROP TABLE fuel_records;
+        ALTER TABLE fuel_records_v2 RENAME TO fuel_records;
+        CREATE INDEX idx_records_vehicle_date ON fuel_records(vehicleId, date);
+        PRAGMA user_version = 2;
+      `)
+    }
   })
+  db.run('PRAGMA foreign_keys = ON')
 }
 
 function assertDatabaseIntegrity() {
   const result = rows<{ quick_check: string }>('PRAGMA quick_check')[0]?.quick_check
   if (result !== 'ok') throw new Error(`本地 SQLite 数据库完整性检查失败：${result || '未知错误'}`)
+  const foreignKeyErrors = rows<Record<string, unknown>>('PRAGMA foreign_key_check')
+  if (foreignKeyErrors.length) throw new Error('本地数据库存在引用不到车辆的加油记录，请从备份恢复或联系维护者')
 }
 
 async function init() {
@@ -170,6 +194,7 @@ async function init() {
     db = storedBytes ? new SQL.Database(storedBytes) : new SQL.Database()
     if (storedBytes) assertDatabaseIntegrity()
     migrateSchema()
+    assertDatabaseIntegrity()
   } catch (error) {
     db?.close()
     throw error
@@ -232,11 +257,11 @@ export const webDatabase: DatabaseAdapter = {
       const localRecords = new Map(getRecords(true).map((item) => [item.id, item]))
       for (const item of remote.vehicles) {
         const local = localVehicles.get(item.id)
-        if (!local || item.updatedAt > local.updatedAt) upsertVehicle(item)
+        if (shouldAcceptRemote(local, item)) upsertVehicle(item)
       }
       for (const item of remote.records) {
         const local = localRecords.get(item.id)
-        if (!local || item.updatedAt > local.updatedAt) upsertRecord(item)
+        if (shouldAcceptRemote(local, item)) upsertRecord(item)
       }
     })
     await persist()

@@ -12,7 +12,7 @@ vi.mock('../database', () => ({ database }))
 import { syncWebDav, testWebDav } from '../webdav'
 
 const config = { url: 'https://dav.example.com/fuel', username: 'user', password: 'pass', fileName: 'data.json' }
-const payload = JSON.stringify({ version: 1, exportedAt: '', vehicles: [], records: [] })
+const payload = JSON.stringify({ version: 1, exportedAt: '2026-01-01T00:00:00.000Z', vehicles: [], records: [] })
 
 describe('WebDAV synchronization', () => {
   beforeEach(() => {
@@ -40,5 +40,22 @@ describe('WebDAV synchronization', () => {
     expect(fetchMock.mock.calls[1][1].headers['If-Match']).toBe('"v1"')
     expect(fetchMock.mock.calls[3][1].headers['If-Match']).toBe('"v2"')
     expect(database.mergeData).toHaveBeenCalledTimes(2)
+  })
+
+  it('aborts a request that exceeds the timeout', async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi.fn((_input: string | URL | Request, init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        const error = new Error('aborted')
+        error.name = 'AbortError'
+        reject(error)
+      })
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    try {
+      const assertion = expect(testWebDav(config)).rejects.toThrow('请求超时')
+      await vi.advanceTimersByTimeAsync(30_000)
+      await assertion
+    } finally { vi.useRealTimers() }
   })
 })

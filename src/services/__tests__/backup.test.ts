@@ -4,7 +4,14 @@ import type { FuelRecord, Vehicle } from '../../types'
 
 describe('backup helpers', () => {
   it('rejects unsupported JSON data', () => {
-    expect(() => parseBackup('{"version":2}')).toThrow('格式不受支持')
+    expect(() => parseBackup('{"version":2}')).toThrow('仅支持版本 1')
+  })
+
+  it('rejects malformed records and dangling vehicle references', () => {
+    expect(() => parseBackup(JSON.stringify({
+      version: 1, exportedAt: '2026-01-01T00:00:00.000Z',
+      vehicles: [], records: [{ id: 'r1', vehicleId: 'missing' }],
+    }))).toThrow('校验失败')
   })
 
   it('escapes commas and quotes in CSV', () => {

@@ -1,12 +1,15 @@
 import type { FuelRecord, SyncPayload, Vehicle } from '../types'
 import { Capacitor } from '@capacitor/core'
+import { validateSyncPayload } from './sync-validation'
 
 export function parseBackup(text: string): SyncPayload {
+  if (text.length > 20 * 1024 * 1024) throw new Error('备份文件超过 20 MB，拒绝导入')
   let value: unknown
   try { value = JSON.parse(text) } catch { throw new Error('备份文件不是有效的 JSON') }
-  const payload = value as Partial<SyncPayload>
-  if (payload.version !== 1 || !Array.isArray(payload.vehicles) || !Array.isArray(payload.records)) throw new Error('备份文件格式不受支持')
-  return payload as SyncPayload
+  try { return validateSyncPayload(value) } catch (error) {
+    if (error instanceof Error && error.message.startsWith('备份文件校验失败')) throw error
+    throw new Error('备份文件格式不受支持')
+  }
 }
 
 function csvCell(value: string | number | boolean) {
