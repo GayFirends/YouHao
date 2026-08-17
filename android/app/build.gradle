@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+def ciVersionCode = System.getenv('ANDROID_VERSION_CODE')?.trim()
+def ciVersionName = System.getenv('ANDROID_VERSION_NAME')?.trim()
+
 android {
     namespace "com.youhao.fueltrack"
     compileSdk rootProject.ext.compileSdkVersion
@@ -7,8 +10,8 @@ android {
         applicationId "com.youhao.fueltrack"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode (System.getenv("ANDROID_VERSION_CODE") ?: "1").toInteger()
-        versionName (System.getenv("ANDROID_VERSION_NAME") ?: "1.0")
+        versionCode ciVersionCode ? ciVersionCode.toInteger() : 1
+        versionName ciVersionName ?: '1.0'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
