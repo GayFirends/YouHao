@@ -1,4 +1,5 @@
 import type { FuelRecord, SyncPayload, Vehicle } from '../types'
+import { Capacitor } from '@capacitor/core'
 
 export function parseBackup(text: string): SyncPayload {
   let value: unknown
@@ -30,11 +31,37 @@ export function recordsToCsv(records: FuelRecord[], vehicles: Vehicle[]) {
   return `\uFEFF${columns.join(',')}\r\n${lines.join('\r\n')}`
 }
 
-export function downloadText(content: string, fileName: string, type: string) {
+export async function downloadText(content: string, fileName: string, type: string) {
+  if (Capacitor.isNativePlatform()) {
+    const [{ Directory, Encoding, Filesystem }, { Share }] = await Promise.all([
+      import('@capacitor/filesystem'),
+      import('@capacitor/share'),
+    ])
+    const permission = await Filesystem.checkPermissions()
+    if (permission.publicStorage !== 'granted') await Filesystem.requestPermissions()
+    const path = `FuelTrack/${fileName}`
+    const result = await Filesystem.writeFile({
+      path,
+      directory: Directory.Documents,
+      data: content,
+      encoding: Encoding.UTF8,
+      recursive: true,
+    })
+    try {
+      if ((await Share.canShare()).value) {
+        await Share.share({ files: [result.uri], title: fileName, dialogTitle: '保存或分享油迹备份' })
+      }
+    } catch {
+      // The file is already saved; dismissing the share sheet is harmless.
+    }
+    return `已保存到 Documents/FuelTrack/${fileName}`
+  }
+
   const url = URL.createObjectURL(new Blob([content], { type }))
   const link = document.createElement('a')
   link.href = url
   link.download = fileName
   link.click()
   window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+  return `已下载 ${fileName}`
 }

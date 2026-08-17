@@ -5,6 +5,13 @@ const config: CapacitorConfig = {
   appName: '油迹',
   webDir: 'dist',
   android: { allowMixedContent: false },
+  plugins: {
+    StatusBar: {
+      overlaysWebView: false,
+      style: 'LIGHT',
+      backgroundColor: '#ffffff',
+    },
+  },
 }
 
 export default config

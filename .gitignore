@@ -8,3 +8,5 @@ android/local.properties
 android/app/build/
 android/build/
 .gradle-user/
+*.jks
+*.keystore

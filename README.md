@@ -54,6 +54,17 @@ APK 生成在 `android/app/build/outputs/apk/debug/app-debug.apk`。
 
 Android 构建使用 Java 21（Capacitor 7 和原生 SQLite 插件的 Gradle 配置要求 `sourceCompatibility = 21`）。
 
+### GitHub Actions 签名发布
+
+签名不需要在本机配置 Android 环境。仓库提供 `android-generate-keystore.yml` 和 `android-release.yml`：
+
+1. 在仓库 `Settings → Secrets and variables → Actions` 新建 `ANDROID_KEYSTORE_PASSWORD` 和 `ANDROID_KEY_PASSWORD`，两个密码建议不同且使用密码管理器保存。
+2. 手动运行 `Generate Android Keystore`，填写 key alias（默认 `fuel-track-upload`）。
+3. 下载该工作流生成的短期 artifact，其中的 `.base64` 文件内容整体复制到 Secret `ANDROID_KEYSTORE_BASE64`；再创建 `ANDROID_KEY_ALIAS`，值与工作流输入一致。
+4. 删除本地下载的 base64 文件，并在 Actions 页面手动运行 `Android Signed Release`，填写版本名和版本号。
+
+签名工作流会生成签名的 APK 和 AAB 并上传为 artifact。也可以推送形如 `v1.0.0` 的 tag 自动触发。keystore 是应用升级的唯一身份，务必把原始 keystore 和四个 Secret 一起安全备份；丢失后无法向现有用户发布同包名的升级版本。`android-debug.yml` 仍用于不签名的日常构建。
+
 ## 同步格式
 
 WebDAV 中默认保存 `fuel-track.json`。同步先下载云端快照，再按每条车辆和加油记录的 `updatedAt` 合并，最后上传合并结果。删除使用软删除标记同步到其他设备，避免旧设备把已删除记录重新上传。

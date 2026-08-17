@@ -128,9 +128,10 @@ async function exportBackup(format: 'json' | 'csv') {
   try {
     const payload = await store.exportData()
     const stamp = new Date().toISOString().slice(0, 10)
-    if (format === 'json') downloadText(JSON.stringify(payload, null, 2), `fuel-track-${stamp}.json`, 'application/json;charset=utf-8')
-    else downloadText(recordsToCsv(payload.records, payload.vehicles), `fuel-track-${stamp}.csv`, 'text/csv;charset=utf-8')
-    notify(format === 'json' ? 'JSON 备份已导出' : 'CSV 报表已导出')
+    const location = format === 'json'
+      ? await downloadText(JSON.stringify(payload, null, 2), `fuel-track-${stamp}.json`, 'application/json;charset=utf-8')
+      : await downloadText(recordsToCsv(payload.records, payload.vehicles), `fuel-track-${stamp}.csv`, 'text/csv;charset=utf-8')
+    notify(location)
   } catch (error) {
     notify(error instanceof Error ? error.message : '导出失败', 'error')
   }

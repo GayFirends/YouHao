@@ -4,7 +4,7 @@ body { margin: 0; min-width: 320px; min-height: 100vh; }
 button, input, select, textarea { font: inherit; letter-spacing: 0; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .48; }
-.app-shell { min-height: 100vh; }
+.app-shell { min-height: 100vh; padding-top: env(safe-area-inset-top); }
 .sidebar { position: fixed; inset: 0 auto 0 0; width: 232px; background: #17211e; color: #fff; padding: 28px 18px 22px; display: flex; flex-direction: column; z-index: 20; }
 .brand { display: flex; gap: 12px; align-items: center; padding: 0 10px 32px; }
 .brand-mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 8px; background: var(--green); }
