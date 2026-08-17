@@ -52,6 +52,8 @@ APK 生成在 `android/app/build/outputs/apk/debug/app-debug.apk`。
 
 仓库包含 `.github/workflows/android-debug.yml`。推送到 `main` 或手动触发工作流后，会依次运行测试、同步 Capacitor、构建 Debug APK 并上传构建产物。
 
+Android 构建使用 Java 21（Capacitor 7 和原生 SQLite 插件的 Gradle 配置要求 `sourceCompatibility = 21`）。
+
 ## 同步格式
 
 WebDAV 中默认保存 `fuel-track.json`。同步先下载云端快照，再按每条车辆和加油记录的 `updatedAt` 合并，最后上传合并结果。删除使用软删除标记同步到其他设备，避免旧设备把已删除记录重新上传。
