@@ -58,7 +58,7 @@ Android 构建使用 Java 21（Capacitor 7 和原生 SQLite 插件的 Gradle 配
 
 签名不需要在本机配置 Android 环境。仓库提供 `android-generate-keystore.yml` 和 `android-release.yml`：
 
-1. 在仓库 `Settings → Secrets and variables → Actions` 新建 `ANDROID_KEYSTORE_PASSWORD` 和 `ANDROID_KEY_PASSWORD`，两个密码建议不同且使用密码管理器保存。
+1. 在仓库 `Settings → Secrets and variables → Actions → Repository secrets` 中新建 `ANDROID_KEYSTORE_PASSWORD` 和 `ANDROID_KEY_PASSWORD`。注意必须建在 **Secrets**，不能建在 Variables；两个密码建议不同且使用密码管理器保存。
 2. 手动运行 `Generate Android Keystore`，填写 key alias（默认 `fuel-track-upload`）。
 3. 下载该工作流生成的短期 artifact，其中的 `.base64` 文件内容整体复制到 Secret `ANDROID_KEYSTORE_BASE64`；再创建 `ANDROID_KEY_ALIAS`，值与工作流输入一致。
 4. 删除本地下载的 base64 文件，并在 Actions 页面手动运行 `Android Signed Release`，填写版本名和版本号。

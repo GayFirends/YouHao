@@ -44,10 +44,10 @@ jobs:
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          test -n "$ANDROID_KEYSTORE_BASE64"
-          test -n "$ANDROID_KEYSTORE_PASSWORD"
-          test -n "$ANDROID_KEY_ALIAS"
-          test -n "$ANDROID_KEY_PASSWORD"
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then echo "::error::Missing Repository Secret: ANDROID_KEYSTORE_BASE64"; exit 1; fi
+          if [ -z "$ANDROID_KEYSTORE_PASSWORD" ]; then echo "::error::Missing Repository Secret: ANDROID_KEYSTORE_PASSWORD"; exit 1; fi
+          if [ -z "$ANDROID_KEY_ALIAS" ]; then echo "::error::Missing Repository Secret: ANDROID_KEY_ALIAS"; exit 1; fi
+          if [ -z "$ANDROID_KEY_PASSWORD" ]; then echo "::error::Missing Repository Secret: ANDROID_KEY_PASSWORD"; exit 1; fi
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/fuel-track-upload.jks"
           test -s "$RUNNER_TEMP/fuel-track-upload.jks"
 
