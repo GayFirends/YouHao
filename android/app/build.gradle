@@ -37,6 +37,14 @@ android {
             if (ciKeystorePath) signingConfig signingConfigs.release
         }
     }
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+            universalApk true
+        }
+    }
 }
 
 repositories {
