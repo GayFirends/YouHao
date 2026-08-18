@@ -68,13 +68,40 @@ jobs:
           chmod +x android/gradlew
           ./android/gradlew -p android --no-daemon assembleRelease bundleRelease
 
+      - name: Rename release packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${ANDROID_VERSION_NAME#v}"
+          output_dir="release-artifacts"
+          mkdir -p "$output_dir"
+
+          for apk in android/app/build/outputs/apk/release/*.apk; do
+            file_name="$(basename "$apk")"
+            case "$file_name" in
+              app-*-release.apk)
+                architecture="${file_name#app-}"
+                architecture="${architecture%-release.apk}"
+                ;;
+              app-release.apk)
+                architecture="universal"
+                ;;
+              *)
+                echo "::error::Unknown APK output name: $file_name"
+                exit 1
+                ;;
+            esac
+            cp "$apk" "$output_dir/FuelTrack-${version}-${architecture}.apk"
+          done
+
+          cp android/app/build/outputs/bundle/release/app-release.aab \
+            "$output_dir/FuelTrack-${version}-universal.aab"
+
       - name: Upload signed artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: fuel-track-${{ env.ANDROID_VERSION_NAME }}
-          path: |
-            android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/bundle/release/app-release.aab
+          name: FuelTrack-${{ env.ANDROID_VERSION_NAME }}
+          path: release-artifacts/*
           if-no-files-found: error
 
       - name: Publish GitHub Release
@@ -82,7 +109,6 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           name: Fuel Track ${{ env.RELEASE_TAG }}
+          body_path: CHANGELOG.md
           generate_release_notes: true
-          files: |
-            android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/bundle/release/app-release.aab
+          files: release-artifacts/*
