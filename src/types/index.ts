@@ -16,6 +16,7 @@ export interface FuelRecord {
   odometer: number
   liters: number
   amount: number
+  pumpAmount: number
   pricePerLiter: number
   isFull: boolean
   station: string

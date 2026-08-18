@@ -19,13 +19,16 @@ function csvCell(value: string | number | boolean) {
 
 export function recordsToCsv(records: FuelRecord[], vehicles: Vehicle[]) {
   const vehicleNames = new Map(vehicles.map((vehicle) => [vehicle.id, vehicle.name]))
-  const columns = ['车辆', '日期', '里程(km)', '加油量(L)', '金额(元)', '单价(元/L)', '满箱', '加油站', '备注']
+  const columns = ['车辆', '日期', '里程(km)', '加油量(L)', '表显金额(元)', '实付金额(元)', '优惠金额(元)', '表显单价(元/L)', '优惠后单价(元/L)', '满箱', '加油站', '备注']
   const lines = records.filter((record) => !record.deletedAt).map((record) => [
     vehicleNames.get(record.vehicleId) || record.vehicleId,
     record.date,
     record.odometer,
     record.liters,
+    record.pumpAmount,
     record.amount,
+    Math.max(record.pumpAmount - record.amount, 0).toFixed(2),
+    (record.liters ? record.pumpAmount / record.liters : 0).toFixed(2),
     record.pricePerLiter.toFixed(2),
     record.isFull ? '是' : '否',
     record.station,

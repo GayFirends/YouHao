@@ -8,7 +8,7 @@ import type { FuelRecord, SyncPayload, Vehicle } from '../types'
 import { shouldAcceptRemote } from './conflict-resolution'
 
 const DATABASE_NAME = 'fuel-track'
-const DATABASE_VERSION = 2
+const DATABASE_VERSION = 3
 
 const VEHICLE_UPSERT = `
   INSERT INTO vehicles (id, name, plate, fuelType, initialOdometer, createdAt, updatedAt, deletedAt)
@@ -21,12 +21,13 @@ const VEHICLE_UPSERT = `
 
 const RECORD_UPSERT = `
   INSERT INTO fuel_records (
-    id, vehicleId, date, odometer, liters, amount, pricePerLiter, isFull,
+    id, vehicleId, date, odometer, liters, amount, pumpAmount, pricePerLiter, isFull,
     station, note, createdAt, updatedAt, deletedAt
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   ON CONFLICT(id) DO UPDATE SET
     vehicleId = excluded.vehicleId, date = excluded.date, odometer = excluded.odometer,
-    liters = excluded.liters, amount = excluded.amount, pricePerLiter = excluded.pricePerLiter,
+    liters = excluded.liters, amount = excluded.amount, pumpAmount = excluded.pumpAmount,
+    pricePerLiter = excluded.pricePerLiter,
     isFull = excluded.isFull, station = excluded.station, note = excluded.note,
     updatedAt = excluded.updatedAt, deletedAt = excluded.deletedAt
 `
@@ -38,7 +39,7 @@ function vehicleValues(vehicle: Vehicle) {
 }
 
 function recordValues(record: FuelRecord) {
-  return [record.id, record.vehicleId, record.date, record.odometer, record.liters, record.amount, record.pricePerLiter, record.isFull ? 1 : 0, record.station, record.note, record.createdAt, record.updatedAt, record.deletedAt]
+  return [record.id, record.vehicleId, record.date, record.odometer, record.liters, record.amount, record.pumpAmount, record.pricePerLiter, record.isFull ? 1 : 0, record.station, record.note, record.createdAt, record.updatedAt, record.deletedAt]
 }
 
 function mapVehicle(row: Record<string, unknown>): Vehicle {
@@ -85,6 +86,12 @@ async function init() {
   }, {
     toVersion: 2,
     statements: ['CREATE INDEX IF NOT EXISTS idx_records_vehicle_date ON fuel_records(vehicleId, date);'],
+  }, {
+    toVersion: 3,
+    statements: [
+      'ALTER TABLE fuel_records ADD COLUMN pumpAmount REAL NOT NULL DEFAULT 0 CHECK (pumpAmount >= 0);',
+      'UPDATE fuel_records SET pumpAmount = amount;',
+    ],
   }])
 
   const consistency = await sqlite.checkConnectionsConsistency()

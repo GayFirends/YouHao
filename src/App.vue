@@ -49,6 +49,7 @@ async function submitRecord(event: Event) {
   const data = new FormData(event.target as HTMLFormElement)
   const liters = Number(data.get('liters'))
   const amount = Number(data.get('amount'))
+  const pumpAmount = Number(data.get('pumpAmount'))
   const draft = {
     id: editingRecord.value?.id,
     date: String(data.get('date')),
@@ -64,7 +65,7 @@ async function submitRecord(event: Event) {
     await store.saveRecord({
       id: editingRecord.value?.id, createdAt: editingRecord.value?.createdAt,
       vehicleId: String(data.get('vehicleId')), date: draft.date,
-      odometer: draft.odometer, liters, amount,
+      odometer: draft.odometer, liters, amount, pumpAmount,
       pricePerLiter: liters ? amount / liters : 0, isFull: draft.isFull,
       station: String(data.get('station')), note: String(data.get('note')),
     })

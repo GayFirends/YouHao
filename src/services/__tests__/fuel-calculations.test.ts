@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { calculateAverageConsumption, calculateConsumptionIntervals, fuelRecordWarnings } from '../fuel-calculations'
+import { calculateAverageConsumption, calculateConsumptionIntervals, fuelPriceSummary, fuelRecordWarnings } from '../fuel-calculations'
 import type { FuelRecord } from '../../types'
 
 function record(overrides: Partial<FuelRecord>): FuelRecord {
   return {
     id: crypto.randomUUID(), vehicleId: 'vehicle', date: '2026-01-01',
-    odometer: 0, liters: 40, amount: 300, pricePerLiter: 7.5,
+    odometer: 0, liters: 40, amount: 300, pumpAmount: 300, pricePerLiter: 7.5,
     isFull: true, station: '', note: '', createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(), deletedAt: null, ...overrides,
   }
@@ -30,6 +30,16 @@ describe('calculateConsumptionIntervals', () => {
       record({ odometer: 2500, liters: 80, isFull: true }),
     ])
     expect(calculateAverageConsumption(intervals)).toBeCloseTo(8.6667, 3)
+  })
+})
+
+describe('fuelPriceSummary', () => {
+  it('calculates displayed price, discounted price, and discount amount', () => {
+    expect(fuelPriceSummary(40, 280, 320)).toEqual({
+      pumpPricePerLiter: 8,
+      discountedPricePerLiter: 7,
+      discountAmount: 40,
+    })
   })
 })
 

@@ -61,6 +61,9 @@ function validateRecord(value: unknown, index: number): FuelRecord {
     odometer: numberField(item.odometer, `records[${index}].odometer`, 0),
     liters: numberField(item.liters, `records[${index}].liters`, Number.MIN_VALUE),
     amount: numberField(item.amount, `records[${index}].amount`, 0),
+    pumpAmount: item.pumpAmount === undefined
+      ? numberField(item.amount, `records[${index}].amount`, 0)
+      : numberField(item.pumpAmount, `records[${index}].pumpAmount`, 0),
     pricePerLiter: numberField(item.pricePerLiter, `records[${index}].pricePerLiter`, 0),
     isFull: item.isFull,
     station: stringField(item.station, `records[${index}].station`),

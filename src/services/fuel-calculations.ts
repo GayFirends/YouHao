@@ -56,6 +56,17 @@ export interface RecordDraft {
   isFull: boolean
 }
 
+export function fuelPriceSummary(liters: number, amount: number, pumpAmount: number) {
+  const validLiters = Number.isFinite(liters) && liters > 0 ? liters : 0
+  const paid = Number.isFinite(amount) && amount > 0 ? amount : 0
+  const displayed = Number.isFinite(pumpAmount) && pumpAmount > 0 ? pumpAmount : 0
+  return {
+    pumpPricePerLiter: validLiters ? displayed / validLiters : 0,
+    discountedPricePerLiter: validLiters ? paid / validLiters : 0,
+    discountAmount: Math.max(displayed - paid, 0),
+  }
+}
+
 export function fuelRecordWarnings(draft: RecordDraft, records: FuelRecord[], today = localDateKey()) {
   const warnings: string[] = []
   const others = records.filter((record) => !record.deletedAt && record.id !== draft.id)

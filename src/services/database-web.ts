@@ -9,7 +9,7 @@ const STORAGE_NAME = 'fuel-track-storage'
 const STORAGE_VERSION = 1
 const STORAGE_STORE = 'databases'
 const STORAGE_KEY = 'main'
-const SCHEMA_VERSION = 2
+const SCHEMA_VERSION = 3
 
 let db: Database
 let storagePromise: Promise<IDBDatabase> | undefined
@@ -116,15 +116,16 @@ function upsertVehicle(vehicle: Vehicle) {
 function upsertRecord(record: FuelRecord) {
   db.run(`
     INSERT INTO fuel_records (
-      id, vehicleId, date, odometer, liters, amount, pricePerLiter, isFull,
+      id, vehicleId, date, odometer, liters, amount, pumpAmount, pricePerLiter, isFull,
       station, note, createdAt, updatedAt, deletedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       vehicleId = excluded.vehicleId, date = excluded.date, odometer = excluded.odometer,
-      liters = excluded.liters, amount = excluded.amount, pricePerLiter = excluded.pricePerLiter,
+      liters = excluded.liters, amount = excluded.amount, pumpAmount = excluded.pumpAmount,
+      pricePerLiter = excluded.pricePerLiter,
       isFull = excluded.isFull, station = excluded.station, note = excluded.note,
       updatedAt = excluded.updatedAt, deletedAt = excluded.deletedAt
-  `, [record.id, record.vehicleId, record.date, record.odometer, record.liters, record.amount, record.pricePerLiter, record.isFull ? 1 : 0, record.station, record.note, record.createdAt, record.updatedAt, record.deletedAt])
+  `, [record.id, record.vehicleId, record.date, record.odometer, record.liters, record.amount, record.pumpAmount, record.pricePerLiter, record.isFull ? 1 : 0, record.station, record.note, record.createdAt, record.updatedAt, record.deletedAt])
 }
 
 function migrateSchema() {
@@ -171,6 +172,13 @@ function migrateSchema() {
         ALTER TABLE fuel_records_v2 RENAME TO fuel_records;
         CREATE INDEX idx_records_vehicle_date ON fuel_records(vehicleId, date);
         PRAGMA user_version = 2;
+      `)
+    }
+    if (version < 3) {
+      db.run(`
+        ALTER TABLE fuel_records ADD COLUMN pumpAmount REAL NOT NULL DEFAULT 0 CHECK (pumpAmount >= 0);
+        UPDATE fuel_records SET pumpAmount = amount;
+        PRAGMA user_version = 3;
       `)
     }
   })
