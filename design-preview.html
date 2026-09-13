@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>油迹 · 找到你喜欢的样子</title>
+  <style>
+    :root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;color:#25312d;background:#f7f8f6;font-synthesis:none;--studio-green:#285c48;--studio-line:#e3e7e1}
+    *{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opacity:.6}button,a,input,select,textarea,summary{ -webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #91b9a2;outline-offset:4px}button{color:inherit}svg{display:block;flex:none}button svg{pointer-events:none}[hidden]{display:none!important}
+    .studio-header{height:76px;padding:0 36px;border-bottom:1px solid var(--studio-line);background:#fbfcfa;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .studio-brand{display:flex;align-items:center;gap:12px}.studio-logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#285c48;color:white}.studio-brand strong{font-size:17px;letter-spacing:1px}.studio-brand span{font-size:12px;color:#7a837c;margin-left:14px;letter-spacing:1px}.header-actions{display:flex;align-items:center;gap:20px}.sample-badge{font-size:12px;color:#7b847c;display:flex;align-items:center;gap:7px}.sample-badge:before{content:"";width:6px;height:6px;background:#8aa58c;border-radius:50%}
+    .quiet-button{min-height:40px;border:0;background:transparent;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 12px;border-radius:9px;font-size:12px}.quiet-button:hover{background:#e9ede7}
+    .studio{max-width:1660px;margin:0 auto;padding:32px 36px 40px;display:grid;grid-template-columns:278px minmax(0,1fr);gap:36px;align-items:start}
+    .controls{min-width:0}.intro-label{font-size:10px;letter-spacing:2.4px;color:#879387;font-weight:700}.controls h1{font-size:27px;line-height:1.48;letter-spacing:-.8px;margin:10px 0}.controls .intro{font-size:12px;line-height:1.85;color:#7a827b;margin:0 0 24px}
+    .step-heading{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:650;margin:23px 0 12px}.step-heading>span{width:20px;height:20px;background:#e9eee7;border-radius:6px;display:grid;place-items:center;font-size:10px;color:#7c8b7e}.step-heading small{margin-left:auto;font-size:11px;color:#8c948c;font-weight:400}
+    .theme-options{display:grid;gap:9px}.theme-option{position:relative;display:flex;align-items:center;gap:12px;min-height:80px;width:100%;background:#fff;border:1px solid var(--studio-line);border-radius:13px;padding:12px;text-align:left;transition:background .18s,border-color .18s,box-shadow .18s}.theme-option:hover{border-color:#aebdad}.theme-option[aria-pressed=true]{border-color:#5f8566;box-shadow:0 0 0 1px #5f8566;background:#fbfdf9}.theme-option strong{display:block;font-size:14px;font-weight:650}.theme-option .theme-sub{display:block;font-size:11px;color:#879084;margin-top:5px}.theme-option .theme-code{font-size:10px;position:absolute;right:12px;top:12px;color:#a0aaa0}.recommended{font-size:9px;font-weight:500;background:#e8f0e3;color:#5c7b50;border-radius:4px;padding:2px 5px;margin-left:5px}
+    .theme-mini{width:53px;height:54px;background:#edf2e9;border-radius:8px;padding:8px;flex:none;display:grid;grid-template-columns:1fr 1fr;gap:4px;overflow:hidden}.theme-mini b{grid-column:1/-1;height:21px;border-radius:4px;background:#315c46;position:relative}.theme-mini b:before{content:"7.2";font-size:10px;color:#fff;position:absolute;left:5px;top:4px;font-weight:600}.theme-mini i{background:white;border-radius:3px;height:12px}.theme-mini.paper{background:#efe5d4}.theme-mini.paper b{background:#e1d1b8;border-radius:2px}.theme-mini.paper b:before{color:#7d5731;font-family:Georgia,serif}.theme-mini.paper i{background:#fffaf0;border-radius:2px}.theme-mini.night{background:#18252b}.theme-mini.night b{background:#294551}.theme-mini.night b:before{color:#aed3e2}.theme-mini.night i{background:#2c3b40}
+    .tuning{background:#fff;border:1px solid var(--studio-line);border-radius:14px;padding:15px}.control-row+.control-row{margin-top:19px}.control-label{font-size:11px;display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;color:#667265}.control-label output{font-size:10px;color:#8f988d}.segmented{display:flex;gap:3px;padding:3px;background:#f0f3ed;border-radius:8px}.segmented button{min-height:34px;flex:1;border:0;background:transparent;border-radius:6px;font-size:11px;color:#7d897a;display:flex;gap:6px;justify-content:center;align-items:center}.segmented button[aria-pressed=true]{background:#fff;color:#294b35;box-shadow:0 1px 4px #22391b10;font-weight:600}
+    .swatches{display:flex;gap:13px;align-items:center}.swatch{border:0;width:30px;height:30px;border-radius:50%;background:var(--swatch);position:relative;display:grid;place-items:center;padding:0}.swatch[aria-pressed=true]:after{content:"";position:absolute;inset:-4px;border:1.5px solid var(--swatch);border-radius:50%}.swatch svg{opacity:0;color:white}.swatch[aria-pressed=true] svg{opacity:1}
+    .choice-open{width:100%;border:0;border-radius:10px;background:#285c48;color:#fff;min-height:44px;padding:10px 14px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px}.choice-open:hover{background:#1c4937}.selection-hint{font-size:10px;line-height:1.7;color:#8a9386;text-align:center;margin:9px 0 0}
+    .stage{min-width:0}.stage-toolbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:0 0 17px;min-height:38px}.preview-label{display:flex;align-items:center;gap:8px;font-size:12px;color:#7e887b}.preview-label b{font-size:13px;color:#33442f}.view-switch{background:#e9eee5;min-width:240px}.view-switch button{padding:5px 10px;min-height:32px;font-size:11px}
+    .canvas{border:1px solid #e3e8df;border-radius:22px;min-height:710px;background:#edf1e9;position:relative;overflow:hidden;padding:30px 26px 26px;background-image:radial-gradient(#c9d3c44d .8px,transparent .8px);background-size:12px 12px}
+    .canvas-topline{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px;color:#899581;font-size:10px;letter-spacing:1.4px}.canvas-topline strong{color:#65765c;font-weight:500}.preview-layout{display:flex;justify-content:center;align-items:center;gap:clamp(24px,3.3vw,58px)}
+    .device{position:relative;flex:none;width:390px;height:746px;overflow:hidden;border:7px solid #283129;border-radius:43px;background:#fff;box-shadow:0 0 0 1px #1d2a1a,0 2px 0 2px #c9d3c5,0 28px 42px -22px #273b2459}.device iframe{border:0;display:block;width:100%;height:100%;background:white;border-radius:35px}.device:after{content:"";position:absolute;left:50%;bottom:5px;width:92px;height:4px;background:#82938255;border-radius:9px;transform:translateX(-50%);pointer-events:none}
+    .preview-notes{width:188px;flex:none;color:#6d7b64}.notes-eyebrow{font-size:10px;letter-spacing:1.5px;color:#9aaa8f}.preview-notes h2{font-size:25px;color:#415239;font-weight:550;line-height:1.4;margin:12px 0 10px;letter-spacing:-.6px}.preview-notes>p{font-size:12px;line-height:1.9;margin:0 0 24px;color:#7b8b6f}.notes-detail{border-top:1px solid #ced7c7;padding-top:18px;margin-top:18px}.notes-detail span{font-size:10px;display:block;color:#9aaa8f;margin-bottom:7px}.notes-detail strong{display:block;font-size:12px;color:#5c6c50;font-weight:550}.notes-detail p{font-size:11px;line-height:1.9;margin:7px 0 0;color:#8a987f}
+    .try-action{width:100%;border:1px solid #c3cfb9;border-radius:9px;background:#f4f7efb0;color:#54664a;min-height:41px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:20px}.try-action:hover{background:#fff}
+    .page-switch{display:flex;justify-content:center;gap:6px;margin:23px 0 0;flex-wrap:wrap}.page-switch button{border:1px solid transparent;border-radius:7px;background:transparent;padding:7px 10px;font-size:11px;min-height:33px;color:#7d8c72}.page-switch button[aria-pressed=true]{background:#fff;border-color:#dae2d3;color:#4f6443}.canvas-caption{text-align:center;font-size:10px;color:#98a38f;margin:15px 0 0}
+    .canvas[data-view=desktop]{padding:24px 20px}.canvas[data-view=desktop] .preview-layout{display:block}.canvas[data-view=desktop] .device{width:100%;height:720px;border:1px solid #d6dfce;border-radius:12px;box-shadow:0 15px 35px -25px #30442a70;padding-top:27px;background:#f9fbf6}.canvas[data-view=desktop] .device:before{content:"";position:absolute;top:10px;left:13px;width:6px;height:6px;border-radius:50%;background:#c5cdbf;box-shadow:12px 0 #d2d9cd,24px 0 #e0e5dc}.canvas[data-view=desktop] .device:after{display:none}.canvas[data-view=desktop] .device iframe{border-radius:0 0 10px 10px}.canvas[data-view=desktop] .preview-notes{display:none}
+    .canvas[data-view=compare]{overflow-x:auto}.comparison{display:grid;grid-template-columns:repeat(3,minmax(290px,1fr));gap:14px;min-width:898px}.compare-card{min-width:0;background:#ffffffa8;border:1px solid #d9e1d0;border-radius:14px;overflow:hidden}.compare-head{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:12px}.compare-head strong{font-size:12px}.compare-head span{font-size:10px;color:#87917e;margin-left:5px}.compare-choose{font-size:10px;min-height:32px;border:1px solid #cbd5c1;border-radius:6px;background:#f7faf2;padding:5px 8px}.compare-choose:hover{background:#e8f0e0}.compare-card iframe{width:100%;height:690px;display:block;border:0}
+    .stage-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 4px;color:#89917f;font-size:11px;line-height:1.7}.stage-foot b{font-weight:500;color:#5d6e51}.stage-foot span:last-child{font-size:10px}
+    dialog.choice-dialog{border:1px solid #e2e7dd;border-radius:22px;padding:28px;width:min(520px,calc(100vw - 32px));color:#2b3928;box-shadow:0 35px 90px #20301730;max-height:calc(100dvh - 36px);overflow:auto}dialog::backdrop{background:#18221865;backdrop-filter:blur(6px)}.choice-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.choice-head h2{font-size:21px;font-weight:600;margin:0}.choice-close{width:36px;height:36px;border:0;border-radius:50%;background:#f0f3eb;font-size:22px}.choice-dialog>p{font-size:12px;color:#7e8a73;line-height:1.8;margin:11px 0 20px}.choice-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;border:1px solid #e5e9df;background:#f7f9f3;border-radius:12px;padding:16px;margin-bottom:16px}.choice-summary span{display:block;font-size:10px;color:#8a947e;margin-bottom:5px}.choice-summary b{font-size:12px;font-weight:600}.choice-dialog label{display:block;font-size:11px;color:#728064;margin-top:15px;margin-bottom:8px}.choice-dialog textarea{display:block;width:100%;border:1px solid #dce3d3;border-radius:9px;padding:12px;font-size:12px;line-height:1.8;color:#4e6041;background:#fff;resize:vertical;min-height:80px}.choice-dialog textarea[readonly]{background:#fafbf7;min-height:145px}.choice-actions{display:flex;gap:9px;margin-top:16px}.choice-actions button{flex:1;margin:0}.download-choice{min-height:44px;border:1px solid #d5dfca;border-radius:10px;background:white;font-size:12px}.copy-status{min-height:18px;font-size:11px;color:#456838;margin-top:10px;text-align:center}
+    .studio-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:12px 18px;background:#283b25;color:#fff;border-radius:10px;box-shadow:0 8px 28px #19351225;font-size:12px;z-index:30;line-height:1.6;text-align:center}.noscript-note{margin:24px;padding:20px;background:#fff3dc;color:#714c0d;border-radius:12px;font-size:14px}
+    @media(min-width:1550px){.device{width:406px;height:802px}.canvas{padding-top:32px;padding-bottom:30px}.studio{gap:46px}}
+    @media(max-width:1240px){.studio{grid-template-columns:254px minmax(0,1fr);gap:24px;padding:26px 24px}.studio-header{padding:0 24px}.preview-notes{width:152px}.preview-notes h2{font-size:22px}.preview-layout{gap:22px}.canvas{padding:24px 20px}.device{width:362px;height:726px}.view-switch{min-width:218px}}
+    @media(max-width:1080px){.preview-notes{display:none}.canvas{padding:22px 18px}.canvas[data-view=compare]{overflow-x:auto}.comparison{min-width:795px}.studio-brand span{display:none}.stage-foot{display:block}.stage-foot span{display:block}.canvas[data-view=desktop] .device{height:750px}}
+    @media(max-width:790px){.studio-header{height:66px;padding:0 18px}.header-actions{gap:4px}.sample-badge{font-size:10px}.studio{display:block;padding:22px 16px}.controls h1{font-size:25px;margin-top:8px}.controls h1 br{display:none}.controls .intro{margin-bottom:18px}.theme-options{grid-template-columns:repeat(3,1fr);gap:8px}.theme-option{display:block;padding:11px 9px;min-height:130px}.theme-mini{margin-bottom:10px;width:45px;height:45px;padding:6px}.theme-mini b{height:17px}.theme-mini i{height:10px}.theme-option strong{font-size:12px}.theme-option .theme-sub{font-size:10px}.recommended{font-size:8px;padding:1px 3px}.tuning{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px}.control-row+.control-row{margin-top:0}.control-row:last-child{grid-column:1/-1}.swatches{gap:15px;padding:2px 4px}.swatch{width:26px;height:26px}.choice-open{margin-top:13px}.selection-hint{margin-bottom:24px}.stage-toolbar{margin-top:25px}.canvas{border-radius:17px;padding:20px 10px}.device{width:min(390px,calc(100vw - 66px));height:746px;border-width:6px;border-radius:38px}.device iframe{border-radius:31px}.canvas-topline{padding:0 10px;font-size:9px;margin-bottom:20px}.canvas-caption{font-size:9px}.canvas[data-view=desktop]{overflow-x:auto}.canvas[data-view=desktop] .preview-layout{min-width:930px}.canvas[data-view=desktop] .canvas-topline{min-width:930px}.canvas[data-view=desktop] .device{height:680px}.view-switch{min-width:206px}.stage-foot{padding:14px 4px}}
+    @media(max-width:390px){.studio-brand strong{font-size:15px}.sample-badge{display:none}.studio-header{padding:0 14px}.controls h1{font-size:22px}.theme-option strong{font-size:11px}.theme-option .theme-sub{font-size:9px}.theme-option .theme-code{right:8px;top:8px}.recommended{display:block;width:max-content;margin-left:0;margin-top:4px}.theme-option{min-height:140px}.preview-label{font-size:10px}.preview-label b{font-size:11px}.view-switch{min-width:182px}.view-switch button{padding:5px;font-size:10px}.stage-toolbar{gap:8px}.tuning{gap:14px 10px}.device{height:708px}.choice-dialog{padding:21px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+  <header class="studio-header">
+    <div class="studio-brand"><div class="studio-logo" data-icon="fuel"></div><strong>油迹</strong><span>DESIGN EXPLORER</span></div>
+    <div class="header-actions"><span class="sample-badge">交互原型 · 示例数据</span><button class="quiet-button" id="reset-design"><span data-icon="reset"></span>重置偏好</button></div>
+  </header>
+  <noscript><p class="noscript-note">请在浏览器中启用 JavaScript，以切换设计方案和体验交互。</p></noscript>
+  <main class="studio">
+    <aside class="controls" aria-label="设计偏好">
+      <div class="intro-label">A LITTLE MORE YOU.</div>
+      <h1>让每一程，<br>都有喜欢的样子。</h1>
+      <p class="intro">先选一种气质，再调整一点细节。<br>在右侧试用，找到属于你的油迹。</p>
+      <div class="step-heading"><span>01</span>选择整体风格<small>三种不同的气质</small></div>
+      <div class="theme-options" role="group" aria-label="整体风格">
+        <button class="theme-option" data-theme="forest" aria-pressed="true"><span class="theme-mini"><b></b><i></i><i></i></span><span><strong>松间 <em class="recommended">推荐</em></strong><span class="theme-sub">清爽自然 · 专注日常</span></span><span class="theme-code">A</span></button>
+        <button class="theme-option" data-theme="paper" aria-pressed="false"><span class="theme-mini paper"><b></b><i></i><i></i></span><span><strong>纸本</strong><span class="theme-sub">温暖克制 · 账本质感</span></span><span class="theme-code">B</span></button>
+        <button class="theme-option" data-theme="night" aria-pressed="false"><span class="theme-mini night"><b></b><i></i><i></i></span><span><strong>夜航</strong><span class="theme-sub">沉静深色 · 仪表气质</span></span><span class="theme-code">C</span></button>
+      </div>
+      <div class="step-heading"><span>02</span>让细节更合心意</div>
+      <div class="tuning">
+        <div class="control-row"><div class="control-label">强调色<output id="accent-label">松绿</output></div><div class="swatches" role="group" aria-label="强调色">
+          <button class="swatch" data-accent="green" style="--swatch:#376650" aria-label="松绿" aria-pressed="true"><span data-icon="check"></span></button>
+          <button class="swatch" data-accent="blue" style="--swatch:#47728b" aria-label="湖蓝" aria-pressed="false"><span data-icon="check"></span></button>
+          <button class="swatch" data-accent="amber" style="--swatch:#a47b46" aria-label="琥珀" aria-pressed="false"><span data-icon="check"></span></button>
+          <button class="swatch" data-accent="coral" style="--swatch:#aa6757" aria-label="陶红" aria-pressed="false"><span data-icon="check"></span></button>
+        </div></div>
+        <div class="control-row"><div class="control-label">内容密度</div><div class="segmented" role="group" aria-label="内容密度"><button data-density="relaxed" aria-pressed="true">舒展留白</button><button data-density="compact" aria-pressed="false">紧凑高效</button></div></div>
+        <div class="control-row"><div class="control-label">首页更关注什么</div><div class="segmented" role="group" aria-label="首页主指标"><button data-focus="consumption" aria-pressed="true">油耗表现</button><button data-focus="spending" aria-pressed="false">每月花费</button></div></div>
+      </div>
+      <div class="step-heading"><span>03</span>留下你的选择</div>
+      <button class="choice-open" id="open-choice"><span data-icon="check"></span>我喜欢这个方向<span data-icon="arrow"></span></button>
+      <p class="selection-hint">生成偏好摘要，复制后粘贴回对话即可。</p>
+    </aside>
+    <section class="stage" aria-label="实时交互预览">
+      <div class="stage-toolbar"><div class="preview-label"><b>实时预览</b><span>/</span><span id="current-theme">松间</span></div><div class="segmented view-switch" role="group" aria-label="预览方式"><button data-view="phone" aria-pressed="true"><span data-icon="phone"></span>手机</button><button data-view="desktop" aria-pressed="false"><span data-icon="desktop"></span>桌面</button><button data-view="compare" aria-pressed="false"><span data-icon="compare"></span>对比</button></div></div>
+      <div class="canvas" id="canvas" data-view="phone">
+        <div class="canvas-topline"><strong id="canvas-direction">DIRECTION A / 松间</strong><span id="canvas-device">MOBILE EXPERIENCE</span></div>
+        <div class="preview-layout" id="single-preview">
+          <div class="device"><iframe id="app-preview" title="油迹交互预览" sandbox="allow-scripts allow-forms allow-downloads"></iframe></div>
+          <aside class="preview-notes">
+            <span class="notes-eyebrow" id="notes-en">CALM, BY NATURE.</span><h2 id="notes-title">把日常，<br>记得清清楚楚。</h2>
+            <p id="notes-description">柔和的灰绿底色，让每一个数字都有呼吸的空间。</p>
+            <div class="notes-detail"><span>01 / 看得清</span><strong id="notes-detail-title">数字先行，层次分明</strong><p id="notes-detail-description">让油耗成为主角，次要信息退后一步。</p></div>
+            <div class="notes-detail"><span>02 / 记得快</span><strong>常用在前，优惠按需展开</strong><p>试试录入一笔加油，感受表单的节奏。</p></div>
+            <button class="try-action" id="try-record"><span data-icon="plus"></span>试着记一笔</button>
+          </aside>
+        </div>
+        <div class="comparison" id="comparison" hidden>
+          <article class="compare-card"><div class="compare-head"><div><strong>A · 松间</strong><span>清爽自然</span></div><button class="compare-choose" data-choose="forest">选择这款</button></div><iframe title="松间风格对比" data-compare="forest" sandbox="allow-scripts allow-forms allow-downloads"></iframe></article>
+          <article class="compare-card"><div class="compare-head"><div><strong>B · 纸本</strong><span>温暖账本</span></div><button class="compare-choose" data-choose="paper">选择这款</button></div><iframe title="纸本风格对比" data-compare="paper" sandbox="allow-scripts allow-forms allow-downloads"></iframe></article>
+          <article class="compare-card"><div class="compare-head"><div><strong>C · 夜航</strong><span>深色仪表</span></div><button class="compare-choose" data-choose="night">选择这款</button></div><iframe title="夜航风格对比" data-compare="night" sandbox="allow-scripts allow-forms allow-downloads"></iframe></article>
+        </div>
+        <div class="page-switch" id="page-switch" role="group" aria-label="快速体验页面"><button data-screen="overview" aria-pressed="true">概览</button><button data-screen="records" aria-pressed="false">加油记录</button><button data-screen="form" aria-pressed="false">加油表单</button><button data-screen="settings" aria-pressed="false">数据与同步</button></div>
+        <p class="canvas-caption" id="canvas-caption">可点击、可切换、可试填。所有数据均为预览示例。</p>
+      </div>
+      <div class="stage-foot"><span>当前搭配：<b id="current-combination">松间 / 松绿 / 舒展留白 / 油耗优先</b></span><span>单文件 · 无需联网 · 偏好自动记住</span></div>
+    </section>
+  </main>
+  <dialog class="choice-dialog" id="choice-dialog" aria-labelledby="choice-title">
+    <div class="choice-head"><h2 id="choice-title">让这个方向，成为下一步。</h2><button class="choice-close" id="close-choice" aria-label="关闭">×</button></div>
+    <p>把下面的选择复制回对话，就可以据此调整正式界面。也可以补充你喜欢或想改的地方。</p>
+    <div class="choice-summary" id="choice-summary"></div>
+    <label for="choice-note">再加一点你的想法（选填）</label><textarea id="choice-note" rows="2" placeholder="例如：喜欢松间的配色，但希望首页再简洁一点。"></textarea>
+    <label for="choice-text">将要复制的内容</label><textarea id="choice-text" readonly rows="5"></textarea>
+    <div class="choice-actions"><button class="download-choice" id="download-choice">下载选择 .txt</button><button class="choice-open" id="copy-choice"><span data-icon="copy"></span>复制我的选择</button></div>
+    <div class="copy-status" id="copy-status" role="status" aria-live="polite"></div>
+  </dialog>
+  <div class="studio-toast" id="studio-toast" role="status" aria-live="polite" hidden></div>
+
+  <template id="app-template">
+    <style>
+      :root{color-scheme:light;--bg:#f4f6f2;--surface:#fff;--surface-alt:#f7f9f5;--ink:#22342a;--muted:#829080;--line:#e4eae0;--accent:#326349;--accent-soft:#edf3e7;--on-accent:#fff;--hero:#315d46;--hero-ink:#fff;--hero-muted:#cedccc;--radius:18px;--small-radius:11px;--space:24px;--display:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC",sans-serif;--sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;--shadow:0 5px 15px #263c1910}
+      *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;font-synthesis:none}button,input,select,textarea{font:inherit}button{cursor:pointer;color:inherit}button:disabled{cursor:wait;opacity:.6}button,input,select,textarea,summary{ -webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:3px}svg{display:block;flex:none}button svg{pointer-events:none}button{border:0}input,select,textarea{max-width:100%}[hidden]{display:none!important}.number{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";letter-spacing:-.04em}.icon{display:inline-flex;align-items:center;justify-content:center}
+      :root[data-theme=paper]{--bg:#f4efe5;--surface:#fffcf5;--surface-alt:#f8f2e8;--ink:#433827;--muted:#9b8d76;--line:#e8dfcf;--radius:9px;--small-radius:6px;--display:"Iowan Old Style","Baskerville","Songti SC","STSong",serif;--shadow:none}
+      :root[data-theme=night]{color-scheme:dark;--bg:#121c21;--surface:#1a282e;--surface-alt:#1e2d34;--ink:#e4eeec;--muted:#879fa4;--line:#2c3d44;--radius:15px;--small-radius:9px;--shadow:0 6px 15px #0712161c}
+      :root[data-density=compact]{--space:17px;--radius:12px}
+      .app{height:100dvh;display:grid;grid-template-columns:190px minmax(0,1fr);overflow:hidden}
+      .sidebar{display:flex;flex-direction:column;border-right:1px solid var(--line);background:var(--surface);padding:27px 16px 22px;z-index:3}.brand{display:flex;align-items:center;gap:9px;margin:0 10px 33px}.brand-mark{background:var(--accent);color:var(--on-accent);width:34px;height:34px;border-radius:11px;display:grid;place-items:center}.brand-name{font-size:20px;letter-spacing:2px;font-weight:650;line-height:1.2}.brand-en{font-size:8px;letter-spacing:2px;color:var(--muted);margin-top:5px}.sidebar-nav{display:grid;gap:7px}.nav-item{min-height:44px;display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:var(--small-radius);background:transparent;color:var(--muted);font-size:12px;text-align:left}.nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:650}.sidebar-bottom{margin-top:auto;padding:16px 11px 0;border-top:1px solid var(--line);font-size:11px;line-height:1.9;color:var(--muted)}.saved-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;display:inline-block;margin-right:6px}.sidebar-bottom small{font-size:10px;display:block}
+      .workspace{min-width:0;display:flex;flex-direction:column;height:100dvh}.app-topbar{height:70px;flex:none;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 30px;background:var(--surface)}.vehicle-picker{position:relative;display:flex;align-items:center;gap:10px;min-width:0}.vehicle-icon{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;color:var(--accent)}.vehicle-picker strong{font-size:12px;display:block;font-weight:600}.vehicle-picker small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.vehicle-picker select{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}.vehicle-picker:focus-within{outline:2px solid var(--accent);outline-offset:5px;border-radius:7px}.topbar-end{display:flex;gap:13px;align-items:center}.avatar{width:31px;height:31px;background:var(--accent-soft);border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--accent);font-size:11px;font-weight:600}.primary-button{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;border-radius:var(--small-radius);background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:600;white-space:nowrap}.primary-button:hover{filter:brightness(.93)}.secondary-button{min-height:40px;border:1px solid var(--line);background:var(--surface);border-radius:var(--small-radius);padding:9px 14px;color:var(--ink);font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:7px}.secondary-button:hover{background:var(--surface-alt)}.icon-button{min-width:40px;min-height:40px;display:inline-grid;place-items:center;border-radius:50%;background:transparent;color:var(--muted)}.icon-button:hover{background:var(--accent-soft);color:var(--accent)}.text-button{min-height:36px;display:inline-flex;align-items:center;gap:4px;background:transparent;color:var(--accent);font-size:11px;padding:5px}
+      .app-main{overflow:auto;min-height:0;flex:1;scrollbar-width:thin;scrollbar-color:var(--line) transparent;scroll-behavior:smooth}.page{max-width:1180px;padding:var(--space) 30px 34px;margin:0 auto;animation:arrive .24s ease}.page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}.eyebrow{display:block;font-size:10px;color:var(--muted);letter-spacing:.8px;margin-bottom:7px}.page-head h1{font-family:var(--display);font-size:26px;letter-spacing:-.7px;margin:0;font-weight:650;line-height:1.35}.page-sub{font-size:12px;color:var(--muted);line-height:1.8;margin:8px 0 0}.date-pill{font-size:10px;color:var(--muted);padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);white-space:nowrap}.metrics{display:grid;grid-template-columns:1.55fr 1fr 1fr;gap:13px;margin-bottom:18px}.hero-metric{position:relative;overflow:hidden;background:var(--hero);color:var(--hero-ink);padding:21px 23px;border-radius:var(--radius);min-height:162px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid transparent}.metric-label{font-size:12px;font-weight:500}.hero-top{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--hero-muted)}.hero-top svg{opacity:.75}.hero-value{display:flex;align-items:baseline;gap:9px;margin:6px 0}.hero-value b{font-family:var(--display);font-size:55px;line-height:1.05;font-weight:550;letter-spacing:-2.7px}.hero-value small{font-size:11px;color:var(--hero-muted)}.hero-bottom{display:flex;gap:8px;align-items:center;font-size:10px;color:var(--hero-muted);line-height:1.6}.hero-bottom svg{width:13px;height:13px}.hero-metric:after{content:"";position:absolute;right:-22px;bottom:-38px;width:138px;height:138px;border:1px solid currentColor;opacity:.065;border-radius:50%;box-shadow:0 0 0 20px currentColor,0 0 0 40px currentColor;pointer-events:none}
+      .mini-metric{padding:20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-width:0}.mini-top{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted);gap:6px}.mini-top svg{color:var(--accent);opacity:.75}.mini-value{font-size:29px;font-weight:600;white-space:nowrap}.mini-value small{font-size:11px;letter-spacing:0;color:var(--muted);font-weight:400;margin-left:4px}.mini-foot{font-size:10px;color:var(--muted);white-space:nowrap}
+      .dashboard{display:grid;grid-template-columns:1.3fr 1fr;gap:17px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:21px;min-width:0}.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}.panel-heading h2{font-size:14px;letter-spacing:-.2px;font-weight:650;margin:0}.panel-heading small{font-size:10px;color:var(--muted)}.chart-unit{font-size:10px;color:var(--muted)}.chart-wrapper{padding:7px 0 0}.chart-svg{width:100%;height:163px;overflow:visible;touch-action:pan-y}.chart-grid{stroke:var(--line);stroke-dasharray:3 5;stroke-width:1}.chart-axis{font:10px var(--sans);fill:var(--muted)}.chart-line{stroke:var(--accent);stroke-width:2.6;fill:none;stroke-linejoin:round;stroke-linecap:round}.chart-dot{fill:var(--surface);stroke:var(--accent);stroke-width:2}.chart-point{cursor:pointer;outline:none}.chart-point:focus .chart-dot,.chart-point[data-selected=true] .chart-dot{fill:var(--accent);stroke-width:3}.chart-point .point-ring{fill:var(--accent);opacity:0}.chart-point[data-selected=true] .point-ring,.chart-point:focus .point-ring{opacity:.12}.chart-detail{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:5px;padding-top:13px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}.chart-detail b{font-size:12px;color:var(--accent);font-weight:650}
+      .recent-list{margin-top:3px}.receipt{width:100%;background:transparent;padding:15px 0;display:flex;align-items:center;text-align:left;gap:11px;border-bottom:1px solid var(--line)}.receipt:last-child{border-bottom:0;padding-bottom:3px}.receipt:hover .receipt-title{color:var(--accent)}.receipt-symbol{background:var(--accent-soft);width:36px;height:39px;flex:none;display:grid;place-items:center;border-radius:10px;color:var(--accent)}.receipt-body{min-width:0;flex:1}.receipt-title{font-size:12px;font-weight:550;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.receipt-sub{font-size:10px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:6px}.receipt-amount{text-align:right;flex:none}.receipt-amount b{display:block;font-size:15px;font-weight:650}.receipt-amount small{display:block;font-size:9px;color:var(--muted);margin-top:6px}.full-tag{display:inline-flex;align-items:center;font-size:8px;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:2px 4px;font-weight:450}.overview-note{display:flex;align-items:center;gap:7px;justify-content:center;font-size:10px;color:var(--muted);margin:19px 0 0}
+      .filter-bar{display:flex;gap:9px;margin-bottom:18px}.search-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--small-radius);min-height:43px;display:flex;align-items:center;gap:9px;padding:0 12px;min-width:0;flex:1;color:var(--muted)}.search-box input{border:0;background:transparent;color:var(--ink);outline:0;min-width:0;width:100%;font-size:12px}.search-box:focus-within{border-color:var(--accent)}.filter-bar select{border:1px solid var(--line);border-radius:var(--small-radius);background:var(--surface);color:var(--ink);padding:0 9px;max-width:111px;font-size:11px}.records-total{background:var(--accent-soft);border-radius:var(--small-radius);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:21px}.records-total span{font-size:11px;color:var(--accent)}.records-total b{font-size:23px;font-weight:600;color:var(--accent)}.records-total b small{font-size:13px;margin-right:3px}.month-heading{display:flex;justify-content:space-between;align-items:center;padding:0 2px;font-size:12px;font-weight:600;margin:23px 0 11px}.month-heading small{font-size:10px;color:var(--muted);font-weight:400}.record-group{padding:2px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}.record-group .receipt{padding:18px 0}.record-group .receipt:last-child{padding-bottom:18px}.record-group .receipt-title{font-size:13px}.record-group .receipt-symbol{width:40px;height:43px}.record-date{font-size:17px;font-weight:550;line-height:1.1;text-align:center}.record-date small{font-size:8px;display:block;margin-top:3px;font-weight:400}.record-odometer{display:block;margin:5px 0 0;font-size:10px;color:var(--muted)}.empty{text-align:center;padding:42px 15px;color:var(--muted);font-size:12px;line-height:1.8}.empty>.icon{margin:0 auto 10px;color:var(--accent);background:var(--accent-soft);width:46px;height:46px;border-radius:15px}.empty b{display:block;color:var(--ink);font-size:14px;margin-bottom:5px}.empty .primary-button{margin-top:15px}.empty p{margin:6px 0}
+      .car-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.car-card{overflow:hidden;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius)}.car-card.selected{border-color:var(--accent)}.car-art{height:110px;display:flex;align-items:center;justify-content:space-between;padding:22px;background:var(--accent-soft);color:var(--accent)}.car-art svg{width:66px;height:66px;stroke-width:1}.car-badge{align-self:flex-start;font-size:10px;border:1px solid var(--line);padding:5px 7px;background:var(--surface);border-radius:5px}.car-body{padding:19px}.car-body h2{font-family:var(--display);font-size:19px;margin:0 0 6px}.car-body>p{font-size:11px;color:var(--muted);margin:0 0 17px}.car-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;border-top:1px solid var(--line);padding-top:15px;margin-bottom:19px}.car-stats span{display:block;font-size:10px;color:var(--muted);margin-bottom:6px}.car-stats b{font-size:16px;font-weight:550}.car-body button{width:100%}
+      .sync-card{background:var(--hero);color:var(--hero-ink);border-radius:var(--radius);padding:24px;display:flex;gap:16px;align-items:center;margin-bottom:18px}.sync-orb{width:50px;height:50px;border-radius:16px;background:#ffffff12;display:grid;place-items:center;flex:none}.sync-card h2{font-size:15px;margin:0 0 7px;font-weight:600}.sync-card p{font-size:11px;color:var(--hero-muted);margin:0;line-height:1.8}.sync-card button{margin-left:auto;background:var(--hero-ink);color:var(--hero);border-radius:var(--small-radius);font-size:11px;min-height:38px;display:flex;align-items:center;gap:6px;padding:8px 12px;white-space:nowrap}.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px}.settings-item{width:100%;display:flex;align-items:center;gap:12px;background:transparent;text-align:left;padding:18px 0;border-bottom:1px solid var(--line)}.settings-item:last-child{border-bottom:0;padding-bottom:0}.settings-item>.icon{width:35px;height:35px;background:var(--accent-soft);color:var(--accent);border-radius:10px}.settings-item strong{display:block;font-size:12px;font-weight:550}.settings-item small{display:block;font-size:10px;color:var(--muted);margin-top:5px}.settings-item>.icon:last-child{margin-left:auto;background:transparent;width:18px;color:var(--muted)}.settings-note{font-size:11px;color:var(--muted);line-height:1.8;margin:0 0 14px}.settings-details{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 21px}.settings-details summary{cursor:pointer;font-size:12px;display:flex;justify-content:space-between;align-items:center;list-style:none;min-height:30px}.settings-details summary::-webkit-details-marker{display:none}.settings-details[open] summary{margin-bottom:20px}.settings-details .fields{margin-bottom:14px}.settings-details summary small{color:var(--muted);font-size:10px}.settings-status{font-size:11px;line-height:1.8;color:var(--muted);margin-top:18px}.settings-status b{font-weight:500;color:var(--accent)}
+      .bottom-nav{display:none}.floating-add{display:none}.mobile-only{display:none}
+      dialog.app-dialog{padding:0;border:1px solid var(--line);border-radius:22px;width:min(530px,calc(100vw - 40px));max-height:calc(100dvh - 44px);background:var(--surface);color:var(--ink);box-shadow:0 30px 100px #031d1c26;overflow:auto;margin:auto}dialog.app-dialog::backdrop{background:#13231b73;backdrop-filter:blur(4px)}.dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 24px 16px;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:3}.dialog-heading h2{font-family:var(--display);font-size:22px;letter-spacing:-.5px;margin:4px 0 0;font-weight:650}.dialog-heading .eyebrow{font-size:9px;margin-bottom:0}.dialog-content{padding:20px 24px}.dialog-intro{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:11px;margin-bottom:16px}.dialog-intro button{font-size:10px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:16px 13px}.field{display:block;min-width:0}.field>span{font-size:11px;color:var(--muted);display:flex;gap:4px;align-items:center;margin-bottom:8px}.field input,.field select,.field textarea{display:block;width:100%;min-height:45px;background:var(--surface-alt);border:1px solid var(--line);border-radius:var(--small-radius);padding:11px 12px;color:var(--ink);outline:0;font-size:13px}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}.field input::placeholder,.field textarea::placeholder{color:var(--muted);opacity:.65}.field.full{grid-column:1/-1}.big-field input{font-size:22px;font-variant-numeric:tabular-nums;letter-spacing:-.5px;padding-block:15px;font-weight:550}.full-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px;background:var(--accent-soft);border-radius:var(--small-radius);margin:18px 0;color:var(--accent)}.full-toggle strong{font-size:12px;font-weight:550;display:block}.full-toggle small{font-size:10px;opacity:.75;display:block;margin-top:4px}.switch{position:relative;width:37px;height:23px;flex:none}.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}.switch span{display:block;width:37px;height:23px;background:var(--line);border-radius:20px;pointer-events:none}.switch span:after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px #0002;transition:transform .15s}.switch input:checked+span{background:var(--accent)}.switch input:checked+span:after{transform:translateX(14px)}.switch input:focus-visible+span{outline:2px solid var(--accent);outline-offset:3px}
+      .discount-details{border:1px solid var(--line);border-radius:var(--small-radius);padding:0 14px;margin-bottom:18px}.discount-details>summary{min-height:46px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:11px;list-style:none;color:var(--muted)}.discount-details>summary::-webkit-details-marker{display:none}.discount-details>summary .icon{color:var(--accent)}.discount-details[open]>summary{margin-bottom:8px;color:var(--ink)}.discount-details[open]>summary>.icon:last-child{transform:rotate(180deg)}.discount-details .fields{margin-bottom:14px}.price-summary{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding:14px 0;margin-top:12px}.price-summary span{display:block;color:var(--muted);font-size:9px;margin-bottom:5px}.price-summary b{font-size:13px;font-weight:600}.price-summary div:last-child b{color:var(--accent)}
+      .dialog-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;position:sticky;bottom:0;padding:16px 24px;background:var(--surface);border-top:1px solid var(--line);z-index:3}.dialog-footer small{color:var(--muted);font-size:10px}.dialog-footer .primary-button{min-width:126px;min-height:43px}.app-toast{position:fixed;z-index:20;left:50%;bottom:25px;transform:translateX(-50%);background:var(--ink);color:var(--surface);border-radius:11px;box-shadow:var(--shadow);padding:12px 16px;font-size:12px;max-width:calc(100vw - 32px);line-height:1.6;text-align:center;pointer-events:none}.spin{animation:spin 1s linear infinite}
+      :root[data-theme=paper] .hero-metric{border-color:var(--line);background-image:linear-gradient(transparent 96%,#aa8f6320 96%);background-size:100% 27px}.paper-stamp{display:none}:root[data-theme=paper] .hero-metric:after{border-radius:0;transform:rotate(35deg);opacity:.025}:root[data-theme=paper] .page-head h1{font-size:29px;font-weight:600}:root[data-theme=paper] .brand-mark{border-radius:6px}:root[data-theme=paper] .hero-value b{font-size:59px;letter-spacing:-3px}:root[data-theme=paper] .panel-heading h2{font-family:var(--display);font-size:16px}:root[data-theme=paper] .panel{border-top:2px solid var(--line)}
+      :root[data-theme=night] .hero-metric{background-image:radial-gradient(ellipse at 105% 0%,#ffffff0c,transparent 70%);border-color:#ffffff12}:root[data-theme=night] .hero-metric:after{opacity:.025}:root[data-theme=night] .hero-value b{font-weight:450}:root[data-theme=night] .chart-line{filter:drop-shadow(0 3px 5px #8ebcdb30)}:root[data-theme=night] .brand-mark{background:var(--accent-soft);color:var(--accent)}
+      :root[data-density=compact] .page-head{margin-bottom:15px}:root[data-density=compact] .hero-metric{min-height:141px;padding:17px 20px}:root[data-density=compact] .mini-metric{padding:16px}:root[data-density=compact] .panel{padding:16px}:root[data-density=compact] .receipt{padding:12px 0}:root[data-density=compact] .chart-svg{height:144px}:root[data-density=compact] .hero-value b{font-size:48px}:root[data-density=compact] .dialog-content{padding-top:16px;padding-bottom:16px}
+      @keyframes arrive{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}
+      @media(max-width:850px) and (min-width:641px){.app{grid-template-columns:156px minmax(0,1fr)}.sidebar{padding-inline:10px}.brand{margin-inline:7px}.brand-name{font-size:18px}.app-topbar{padding-inline:23px}.page{padding-inline:23px}.metrics{grid-template-columns:1.4fr 1fr 1fr;gap:10px}.hero-metric{padding:19px}.hero-value b{font-size:47px}.mini-metric{padding:16px}.mini-value{font-size:23px}.mini-foot{font-size:9px}.panel{padding:17px}.dashboard{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
+      @media(max-width:640px){.app{display:block}.sidebar{display:none}.workspace{height:100dvh}.app-topbar{height:63px;padding:0 19px;background:var(--bg);border-bottom:0}.vehicle-icon{width:32px;height:32px;border-radius:9px;background:var(--surface)}.vehicle-picker{gap:9px}.vehicle-picker strong{font-size:12px}.vehicle-picker small{font-size:9px}.avatar{width:29px;height:29px;font-size:10px}.topbar-end .primary-button{display:none}.app-main{padding-bottom:0}.page{padding:11px 19px 110px}.page-head{margin-bottom:18px}.eyebrow{font-size:9px;letter-spacing:.5px;margin-bottom:6px}.page-head h1{font-size:25px;font-weight:600}.date-pill{display:none}.metrics{grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px}.hero-metric{grid-column:1/-1;min-height:161px;padding:21px}.hero-value{margin:8px 0 11px}.hero-value b{font-size:58px;letter-spacing:-2.5px}.hero-value small{font-size:11px}.hero-bottom{font-size:10px}.hero-top{font-size:11px}.mini-metric{padding:16px;min-height:106px;gap:9px}.mini-top{font-size:10px}.mini-top svg{width:15px;height:15px}.mini-value{font-size:25px;letter-spacing:-1px}.mini-value small{font-size:10px}.mini-foot{font-size:9px}.dashboard{grid-template-columns:1fr;gap:15px}.panel{padding:18px}.panel-heading h2{font-size:13px}.panel-heading small{font-size:9px}.chart-svg{height:151px}.chart-detail{font-size:10px;padding-top:12px}.chart-detail b{font-size:12px}.chart-unit{font-size:9px}.receipt{padding:14px 0}.receipt-title{font-size:12px}.receipt-sub{font-size:10px}.receipt-amount b{font-size:14px}.overview-note{font-size:9px}.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);height:73px;padding:9px 8px 14px;z-index:4}.bottom-nav button{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;background:transparent;color:var(--muted);font-size:10px;position:relative}.bottom-nav button.active{color:var(--accent);font-weight:600}.bottom-nav button.active:before{content:"";width:31px;height:25px;position:absolute;top:1px;background:var(--accent-soft);border-radius:8px;z-index:-1}.floating-add{position:fixed;right:19px;bottom:88px;min-height:46px;padding:11px 17px;border-radius:24px;display:flex;align-items:center;gap:6px;background:var(--accent);color:var(--on-accent);box-shadow:0 5px 16px #18392426;font-size:12px;font-weight:600;z-index:5}.mobile-only{display:block}.page-sub{font-size:11px}.filter-bar{gap:8px;margin-top:20px}.filter-bar select{max-width:100px}.records-total{padding:16px;margin-bottom:19px}.record-group{padding:0 14px}.record-group .receipt{padding:16px 0}.record-group .receipt:last-child{padding-bottom:16px}.record-group .receipt-title{font-size:12px}.record-group .receipt-symbol{width:37px;height:42px}.record-odometer{font-size:9px}.car-grid{grid-template-columns:1fr}.car-art{height:104px}.sync-card{padding:19px 17px;gap:11px;flex-wrap:wrap}.sync-orb{width:42px;height:42px;border-radius:13px}.sync-card h2{font-size:14px}.sync-card p{font-size:10px}.sync-card button{width:100%;justify-content:center;margin-top:5px;min-height:40px;font-size:12px}.settings-grid{grid-template-columns:1fr}.settings-details{padding:15px 17px}.settings-details summary{font-size:11px}.settings-status{font-size:10px}.settings-item{padding:16px 0}.settings-item strong{font-size:12px}.settings-item small{font-size:10px}
+      dialog.app-dialog{width:100%;max-width:100%;max-height:calc(100dvh - 28px);margin:auto 0 0;border:0;border-radius:24px 24px 0 0}.dialog-heading{padding:20px 20px 15px}.dialog-heading h2{font-size:22px}.dialog-content{padding:17px 20px}.dialog-footer{padding:14px 20px 20px}.dialog-footer .primary-button{min-height:44px;min-width:134px}.dialog-footer small{font-size:10px}.fields{gap:14px 12px}.field>span{font-size:11px}.field input,.field select{min-height:44px;font-size:13px;padding:11px 10px}.big-field input{font-size:24px;padding-block:15px}.app-toast{bottom:88px;font-size:11px}.full-toggle{padding:13px}.discount-details{padding-inline:12px}.price-summary b{font-size:12px}.discount-details>summary{font-size:10px}
+      :root[data-density=compact] .page{padding-top:7px}:root[data-density=compact] .hero-metric{min-height:139px;padding:17px 19px}:root[data-density=compact] .hero-value{margin:5px 0 8px}:root[data-density=compact] .hero-value b{font-size:49px}:root[data-density=compact] .mini-metric{min-height:95px;padding:13px}:root[data-density=compact] .mini-value{font-size:23px}:root[data-density=compact] .chart-svg{height:136px}:root[data-density=compact] .record-group .receipt{padding:13px 0}}
+      @media(max-width:330px){.app-topbar{padding-inline:15px}.page{padding-inline:15px}.hero-metric{padding:18px}.mini-metric{padding:13px}.mini-value{font-size:23px}.mini-foot{font-size:8px}.panel{padding:15px}.receipt{gap:8px}.receipt-title{font-size:11px}.receipt-sub{font-size:9px}.receipt-amount b{font-size:13px}.hero-value b{font-size:52px}.chart-detail{font-size:9px}.chart-detail b{font-size:11px}.page-head h1{font-size:23px}.panel-heading h2{font-size:12px}.dialog-heading,.dialog-content{padding-inline:17px}.dialog-footer{padding-inline:17px}.dialog-footer .primary-button{min-width:120px}}
+      .primary-button,.secondary-button{font-size:13px}.nav-item{font-size:13px}.vehicle-picker strong{font-size:13px}.vehicle-picker small{font-size:11px}.eyebrow{font-size:11px}.hero-bottom{font-size:11px}.hero-value small{font-size:12px}.mini-top{font-size:12px}.mini-foot{font-size:11px}.mini-value small{font-size:11px}.panel-heading h2{font-size:15px}.panel-heading small,.chart-unit{font-size:11px}.chart-detail{font-size:11px}.chart-detail b{font-size:13px}.chart-axis{font-size:11px}.receipt-title,.record-group .receipt-title{font-size:14px}.receipt-sub{font-size:12px}.receipt-amount small{font-size:11px}.full-tag{font-size:10px}.record-odometer{font-size:11px}.text-button{font-size:12px}.bottom-nav button{font-size:12px}.floating-add{font-size:14px}.overview-note{font-size:11px}.field>span{font-size:12px}.field input,.field select{font-size:14px}.big-field input{font-size:24px}.full-toggle strong{font-size:13px}.full-toggle small{font-size:11px}.discount-details>summary{font-size:12px}.discount-details>summary>span{display:flex;align-items:center;gap:7px}.price-summary span{font-size:11px}.price-summary b{font-size:14px}.dialog-footer small{font-size:11px;display:flex;align-items:center;gap:5px}.settings-item strong{font-size:14px}.settings-item small{font-size:12px}.settings-note,.settings-status{font-size:12px}.sync-card p{font-size:12px}.filter-bar select{font-size:12px}.search-box input{font-size:13px}.settings-details summary{font-size:13px}.month-heading{font-size:14px}.month-heading small{font-size:12px}
+      @media(max-width:640px){.field input,.field select{font-size:16px}.big-field input{font-size:25px}.mini-top{font-size:11px}.receipt-sub{font-size:11px}.record-group .receipt-sub{flex-wrap:wrap;gap:4px 5px}.hero-bottom{font-size:11px}.chart-detail{font-size:10px}.chart-detail b{font-size:12px}.chart-axis{font-size:11px}.panel-heading h2{font-size:14px}.receipt-title{font-size:13px}.record-group .receipt-title{font-size:13px}.settings-item strong{font-size:13px}.settings-item small{font-size:11px}.month-heading small{font-size:11px}.bottom-nav{grid-template-columns:repeat(5,1fr);height:77px;padding-top:7px}.bottom-nav .nav-add{gap:3px;color:var(--accent);font-size:11px;font-weight:600}.bottom-nav .nav-add>.icon{width:38px;height:33px;border-radius:11px;background:var(--accent);color:var(--on-accent)}.floating-add{display:none}}
+      @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+    </style>
+    <div id="app-root"></div>
+    <div id="app-toast" class="app-toast" role="status" aria-live="polite" hidden></div>
+    <dialog id="record-dialog" class="app-dialog" aria-labelledby="record-title"></dialog>
+    <dialog id="vehicle-dialog" class="app-dialog" aria-labelledby="vehicle-title"></dialog>
+    <script>
+      (() => {
+        'use strict';
+        const paths = {
+          fuel:'<path d="M3 21h12M5 21V4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v17M5 10h9M17 5l3 3v9a2 2 0 0 1-4 0v-4h-2M18 6v4h2"/>',
+          overview:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+          records:'<path d="M6 3h12a1 1 0 0 1 1 1v17l-3-2-4 2-4-2-3 2V4a1 1 0 0 1 1-1ZM9 8h6M9 12h6"/>',
+          car:'<path d="m5 7 2-4h10l2 4 2 3v7H3v-7l2-3ZM5 7h14M6 12h2M16 12h2M5 17v3M19 17v3"/>',
+          cloud:'<path d="M7 18a5 5 0 0 1-1-9.9A6 6 0 0 1 17.5 7a5.5 5.5 0 0 1 .5 11H7Z"/>',
+          settings:'<path d="M12 8v4l3 2M4.8 5.5l-2 2 2 2v5l-2 2 2 2 3-1.3 4.2 2.4 4.2-2.4 3 1.3 2-2-2-2v-5l2-2-2-2-3 1.3L12 4.4 7.8 6.8l-3-1.3Z"/>',
+          check:'<path d="m5 12 4 4L19 6"/>',
+          plus:'<path d="M12 5v14M5 12h14"/>',
+          down:'<path d="m7 10 5 5 5-5"/>',
+          arrow:'<path d="M5 12h14m-5-5 5 5-5 5"/>',
+          chevron:'<path d="m9 6 6 6-6 6"/>',
+          gauge:'<path d="M3.9 18a10 10 0 1 1 16.2 0M12 12l4-5M5 13H3m18 0h-2M7 5.5l1 1.8"/><circle cx="12" cy="13" r="2"/>',
+          wallet:'<path d="M20 8V5a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15v12H5a2 2 0 0 1-2-2V6M20 12h-6v4h6"/>',
+          route:'<circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M8 5h7a4 4 0 0 1 0 8H9a3 3 0 0 0 0 6h7"/>',
+          search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+          calendar:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 10h18M8 14h2m4 0h2"/>',
+          close:'<path d="m6 6 12 12M6 18 18 6"/>',
+          leaf:'<path d="M20 3c-6 0-14 1-14 8a6 6 0 0 0 6 6c7 0 8-8 8-14ZM4 21 16 9"/>',
+          shield:'<path d="M12 3 4 6v6c0 4 8 9 8 9s8-5 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/>',
+          sync:'<path d="M20 7v5h-5M4 17v-5h5M5.5 7a8 8 0 0 1 13-2l1.5 2M4 17l1.5 2a8 8 0 0 0 13-2"/>',
+          download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
+          file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6ZM14 2v6h6M8 13h8m-8 4h5"/>',
+          discount:'<path d="m3 12 9-9h8v8l-9 10-8-9Z"/><circle cx="16.5" cy="6.5" r="1"/>',
+          clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+        };
+        const icon = (name, size = 20) => '<span class="icon" aria-hidden="true"><svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + (paths[name] || paths.fuel) + '</svg></span>';
+        const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const money = value => new Intl.NumberFormat('zh-CN', {minimumFractionDigits:2,maximumFractionDigits:2}).format(value);
+        const numeric = value => new Intl.NumberFormat('zh-CN', {maximumFractionDigits:1}).format(value);
+        const shortDate = date => Number(date.slice(5,7)) + ' 月 ' + Number(date.slice(8,10)) + ' 日';
+        const monthName = date => Number(date.slice(0,4)) + ' 年 ' + Number(date.slice(5,7)) + ' 月';
+        const demoToday = '2026-09-11';
+        let sequence = 0;
+        const cars = [
+          {id:'golf',name:'日常通勤',model:'Volkswagen Golf',plate:'沪 A · 6K280',fuelType:'95#',initialOdometer:36000},
+          {id:'rav4',name:'周末出行',model:'Toyota RAV4',plate:'沪 B · 2N516',fuelType:'92#',initialOdometer:18800}
+        ];
+        const dates = ['2026-07-24','2026-07-31','2026-08-07','2026-08-14','2026-08-21','2026-08-28','2026-09-03','2026-09-10'];
+        const volumes = [35,38.5,36,37.5,35.5,34,36.5,34.5];
+        const stations = ['中国石化 · 南丹路站','壳牌 · 中山西路站','中国石油 · 莲花路站'];
+        const records = dates.map((date,index) => ({
+          id:'golf-' + index,vehicleId:'golf',date,odometer:36000 + index * 500,
+          liters:volumes[index],amount:Number((volumes[index] * (index === 7 ? 7.4 : 7.5)).toFixed(2)),
+          pumpAmount:Number((volumes[index] * 8.1).toFixed(2)),isFull:true,station:stations[index % 3],note:''
+        }));
+        dates.slice(2).forEach((date,index) => records.push({
+          id:'rav4-' + index,vehicleId:'rav4',date,odometer:18800 + index * 470,
+          liters:[39,40.5,38.2,37.1,36.7,38.8][index],
+          amount:Number(([39,40.5,38.2,37.1,36.7,38.8][index] * 7.25).toFixed(2)),
+          pumpAmount:Number(([39,40.5,38.2,37.1,36.7,38.8][index] * 7.85).toFixed(2)),
+          isFull:true,station:stations[(index + 1) % 3],note:'周末短途'
+        }));
+        const state = {config:{theme:'forest',accent:'green',density:'relaxed',focus:'consumption'},page:'overview',vehicle:'golf',search:'',month:'all',lastSync:'9 月 10 日 20:32',dirty:false};
+        const nav = [['overview','overview','概览'],['records','records','记录'],['vehicles','car','车辆'],['settings','cloud','同步']];
+        const root = document.getElementById('app-root');
+        const recordDialog = document.getElementById('record-dialog');
+        const vehicleDialog = document.getElementById('vehicle-dialog');
+        const currentCar = () => cars.find(car => car.id === state.vehicle) || cars[0];
+        const carRecords = () => records.filter(record => record.vehicleId === state.vehicle).sort((a,b) => b.odometer - a.odometer || b.date.localeCompare(a.date));
+        function stats() {
+          const list = carRecords();
+          let previous = null, accumulated = 0;
+          const intervals = [];
+          [...list].reverse().forEach(record => {
+            if (!previous) { if (record.isFull) previous = record; return; }
+            accumulated += record.liters;
+            if (!record.isFull) return;
+            const distance = record.odometer - previous.odometer;
+            if (distance > 0) intervals.push({record,distance,liters:accumulated,value:accumulated / distance * 100});
+            previous = record;
+            accumulated = 0;
+          });
+          const distance = intervals.reduce((sum,item) => sum + item.distance,0);
+          const month = list.filter(record => record.date.startsWith('2026-09'));
+          return {list,intervals,average:distance ? intervals.reduce((sum,item) => sum + item.liters,0) / distance * 100 : 0,
+            monthCost:month.reduce((sum,item) => sum + item.amount,0),monthCount:month.length,
+            totalDistance:list.length ? Math.max(0,list[0].odometer - currentCar().initialOdometer) : 0,
+            distance,last:intervals.at(-1),cost:list.reduce((sum,item) => sum + item.amount,0)};
+        }
+        function applyAppearance() {
+          const config = state.config;
+          const palette = {
+            green:{accent:'#326349',soft:'#eaf2e5',dark:'#a6cfa7',darkSoft:'#273e32',nightHero:'#253e34'},
+            blue:{accent:'#3f6d88',soft:'#e7f0f6',dark:'#a3cede',darkSoft:'#263e4b',nightHero:'#243e4a'},
+            amber:{accent:'#946b36',soft:'#f3ead9',dark:'#e6c990',darkSoft:'#41392b',nightHero:'#3b3428'},
+            coral:{accent:'#a15f4d',soft:'#f7e9e2',dark:'#e6b1a0',darkSoft:'#44322e',nightHero:'#3d2d2a'}
+          }[config.accent];
+          const night = config.theme === 'night';
+          const paper = config.theme === 'paper';
+          const values = {
+            '--accent':night ? palette.dark : palette.accent,
+            '--accent-soft':night ? palette.darkSoft : paper ? ({green:'#e7ebdf',blue:'#e4ebec',amber:'#efe4d0',coral:'#f0e1d7'}[config.accent]) : palette.soft,
+            '--on-accent':night ? '#17272a' : '#fff',
+            '--hero':night ? palette.nightHero : paper ? ({green:'#e0e8d8',blue:'#dce5e7',amber:'#e9ddc5',coral:'#ead7cc'}[config.accent]) : palette.accent,
+            '--hero-ink':night ? '#e7f1ed' : paper ? '#453a2b' : '#fff',
+            '--hero-muted':night ? '#9bb4b6' : paper ? '#928166' : '#e1e9e0'
+          };
+          document.documentElement.dataset.theme = config.theme;
+          document.documentElement.dataset.density = config.density;
+          Object.entries(values).forEach(([key,value]) => document.documentElement.style.setProperty(key,value));
+        }
+        function announceScreen(page = state.page) {
+          parent.postMessage({source:'fuel-preview',type:'screen',page},'*');
+        }
+        function navigation(bottom) {
+          return nav.map(([page,symbol,label],index) => (bottom && index === 2 ? '<button type="button" class="nav-add" data-act="add-record">' + icon('plus',22) + '<span>记一笔</span></button>' : '') + '<button type="button" class="' + (bottom ? '' : 'nav-item ') + (state.page === page ? 'active' : '') + '" data-act="page" data-page="' + page + '"' + (state.page === page ? ' aria-current="page"' : '') + '>' + icon(symbol,bottom ? 21 : 18) + '<span>' + (bottom ? label : {overview:'行驶概览',records:'加油记录',vehicles:'我的车辆',settings:'数据与同步'}[page]) + '</span></button>').join('');
+        }
+        function renderApp() {
+          const car = currentCar();
+          root.innerHTML = '<div class="app"><aside class="sidebar"><div class="brand"><div class="brand-mark">' + icon('fuel',20) + '</div><div><div class="brand-name">油迹</div><div class="brand-en">FUEL TRACK</div></div></div><nav class="sidebar-nav" aria-label="主导航">' + navigation(false) + '</nav><div class="sidebar-bottom"><span class="saved-dot"></span>每一程，都有迹可循<small>本机记录 · 随时可查</small></div></aside><div class="workspace"><header class="app-topbar"><div class="vehicle-picker"><span class="vehicle-icon">' + icon('car',18) + '</span><div><strong>' + escape(car.name) + '</strong><small>' + escape(car.model) + '</small></div>' + icon('down',13) + '<select id="vehicle-picker" aria-label="切换车辆">' + cars.map(item => '<option value="' + escape(item.id) + '"' + (item.id === state.vehicle ? ' selected' : '') + '>' + escape(item.name) + '</option>').join('') + '</select></div><div class="topbar-end"><button class="primary-button" data-act="add-record">' + icon('plus',16) + '记一笔加油</button><span class="avatar" aria-label="示例用户">迹</span></div></header><main class="app-main" id="app-main"><div id="page" class="page"></div></main></div></div><nav class="bottom-nav" aria-label="底部导航">' + navigation(true) + '</nav>' + (state.page === 'overview' || state.page === 'records' ? '<button class="floating-add" data-act="add-record">' + icon('plus',18) + '记一笔</button>' : '');
+          renderPage();
+        }
+        function receipt(record, full = false) {
+          const badge = full ? '<span class="record-date">' + Number(record.date.slice(8,10)) + '<small>' + Number(record.date.slice(5,7)) + ' 月</small></span>' : icon('fuel',18);
+          return '<button class="receipt" data-act="edit-record" data-id="' + escape(record.id) + '" aria-label="编辑 ' + escape(record.date) + ' 的加油记录"><span class="receipt-symbol">' + badge + '</span><span class="receipt-body"><span class="receipt-title">' + escape(record.station || '加油记录') + '</span><span class="receipt-sub">' + (full ? numeric(record.liters) + ' L · ¥' + (record.amount / record.liters).toFixed(2) + '/L' : shortDate(record.date) + ' · ' + numeric(record.liters) + ' L') + (record.isFull ? '<span class="full-tag">满箱</span>' : '') + '</span>' + (full ? '<span class="record-odometer">' + numeric(record.odometer) + ' km' + (record.note ? ' · ' + escape(record.note) : '') + '</span>' : '') + '</span><span class="receipt-amount"><b class="number">¥' + money(record.amount) + '</b><small>' + (record.pumpAmount > record.amount ? '省 ¥' + money(record.pumpAmount - record.amount) : '实付金额') + '</small></span></button>';
+        }
+        function empty(title, message, add = true) {
+          return '<div class="empty">' + icon('fuel',24) + '<b>' + title + '</b><p>' + message + '</p>' + (add ? '<button class="primary-button" data-act="add-record">' + icon('plus',16) + '记录第一次加油</button>' : '') + '</div>';
+        }
+        function chart(intervals) {
+          const list = intervals.slice(-7);
+          if (!list.length) return empty('从两次满箱开始','连续记录两次满箱加油，<br>这里就会出现你的油耗趋势。',false);
+          const values = list.map(item => item.value);
+          const minimum = Math.max(0,Math.floor(Math.min(...values) - .7));
+          const maximum = Math.max(minimum + 2,Math.ceil(Math.max(...values) + .6));
+          const points = list.map((item,index) => ({x:list.length === 1 ? 169 : 31 + index * 283 / (list.length - 1),y:113 - (item.value - minimum) / (maximum - minimum) * 93,item}));
+          const path = points.map((point,index) => (index ? 'L' : 'M') + point.x.toFixed(2) + ',' + point.y.toFixed(2)).join(' ');
+          const grid = [minimum,(minimum + maximum) / 2,maximum].map(value => {
+            const y = 113 - (value - minimum) / (maximum - minimum) * 93;
+            return '<line class="chart-grid" x1="29" x2="318" y1="' + y + '" y2="' + y + '"/><text class="chart-axis" x="1" y="' + (y + 3) + '">' + numeric(value) + '</text>';
+          }).join('');
+          const dots = points.map((point,index) => '<g class="chart-point" role="button" tabindex="0" data-point="' + index + '" data-selected="' + (index === points.length - 1) + '" aria-label="' + shortDate(point.item.record.date) + '，油耗 ' + point.item.value.toFixed(1) + ' 升每百公里"><circle cx="' + point.x + '" cy="' + point.y + '" r="14" fill="transparent"/><circle class="point-ring" cx="' + point.x + '" cy="' + point.y + '" r="11"/><circle class="chart-dot" cx="' + point.x + '" cy="' + point.y + '" r="3.2"/></g>' + (index === 0 || index === points.length - 1 || points.length > 3 && index === Math.floor(points.length / 2) ? '<text class="chart-axis" text-anchor="middle" x="' + point.x + '" y="141">' + Number(point.item.record.date.slice(5,7)) + '/' + Number(point.item.record.date.slice(8,10)) + '</text>' : '')).join('');
+          const last = list.at(-1);
+          return '<div class="chart-wrapper"><svg class="chart-svg" viewBox="0 0 334 150" preserveAspectRatio="none" role="group" aria-label="最近满箱区间油耗趋势，选择数据点查看详情"><defs><linearGradient id="chart-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".17"/><stop offset="1" stop-color="var(--accent)" stop-opacity=".015"/></linearGradient></defs>' + grid + '<path d="' + path + ' L' + points.at(-1).x + ',114 L' + points[0].x + ',114 Z" fill="url(#chart-fill)"/><path class="chart-line" d="' + path + '"/>' + dots + '</svg></div><div class="chart-detail" id="chart-detail"><span>' + shortDate(last.record.date) + ' · ' + numeric(last.distance) + ' km · ' + numeric(last.liters) + ' L</span><b>' + last.value.toFixed(1) + ' L/100km</b></div>';
+        }
+        function renderOverview() {
+          const data = stats();
+          const spending = state.config.focus === 'spending';
+          const title = spending ? '每一笔，都心中有数。' : '每一程，都心中有数。';
+          const heroValue = spending ? money(data.monthCost) : data.average ? data.average.toFixed(1) : '—';
+          const secondaryValue = spending ? (data.average ? data.average.toFixed(1) : '—') : '¥' + money(data.monthCost);
+          return '<div class="page-head"><div><span class="eyebrow">2026 年 9 月 · ' + escape(currentCar().name) + '</span><h1>' + title + '</h1></div><span class="date-pill">9 月 11 日 · 星期五</span></div><div class="metrics"><article class="hero-metric"><div class="hero-top"><span class="metric-label">' + (spending ? '本月加油花费' : '平均油耗') + '</span>' + icon(spending ? 'wallet' : 'gauge',22) + '</div><div class="hero-value"><b class="number">' + heroValue + '</b><small>' + (spending ? '元' : 'L / 100 km') + '</small></div><div class="hero-bottom">' + icon(spending ? 'records' : 'leaf',13) + '<span>' + (spending ? '9 月共 ' + data.monthCount + ' 次加油 · 每笔都清楚' : data.intervals.length ? '基于 ' + data.intervals.length + ' 个满箱区间 · ' + numeric(data.distance) + ' km' : '两次满箱后，计算更准确') + '</span></div></article><article class="mini-metric"><div class="mini-top"><span>' + (spending ? '平均油耗' : '本月油费') + '</span>' + icon(spending ? 'gauge' : 'wallet',17) + '</div><div class="mini-value number">' + secondaryValue + (spending ? '<small>L/100km</small>' : '') + '</div><span class="mini-foot">' + (spending ? data.intervals.length + ' 个满箱区间' : '本月已记录 ' + data.monthCount + ' 次加油') + '</span></article><article class="mini-metric"><div class="mini-top"><span>记录里程</span>' + icon('route',17) + '</div><div class="mini-value number">' + numeric(data.totalDistance) + '<small>km</small></div><span class="mini-foot">' + (data.list.length ? '当前里程 ' + numeric(data.list[0].odometer) + ' km' : '从第一笔开始累计') + '</span></article></div><div class="dashboard"><section class="panel"><div class="panel-heading"><h2>油耗趋势</h2><span class="chart-unit">L / 100 km</span></div><div class="panel-heading"><small>最近 ' + Math.min(data.intervals.length,7) + ' 个满箱区间</small></div>' + chart(data.intervals) + '</section><section class="panel"><div class="panel-heading"><h2>最近加油</h2><button class="text-button" data-act="page" data-page="records">全部记录' + icon('chevron',12) + '</button></div><div class="recent-list">' + (data.list.length ? data.list.slice(0,3).map(item => receipt(item)).join('') : empty('第一笔记录，从这里开始','加油量、金额和里程，都会为你记好。')) + '</div></section></div><div class="overview-note">' + icon('shield',12) + '记录已保存在本机，安心出发。</div>';
+        }
+        function renderRecords() {
+          return '<div class="page-head"><div><span class="eyebrow">把每一次补给，记在这里</span><h1>加油账本</h1></div><span class="date-pill">' + escape(currentCar().fuelType) + ' · ' + escape(currentCar().name) + '</span></div><div class="filter-bar"><label class="search-box">' + icon('search',17) + '<input type="search" id="record-search" aria-label="搜索加油记录" placeholder="搜索加油站、日期或备注" value="' + escape(state.search) + '"></label><select id="month-filter" aria-label="按月份筛选">' + ['all',...new Set(carRecords().map(record => record.date.slice(0,7)))].sort((a,b) => a === 'all' ? -1 : b === 'all' ? 1 : b.localeCompare(a)).map(month => '<option value="' + month + '"' + (state.month === month ? ' selected' : '') + '>' + (month === 'all' ? '全部月份' : monthName(month)) + '</option>').join('') + '</select></div><div id="record-results"></div>';
+        }
+        function updateRecordResults() {
+          const results = document.getElementById('record-results');
+          if (!results) return;
+          const query = state.search.trim().toLowerCase();
+          const filtered = carRecords().filter(record => (state.month === 'all' || record.date.startsWith(state.month)) && (record.station + ' ' + record.date + ' ' + record.note).toLowerCase().includes(query)).sort((a,b) => b.date.localeCompare(a.date) || b.odometer - a.odometer);
+          const total = filtered.reduce((sum,record) => sum + record.amount,0);
+          const groups = new Map();
+          filtered.forEach(record => {const key = record.date.slice(0,7);if (!groups.has(key)) groups.set(key,[]);groups.get(key).push(record);});
+          results.innerHTML = '<div class="records-total"><span>' + filtered.length + ' 笔记录 · 合计实付</span><b class="number"><small>¥</small>' + money(total) + '</b></div>' + (filtered.length ? [...groups].map(([month,list]) => '<div class="month-heading"><span>' + monthName(month) + '</span><small>¥' + money(list.reduce((sum,record) => sum + record.amount,0)) + ' · ' + list.length + ' 笔</small></div><div class="record-group">' + list.map(item => receipt(item,true)).join('') + '</div>').join('') : empty(query || state.month !== 'all' ? '没有找到这笔记录' : '账本的第一页，留给你',query || state.month !== 'all' ? '试试其他关键词或月份。' : '记录第一次加油，让花费与油耗清晰起来。',!query && state.month === 'all'));
+        }
+        function renderVehicles() {
+          return '<div class="page-head"><div><span class="eyebrow">不同的车，同样用心</span><h1>我的车辆</h1></div><button class="secondary-button" data-act="add-vehicle">' + icon('plus',15) + '添加</button></div><div class="car-grid">' + cars.map(car => {
+            const list = records.filter(record => record.vehicleId === car.id);
+            const distance = list.length ? Math.max(...list.map(record => record.odometer)) - car.initialOdometer : 0;
+            const selected = car.id === state.vehicle;
+            return '<article class="car-card' + (selected ? ' selected' : '') + '"><div class="car-art">' + icon('car',62) + '<span class="car-badge">' + escape(car.fuelType) + '</span></div><div class="car-body"><h2>' + escape(car.name) + '</h2><p>' + escape(car.model) + ' · ' + escape(car.plate) + '</p><div class="car-stats"><div><span>加油记录</span><b class="number">' + list.length + ' <small>次</small></b></div><div><span>记录里程</span><b class="number">' + numeric(Math.max(0,distance)) + ' <small>km</small></b></div></div><button class="' + (selected ? 'primary-button' : 'secondary-button') + '" data-act="select-vehicle" data-id="' + escape(car.id) + '">' + icon(selected ? 'check' : 'arrow',15) + (selected ? '当前车辆 · 查看概览' : '切换到这辆车') + '</button></div></article>';
+          }).join('') + '</div><p class="settings-status">每辆车独立记录里程、加油与花费。<br>添加一辆车，也可以预览首次使用时的空白状态。</p>';
+        }
+        function renderSettings() {
+          return '<div class="page-head"><div><span class="eyebrow">记录随行，安心留存</span><h1>数据与同步</h1></div></div><section class="sync-card"><div class="sync-orb">' + icon('cloud',26) + '</div><div><h2>' + (state.dirty ? '有新记录，等待同步' : '记录已经同步') + '</h2><p>上次同步：' + escape(state.lastSync) + '<br>WebDAV · 我的云端空间</p></div><button id="sync-button" data-act="sync">' + icon('sync',14) + '立即同步</button></section><div class="settings-grid"><section class="panel"><div class="panel-heading"><h2>本地备份</h2><small>留一份安心</small></div><button class="settings-item" data-act="export-json">' + icon('file',18) + '<span><strong>导出示例 JSON</strong><small>查看完整备份的保存体验</small></span>' + icon('chevron',15) + '</button><button class="settings-item" data-act="export-csv">' + icon('download',18) + '<span><strong>导出示例 CSV</strong><small>用表格查看每一笔加油</small></span>' + icon('chevron',15) + '</button></section><section class="panel"><div class="panel-heading"><h2>本机记录</h2>' + icon('shield',17) + '</div><p class="settings-note">随手记下的每一笔，<br>都值得被好好保存。</p><div class="car-stats" style="margin-bottom:0"><div><span>车辆</span><b class="number">' + cars.length + ' <small>辆</small></b></div><div><span>加油记录</span><b class="number">' + records.length + ' <small>笔</small></b></div></div></section></div><details class="settings-details"><summary><span>WebDAV 连接设置</span><small>查看或修改</small>' + icon('down',15) + '</summary><form id="connection-form"><div class="fields"><label class="field full"><span>服务器地址</span><input type="url" value="https://dav.example.com/fuel-track/" required aria-label="WebDAV 服务器地址"></label><label class="field"><span>用户名</span><input value="fuel-track-demo" aria-label="WebDAV 用户名" autocomplete="off"></label><label class="field"><span>应用密码</span><input type="password" placeholder="填写应用密码" aria-label="WebDAV 应用密码" autocomplete="off"></label></div><button class="secondary-button" type="submit">' + icon('check',15) + '保存连接</button><p class="settings-status">此处用于体验连接表单，<b>不会向服务器发送请求</b>。</p></form></details><p class="settings-status">本页使用示例记录。你可以自由切换、试填与导出。</p>';
+        }
+        function renderPage() {
+          document.getElementById('page').innerHTML = {overview:renderOverview,records:renderRecords,vehicles:renderVehicles,settings:renderSettings}[state.page]();
+          if (state.page === 'records') updateRecordResults();
+        }
+        function setPage(page) {
+          if (!nav.some(item => item[0] === page)) return;
+          state.page = page;
+          renderApp();
+          announceScreen();
+        }
+        let toastTimer;
+        function toast(message) {
+          clearTimeout(toastTimer);
+          const element = document.getElementById('app-toast');
+          element.textContent = message;
+          element.hidden = false;
+          toastTimer = setTimeout(() => {element.hidden = true;},3200);
+        }
+        function selectPoint(index) {
+          const item = stats().intervals.slice(-7)[Number(index)];
+          const detail = document.getElementById('chart-detail');
+          if (!item || !detail) return;
+          document.querySelectorAll('[data-point]').forEach(point => {point.dataset.selected = String(point.dataset.point === String(index));});
+          detail.innerHTML = '<span>' + shortDate(item.record.date) + ' · ' + numeric(item.distance) + ' km · ' + numeric(item.liters) + ' L</span><b>' + item.value.toFixed(1) + ' L/100km</b>';
+        }
+        let editingId = null;
+        let pumpTouched = false;
+        let pumpInputSource = 'amount';
+        function openRecord(id) {
+          const record = id ? records.find(item => item.id === id) : null;
+          editingId = record ? record.id : null;
+          pumpTouched = !!record && Math.abs(record.pumpAmount - record.amount) > .001;
+          pumpInputSource = 'amount';
+          const vehicleId = record ? record.vehicleId : state.vehicle;
+          const fieldValue = key => record ? escape(record[key]) : '';
+          const unit = record && record.liters ? (record.pumpAmount / record.liters).toFixed(2) : '';
+          recordDialog.innerHTML = '<form id="record-form"><div class="dialog-heading"><div><span class="eyebrow">' + (record ? '每一笔，都清楚可查' : '记下这一站的补给') + '</span><h2 id="record-title">' + (record ? '编辑加油记录' : '记一笔加油') + '</h2></div><button class="icon-button" type="button" data-act="close-record" aria-label="关闭加油表单">' + icon('close',21) + '</button></div><div class="dialog-content"><div class="dialog-intro"><span>几项信息，就能记好一笔。</span>' + (record ? '<span>可自由试改</span>' : '<button type="button" class="text-button" data-act="sample-record">填入示例</button>') + '</div><div class="fields"><label class="field"><span>日期</span><input id="form-date" name="date" type="date" value="' + (record ? record.date : demoToday) + '" required></label><label class="field"><span>车辆</span><select id="form-vehicle" name="vehicleId">' + cars.map(car => '<option value="' + escape(car.id) + '"' + (car.id === vehicleId ? ' selected' : '') + '>' + escape(car.name) + '</option>').join('') + '</select></label><label class="field full"><span>当前里程 · km</span><input id="form-odometer" name="odometer" type="number" inputmode="decimal" step="0.1" min="0" placeholder="例如 40,000" value="' + fieldValue('odometer') + '" required></label><label class="field big-field"><span>加油量 · L</span><input id="form-liters" name="liters" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="0.00" value="' + fieldValue('liters') + '" required></label><label class="field big-field"><span>实付金额 · 元</span><input id="form-amount" name="amount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" value="' + fieldValue('amount') + '" required></label></div><label class="full-toggle"><span><strong>本次加满油箱</strong><small>两次满箱之间，油耗更准确。</small></span><span class="switch"><input name="isFull" type="checkbox"' + (!record || record.isFull ? ' checked' : '') + '><span></span></span></label><details class="discount-details" id="discount-details"' + (pumpTouched ? ' open' : '') + '><summary><span>' + icon('discount',14) + ' 有优惠？补充表显信息</span>' + icon('down',14) + '</summary><div class="fields"><label class="field"><span>表显金额 · 元</span><input id="form-pumpAmount" name="pumpAmount" type="number" inputmode="decimal" min="0" step="0.01" value="' + fieldValue('pumpAmount') + '" placeholder="自动跟随实付金额"></label><label class="field"><span>表显单价 · 元/L</span><input id="form-pumpPrice" type="number" inputmode="decimal" min="0" step="0.01" value="' + unit + '" placeholder="例如 8.10"></label></div><div class="price-summary"><div><span>表显单价</span><b id="price-pump">—</b></div><div><span>实付单价</span><b id="price-paid">—</b></div><div><span>本次节省</span><b id="price-saved">—</b></div></div></details><div class="fields"><label class="field full"><span>加油站 <small>选填</small></span><input name="station" id="form-station" value="' + fieldValue('station') + '" placeholder="记住这次补给的地方"></label><label class="field full"><span>备注 <small>选填</small></span><input name="note" value="' + fieldValue('note') + '" placeholder="路况、油品或一点随记"></label></div></div><div class="dialog-footer"><small>' + icon('shield',11) + ' 本次为交互预览</small><button type="submit" class="primary-button">' + icon('check',17) + '保存记录</button></div></form>';
+          recordDialog.showModal();
+          updatePrices();
+          announceScreen('form');
+        }
+        function numberValue(id) {
+          const value = document.getElementById(id).value;
+          return value === '' ? null : Number(value);
+        }
+        function setNumber(id,value) {
+          document.getElementById(id).value = Number.isFinite(value) ? String(Number(value.toFixed(2))) : '';
+        }
+        function recalculate(source) {
+          const liters = numberValue('form-liters');
+          const amount = numberValue('form-amount');
+          let pumpAmount = numberValue('form-pumpAmount');
+          const unit = numberValue('form-pumpPrice');
+          if (source === 'pumpAmount' || source === 'pumpPrice') {
+            pumpTouched = true;
+            pumpInputSource = source === 'pumpPrice' ? 'unit' : 'amount';
+          }
+          if (!pumpTouched && amount !== null) {
+            setNumber('form-pumpAmount',amount);
+            pumpAmount = amount;
+          }
+          if (source === 'pumpPrice') {
+            if (liters > 0 && unit !== null) setNumber('form-pumpAmount',liters * unit);
+            else if (unit > 0 && pumpAmount !== null) setNumber('form-liters',pumpAmount / unit);
+          } else if (source === 'pumpAmount') {
+            if (liters > 0 && pumpAmount !== null) setNumber('form-pumpPrice',pumpAmount / liters);
+            else if (unit > 0 && pumpAmount !== null) setNumber('form-liters',pumpAmount / unit);
+          } else if (source === 'liters' && pumpTouched && pumpInputSource === 'unit' && unit !== null && liters > 0) {
+            setNumber('form-pumpAmount',liters * unit);
+          } else if (liters > 0 && pumpAmount !== null) setNumber('form-pumpPrice',pumpAmount / liters);
+          updatePrices();
+        }
+        function updatePrices() {
+          const liters = numberValue('form-liters');
+          const paid = numberValue('form-amount');
+          const displayed = numberValue('form-pumpAmount');
+          document.getElementById('price-pump').textContent = liters > 0 && displayed !== null ? '¥' + money(displayed / liters) : '—';
+          document.getElementById('price-paid').textContent = liters > 0 && paid !== null ? '¥' + money(paid / liters) : '—';
+          document.getElementById('price-saved').textContent = displayed !== null && paid !== null ? '¥' + money(Math.max(0,displayed - paid)) : '—';
+        }
+        function fillSample() {
+          const selected = document.getElementById('form-vehicle').value;
+          const vehicle = cars.find(car => car.id === selected);
+          const lastOdometer = Math.max(vehicle.initialOdometer,...records.filter(record => record.vehicleId === selected).map(record => record.odometer));
+          document.getElementById('form-odometer').value = lastOdometer + 500;
+          document.getElementById('form-liters').value = '35.8';
+          document.getElementById('form-amount').value = '264.92';
+          document.getElementById('form-pumpAmount').value = '289.98';
+          document.getElementById('form-pumpPrice').value = '8.10';
+          document.getElementById('form-station').value = '中国石化 · 南丹路站';
+          pumpTouched = true;
+          pumpInputSource = 'unit';
+          document.getElementById('discount-details').open = true;
+          updatePrices();
+        }
+        function saveRecord(form) {
+          const data = new FormData(form);
+          const liters = Number(data.get('liters'));
+          const amount = Number(data.get('amount'));
+          const odometer = Number(data.get('odometer'));
+          const rawPump = data.get('pumpAmount');
+          const pumpAmount = rawPump === '' ? amount : Number(rawPump);
+          if (![liters,amount,odometer,pumpAmount].every(Number.isFinite) || liters <= 0 || Math.min(amount,odometer,pumpAmount) < 0) {
+            toast('请检查里程、升数和金额。');return;
+          }
+          const vehicleId = String(data.get('vehicleId'));
+          if (!cars.some(car => car.id === vehicleId)) {toast('请选择一辆车。');return;}
+          const item = {id:editingId || 'preview-record-' + (++sequence),vehicleId,date:String(data.get('date')),odometer,liters,amount,pumpAmount,isFull:data.get('isFull') === 'on',station:String(data.get('station') || '').trim(),note:String(data.get('note') || '').trim()};
+          const index = records.findIndex(record => record.id === editingId);
+          if (index >= 0) records[index] = item;else records.push(item);
+          state.vehicle = vehicleId;state.dirty = true;state.search = '';state.month = 'all';
+          recordDialog.close();
+          renderApp();
+          announceScreen();
+          toast('预览记录已保存，统计已更新。');
+        }
+        function openVehicle() {
+          vehicleDialog.innerHTML = '<form id="vehicle-form"><div class="dialog-heading"><div><span class="eyebrow">为新的旅程，留一个位置</span><h2 id="vehicle-title">添加一辆车</h2></div><button type="button" class="icon-button" data-act="close-vehicle" aria-label="关闭车辆表单">' + icon('close',20) + '</button></div><div class="dialog-content"><div class="fields"><label class="field full"><span>给它起个名字</span><input name="name" placeholder="例如：城市漫游" required maxlength="24"></label><label class="field full"><span>车型 · 选填</span><input name="model" placeholder="例如：Honda Civic" maxlength="40"></label><label class="field"><span>燃油标号</span><select name="fuelType"><option>92#</option><option>95#</option><option>98#</option><option>柴油</option></select></label><label class="field"><span>初始里程 · km</span><input name="initialOdometer" type="number" inputmode="decimal" min="0" step="0.1" value="0" required></label></div></div><div class="dialog-footer"><small>体验新车辆的初始界面</small><button class="primary-button" type="submit">' + icon('check',16) + '添加车辆</button></div></form>';
+          vehicleDialog.showModal();
+        }
+        function download(content,name,type) {
+          const url = URL.createObjectURL(new Blob([content],{type}));
+          const link = document.createElement('a');
+          link.href = url;link.download = name;document.body.append(link);link.click();link.remove();
+          setTimeout(() => URL.revokeObjectURL(url),1200);
+        }
+        function exportRecords(format) {
+          if (format === 'json') {
+            download(JSON.stringify({kind:'fuel-track-design-preview',description:'油迹界面预览的示例数据',vehicles:cars,records},null,2),'fuel-track-preview-data.json','application/json;charset=utf-8');
+          } else {
+            const cell = value => '"' + String(value).replace(/"/g,'""') + '"';
+            const rows = records.map(record => [cars.find(car => car.id === record.vehicleId)?.name || '',record.date,record.odometer,record.liters,record.pumpAmount,record.amount,record.station,record.note].map(cell).join(','));
+            download('\uFEFF车辆,日期,里程(km),加油量(L),表显金额(元),实付金额(元),加油站,备注\r\n' + rows.join('\r\n'),'fuel-track-preview-records.csv','text/csv;charset=utf-8');
+          }
+          toast('示例文件已导出。');
+        }
+        document.addEventListener('click',event => {
+          const point = event.target.closest('[data-point]');
+          if (point) {selectPoint(point.dataset.point);return;}
+          const button = event.target.closest('[data-act]');
+          if (!button) return;
+          switch (button.dataset.act) {
+            case 'page':setPage(button.dataset.page);break;
+            case 'add-record':openRecord();break;
+            case 'edit-record':openRecord(button.dataset.id);break;
+            case 'close-record':recordDialog.close();break;
+            case 'sample-record':fillSample();break;
+            case 'add-vehicle':openVehicle();break;
+            case 'close-vehicle':vehicleDialog.close();break;
+            case 'select-vehicle':state.vehicle = button.dataset.id;state.search = '';state.month = 'all';setPage('overview');break;
+            case 'export-json':exportRecords('json');break;
+            case 'export-csv':exportRecords('csv');break;
+            case 'sync':
+              button.disabled = true;
+              button.innerHTML = '<span class="spin">' + icon('sync',14) + '</span>同步中';
+              setTimeout(() => {state.lastSync = '刚刚';state.dirty = false;renderApp();toast('同步效果演示完成，未发送网络请求。');},650);
+              break;
+          }
+        });
+        document.addEventListener('input',event => {
+          const id = event.target.id;
+          if (id === 'record-search') {state.search = event.target.value;updateRecordResults();}
+          const calculations = {'form-liters':'liters','form-amount':'amount','form-pumpAmount':'pumpAmount','form-pumpPrice':'pumpPrice'};
+          if (calculations[id]) recalculate(calculations[id]);
+        });
+        document.addEventListener('change',event => {
+          if (event.target.id === 'vehicle-picker') {state.vehicle = event.target.value;state.search = '';state.month = 'all';renderApp();}
+          if (event.target.id === 'month-filter') {state.month = event.target.value;updateRecordResults();}
+        });
+        document.addEventListener('submit',event => {
+          event.preventDefault();
+          if (event.target.id === 'record-form') saveRecord(event.target);
+          if (event.target.id === 'connection-form') toast('连接表单已试填，本预览不会连接服务器。');
+          if (event.target.id === 'vehicle-form') {
+            const values = new FormData(event.target);
+            const name = String(values.get('name') || '').trim();
+            if (!name) {toast('给这辆车起一个名字吧。');return;}
+            const car = {id:'preview-car-' + (++sequence),name,model:String(values.get('model') || '').trim() || '我的爱车',plate:'车牌未设置',fuelType:String(values.get('fuelType')),initialOdometer:Number(values.get('initialOdometer'))};
+            cars.push(car);state.vehicle = car.id;state.search = '';state.month = 'all';state.dirty = true;
+            vehicleDialog.close();setPage('overview');toast('车辆已添加，可以开始记录第一笔加油。');
+          }
+        });
+        document.addEventListener('pointerover',event => {
+          const point = event.target.closest('[data-point]');
+          if (point) selectPoint(point.dataset.point);
+        });
+        document.addEventListener('focusin',event => {
+          const point = event.target.closest('[data-point]');
+          if (point) selectPoint(point.dataset.point);
+        });
+        document.addEventListener('keydown',event => {
+          const point = event.target.closest('[data-point]');
+          if (point && (event.key === 'Enter' || event.key === ' ')) {event.preventDefault();selectPoint(point.dataset.point);}
+        });
+        [recordDialog,vehicleDialog].forEach(dialog => {
+          dialog.addEventListener('click',event => {
+            if (event.target !== dialog) return;
+            const bounds = dialog.getBoundingClientRect();
+            if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
+          });
+        });
+        recordDialog.addEventListener('close',() => {if (!recordDialog.open) announceScreen();});
+        window.addEventListener('message',event => {
+          if (event.source !== parent || event.data?.source !== 'fuel-studio') return;
+          if (event.data.type === 'config') {
+            const config = event.data.config;
+            if (!config || !['forest','paper','night'].includes(config.theme) || !['green','blue','amber','coral'].includes(config.accent) || !['relaxed','compact'].includes(config.density) || !['consumption','spending'].includes(config.focus)) return;
+            const changeFocus = state.config.focus !== config.focus;
+            state.config = {...config};applyAppearance();
+            if (changeFocus && state.page === 'overview') renderPage();
+          }
+          if (event.data.type === 'screen') {
+            if (recordDialog.open) recordDialog.close();
+            if (vehicleDialog.open) vehicleDialog.close();
+            if (event.data.page === 'form') openRecord();else setPage(event.data.page);
+          }
+        });
+        applyAppearance();renderApp();
+        parent.postMessage({source:'fuel-preview',type:'ready'},'*');
+      })();
+    </script>
+  </template>
+  <script>
+    (() => {
+      'use strict';
+      const symbols = {
+        fuel:'<path d="M3 21h12M5 21V4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v17M5 10h9M17 5l3 3v9a2 2 0 0 1-4 0v-4h-2M18 6v4h2"/>',
+        reset:'<path d="M3 5v5h5M3.5 10A9 9 0 1 1 5 18"/>',
+        check:'<path d="m5 12 4 4L19 6"/>',
+        phone:'<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4"/>',
+        desktop:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M12 17v4m-4 0h8"/>',
+        compare:'<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/>',
+        arrow:'<path d="M5 12h14m-5-5 5 5-5 5"/>',
+        plus:'<path d="M12 5v14M5 12h14"/>',
+        copy:'<rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V3H4v13h4"/>'
+      };
+      const icon = (name,size = 16) => '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (symbols[name] || '') + '</svg>';
+      document.querySelectorAll('[data-icon]').forEach(element => {element.innerHTML = icon(element.dataset.icon,element.closest('.studio-logo') ? 23 : element.closest('.swatch') ? 14 : 15);});
+      const themes = {
+        forest:{name:'松间',code:'A',accent:'green',en:'CALM, BY NATURE.',title:'把日常，<br>记得清清楚楚。',description:'柔和的灰绿底色，让每一个数字都有呼吸的空间。',detailTitle:'数字先行，层次分明',detail:'自然的配色、柔和的圆角，适合每天轻松打开。',character:'清爽自然，浅底卡片与柔和圆角'},
+        paper:{name:'纸本',code:'B',accent:'amber',en:'EVERY MILE, A STORY.',title:'一页账本，<br>一段好好走过的路。',description:'像翻开一本随车手账，温暖、安静，也井井有条。',detailTitle:'纸张底色，书卷气质',detail:'暖白与琥珀色，衬线标题和更克制的卡片边角。',character:'温暖纸张质感，衬线标题与克制边角'},
+        night:{name:'夜航',code:'C',accent:'blue',en:'A QUIETER KIND OF DRIVE.',title:'安静下来，<br>让数字发光。',description:'深色仪表与柔和强调色，在夜晚也保留清晰的秩序。',detailTitle:'深色底，清晰的光感',detail:'深石墨底色，轻盈的线条，让数据成为视觉中心。',character:'深色仪表质感，石墨底色与柔和高亮'}
+      };
+      const accents = {green:'松绿',blue:'湖蓝',amber:'琥珀',coral:'陶红'};
+      const densities = {relaxed:'舒展留白',compact:'紧凑高效'};
+      const focuses = {consumption:'油耗表现',spending:'每月花费'};
+      const defaults = {theme:'forest',accent:'green',density:'relaxed',focus:'consumption',view:'phone'};
+      const storageKey = 'fuel-track-design-explorer-v1';
+      let state = {...defaults};
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+        if (saved && themes[saved.theme] && accents[saved.accent] && densities[saved.density] && focuses[saved.focus]) {
+          state = {...defaults,...saved,view:['phone','desktop','compare'].includes(saved.view) ? saved.view : 'phone'};
+        }
+      } catch {}
+      const frame = document.getElementById('app-preview');
+      const compareFrames = [...document.querySelectorAll('[data-compare]')];
+      const allFrames = [frame,...compareFrames];
+      const ready = new Set();
+      const canvas = document.getElementById('canvas');
+      const choiceDialog = document.getElementById('choice-dialog');
+      let currentPage = 'overview';
+      let notes = '';
+      let toastTimer;
+      function savePreferences() {
+        try {localStorage.setItem(storageKey,JSON.stringify(state));} catch {}
+      }
+      function configFor(target) {
+        if (!target.dataset.compare) return {theme:state.theme,accent:state.accent,density:state.density,focus:state.focus};
+        const theme = target.dataset.compare;
+        return {theme,accent:themes[theme].accent,density:state.density,focus:state.focus};
+      }
+      function sendConfig(target) {
+        if (ready.has(target)) target.contentWindow.postMessage({source:'fuel-studio',type:'config',config:configFor(target)},'*');
+      }
+      const previewDocument = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>油迹 · 交互预览</title></head><body>' + document.getElementById('app-template').innerHTML + '</body></html>';
+      function ensureCompareFrames() {
+        compareFrames.forEach(target => {if (!target.srcdoc) target.srcdoc = previewDocument;});
+      }
+      function renderControls() {
+        const theme = themes[state.theme];
+        document.querySelectorAll('.theme-option').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.theme === state.theme)));
+        document.querySelectorAll('[data-accent]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.accent === state.accent)));
+        document.querySelectorAll('[data-density]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.density === state.density)));
+        document.querySelectorAll('[data-focus]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.focus === state.focus)));
+        document.querySelectorAll('[data-view]').forEach(button => {if (button.tagName === 'BUTTON') button.setAttribute('aria-pressed',String(button.dataset.view === state.view));});
+        document.getElementById('accent-label').textContent = accents[state.accent];
+        document.getElementById('current-theme').textContent = state.view === 'compare' ? '三种方向' : theme.name;
+        document.getElementById('canvas-direction').textContent = state.view === 'compare' ? 'THREE DIRECTIONS / 同一组数据，不同的气质' : 'DIRECTION ' + theme.code + ' / ' + theme.name;
+        document.getElementById('canvas-device').textContent = {phone:'MOBILE EXPERIENCE',desktop:'DESKTOP EXPERIENCE',compare:'SIDE BY SIDE'}[state.view];
+        document.getElementById('notes-en').textContent = theme.en;
+        document.getElementById('notes-title').innerHTML = theme.title;
+        document.getElementById('notes-description').textContent = theme.description;
+        document.getElementById('notes-detail-title').textContent = theme.detailTitle;
+        document.getElementById('notes-detail-description').textContent = theme.detail;
+        document.getElementById('current-combination').textContent = theme.name + ' / ' + accents[state.accent] + ' / ' + densities[state.density] + ' / ' + (state.focus === 'consumption' ? '油耗优先' : '花费优先');
+        canvas.dataset.view = state.view;
+        document.getElementById('single-preview').hidden = state.view === 'compare';
+        document.getElementById('comparison').hidden = state.view !== 'compare';
+        document.getElementById('canvas-caption').textContent = state.view === 'compare' ? '每款使用推荐配色。点击页签可同时切换；窄屏可左右滑动比较。' : state.view === 'desktop' && window.innerWidth < 790 ? '左右滑动查看完整桌面布局，也可以回到手机模式。' : '可点击、可切换、可试填。所有数据均为预览示例。';
+        if (state.view === 'compare') ensureCompareFrames();
+        allFrames.forEach(sendConfig);
+        if (choiceDialog.open) updateChoice();
+        savePreferences();
+      }
+      function setPage(page) {
+        currentPage = page;
+        allFrames.forEach(target => {
+          if (ready.has(target)) target.contentWindow.postMessage({source:'fuel-studio',type:'screen',page},'*');
+        });
+        updatePageButtons();
+      }
+      function updatePageButtons() {
+        document.querySelectorAll('[data-screen]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.screen === currentPage)));
+      }
+      function notify(message) {
+        clearTimeout(toastTimer);
+        const element = document.getElementById('studio-toast');
+        element.textContent = message;element.hidden = false;
+        toastTimer = setTimeout(() => {element.hidden = true;},3000);
+      }
+      function selectionText() {
+        const theme = themes[state.theme];
+        return '我选择油迹方案 ' + theme.code + '「' + theme.name + '」。\n' +
+          '整体气质：' + theme.character + '。\n' +
+          '强调色：' + accents[state.accent] + '；内容密度：' + densities[state.density] + '。\n' +
+          '首页优先展示：' + focuses[state.focus] + '。\n' +
+          '希望先优化：首页、加油表单、加油记录，并兼顾手机与桌面。\n' +
+          (notes.trim() ? '\n补充想法：' + notes.trim() : '');
+      }
+      function updateChoice() {
+        const theme = themes[state.theme];
+        const fields = [['整体风格',theme.code + ' · ' + theme.name],['强调色',accents[state.accent]],['内容密度',densities[state.density]],['首页重点',focuses[state.focus]]];
+        document.getElementById('choice-summary').innerHTML = fields.map(([label,value]) => '<div><span>' + label + '</span><b>' + value + '</b></div>').join('');
+        document.getElementById('choice-text').value = selectionText();
+        document.getElementById('copy-status').textContent = '';
+      }
+      function openChoice() {
+        updateChoice();
+        if (!choiceDialog.open) choiceDialog.showModal();
+      }
+      async function copyChoice() {
+        const content = selectionText();
+        let copied = false;
+        if (navigator.clipboard && window.isSecureContext) {
+          try {await navigator.clipboard.writeText(content);copied = true;} catch {}
+        }
+        if (!copied) {
+          const textarea = document.getElementById('choice-text');
+          textarea.focus();textarea.select();textarea.setSelectionRange(0,textarea.value.length);
+          try {copied = document.execCommand('copy');} catch {}
+        }
+        document.getElementById('copy-status').textContent = copied ? '已复制。粘贴回对话，我们就按这个方向继续。' : '文本已选中，请按 ⌘C / Ctrl+C 复制，或下载选择文件。';
+      }
+      function downloadChoice() {
+        const url = URL.createObjectURL(new Blob(['\uFEFF' + selectionText()],{type:'text/plain;charset=utf-8'}));
+        const link = document.createElement('a');
+        link.href = url;link.download = '油迹-界面偏好-' + themes[state.theme].code + '.txt';
+        document.body.append(link);link.click();link.remove();
+        setTimeout(() => URL.revokeObjectURL(url),1200);
+        document.getElementById('copy-status').textContent = '选择文件已下载，也可以直接复制文字回对话。';
+      }
+      window.addEventListener('message',event => {
+        if (event.data?.source !== 'fuel-preview') return;
+        const target = allFrames.find(item => item.contentWindow === event.source);
+        if (!target) return;
+        if (event.data.type === 'ready') {
+          ready.add(target);sendConfig(target);
+          if (currentPage !== 'overview') target.contentWindow.postMessage({source:'fuel-studio',type:'screen',page:currentPage},'*');
+          if (target === frame) document.documentElement.dataset.previewReady = 'true';
+        }
+        if (event.data.type === 'screen' && target === frame) {currentPage = event.data.page;updatePageButtons();}
+      });
+      document.querySelectorAll('.theme-option').forEach(button => button.addEventListener('click',() => {
+        state.theme = button.dataset.theme;state.accent = themes[state.theme].accent;renderControls();
+      }));
+      document.querySelectorAll('[data-choose]').forEach(button => button.addEventListener('click',() => {
+        state.theme = button.dataset.choose;state.accent = themes[state.theme].accent;state.view = 'phone';renderControls();
+        notify('已选择「' + themes[state.theme].name + '」，可以继续微调或生成偏好摘要。');
+      }));
+      ['accent','density','focus'].forEach(key => document.querySelectorAll('[data-' + key + ']').forEach(button => button.addEventListener('click',() => {
+        state[key] = button.dataset[key];renderControls();
+      })));
+      document.querySelectorAll('button[data-view]').forEach(button => button.addEventListener('click',() => {
+        state.view = button.dataset.view;renderControls();
+      }));
+      document.querySelectorAll('[data-screen]').forEach(button => button.addEventListener('click',() => setPage(button.dataset.screen)));
+      document.getElementById('try-record').addEventListener('click',() => setPage('form'));
+      document.getElementById('open-choice').addEventListener('click',openChoice);
+      document.getElementById('close-choice').addEventListener('click',() => choiceDialog.close());
+      document.getElementById('copy-choice').addEventListener('click',copyChoice);
+      document.getElementById('download-choice').addEventListener('click',downloadChoice);
+      document.getElementById('choice-note').addEventListener('input',event => {notes = event.target.value;updateChoice();});
+      document.getElementById('reset-design').addEventListener('click',() => {
+        state = {...defaults};renderControls();setPage('overview');notify('已恢复「松间」推荐搭配。');
+      });
+      choiceDialog.addEventListener('click',event => {
+        if (event.target !== choiceDialog) return;
+        const bounds = choiceDialog.getBoundingClientRect();
+        if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) choiceDialog.close();
+      });
+      frame.srcdoc = previewDocument;
+      renderControls();
+    })();
+  </script>
+</body>
+</html>
