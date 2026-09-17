@@ -23,6 +23,22 @@
 > [!NOTE]
 > 项目目前处于早期开发阶段（`0.1.x`）。数据结构与交互仍可能调整，重要记录建议定期导出 JSON 备份。
 
+## 界面预览
+
+<p align="center">
+  <img src="./docs/screenshots/overview-desktop.png" width="100%" alt="油迹桌面端行驶概览，展示平均油耗、月度费用、里程、油耗趋势和最近加油记录" />
+</p>
+
+<p align="center">
+  <img src="./docs/screenshots/overview-mobile.png" width="32%" alt="油迹移动端行驶概览" />
+  &nbsp;&nbsp;
+  <img src="./docs/screenshots/records-mobile.png" width="32%" alt="油迹移动端加油账本" />
+</p>
+
+<p align="center">
+  <sub>桌面端数据概览 · 移动端概览与加油账本</sub>
+</p>
+
 ## 功能一览
 
 | 记录与分析 | 数据与同步 | 多端体验 |
