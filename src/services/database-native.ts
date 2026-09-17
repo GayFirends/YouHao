@@ -15,7 +15,7 @@ const VEHICLE_UPSERT = `
   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   ON CONFLICT(id) DO UPDATE SET
     name = excluded.name, plate = excluded.plate, fuelType = excluded.fuelType,
-    initialOdometer = excluded.initialOdometer, updatedAt = excluded.updatedAt,
+    initialOdometer = excluded.initialOdometer, createdAt = excluded.createdAt, updatedAt = excluded.updatedAt,
     deletedAt = excluded.deletedAt
 `
 
@@ -29,7 +29,7 @@ const RECORD_UPSERT = `
     liters = excluded.liters, amount = excluded.amount, pumpAmount = excluded.pumpAmount,
     pricePerLiter = excluded.pricePerLiter,
     isFull = excluded.isFull, station = excluded.station, note = excluded.note,
-    updatedAt = excluded.updatedAt, deletedAt = excluded.deletedAt
+    createdAt = excluded.createdAt, updatedAt = excluded.updatedAt, deletedAt = excluded.deletedAt
 `
 
 let connection: SQLiteDBConnection

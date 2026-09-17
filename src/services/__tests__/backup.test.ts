@@ -3,6 +3,22 @@ import { parseBackup, recordsToCsv } from '../backup'
 import type { FuelRecord, Vehicle } from '../../types'
 
 describe('backup helpers', () => {
+  it('normalizes timezone offsets and timestamp precision when importing a backup', () => {
+    const payload = parseBackup(JSON.stringify({
+      version: 1, exportedAt: '2026-09-15T08:00:00+08:00', records: [],
+      vehicles: [{
+        id: 'v1', name: '测试车', plate: '', fuelType: '92#', initialOdometer: 0,
+        createdAt: '2026-09-15T00:00:00Z', updatedAt: '2026-09-15T08:00:00+08:00',
+        deletedAt: '2026-09-15T00:00:00.000Z',
+      }],
+    }))
+    expect(payload.exportedAt).toBe('2026-09-15T00:00:00.000Z')
+    expect(payload.vehicles[0]).toMatchObject({
+      createdAt: '2026-09-15T00:00:00.000Z', updatedAt: '2026-09-15T00:00:00.000Z',
+      deletedAt: '2026-09-15T00:00:00.000Z',
+    })
+  })
+
   it('rejects unsupported JSON data', () => {
     expect(() => parseBackup('{"version":2}')).toThrow('仅支持版本 1')
   })

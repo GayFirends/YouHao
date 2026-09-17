@@ -1,65 +1,13 @@
-import initSqlJs, { type Database, type SqlValue } from 'sql.js'
+import initSqlJs, { type Database, type SqlJsStatic, type SqlValue } from 'sql.js'
 import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url'
 import type { DatabaseAdapter } from './database-adapter'
 import type { FuelRecord, SyncPayload, Vehicle } from '../types'
 import { shouldAcceptRemote } from './conflict-resolution'
+import { createDatabaseStorage, SnapshotConflictError } from './database-storage'
 
 const LEGACY_DB_KEY = 'fuel-track-sqlite-v1'
-const STORAGE_NAME = 'fuel-track-storage'
-const STORAGE_VERSION = 1
-const STORAGE_STORE = 'databases'
-const STORAGE_KEY = 'main'
 const SCHEMA_VERSION = 3
-
-let db: Database
-let storagePromise: Promise<IDBDatabase> | undefined
-let persistenceQueue = Promise.resolve()
-
-function openStorage(): Promise<IDBDatabase> {
-  if (!('indexedDB' in globalThis)) return Promise.reject(new Error('当前环境不支持 IndexedDB'))
-  if (storagePromise) return storagePromise
-
-  storagePromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open(STORAGE_NAME, STORAGE_VERSION)
-    request.onupgradeneeded = () => {
-      if (!request.result.objectStoreNames.contains(STORAGE_STORE)) request.result.createObjectStore(STORAGE_STORE)
-    }
-    request.onsuccess = () => {
-      request.result.onversionchange = () => request.result.close()
-      resolve(request.result)
-    }
-    request.onerror = () => reject(request.error || new Error('无法打开本地数据库存储'))
-    request.onblocked = () => reject(new Error('数据库升级被其他页面阻止，请关闭其他油迹页面后重试'))
-  })
-  return storagePromise
-}
-
-async function readDatabaseBytes(): Promise<Uint8Array | null> {
-  const storage = await openStorage()
-  return new Promise((resolve, reject) => {
-    const transaction = storage.transaction(STORAGE_STORE, 'readonly')
-    const request = transaction.objectStore(STORAGE_STORE).get(STORAGE_KEY)
-    request.onsuccess = () => {
-      const value = request.result
-      if (!value) resolve(null)
-      else if (value instanceof Uint8Array) resolve(value)
-      else if (value instanceof ArrayBuffer) resolve(new Uint8Array(value))
-      else reject(new Error('本地数据库文件格式无效'))
-    }
-    request.onerror = () => reject(request.error || new Error('读取本地数据库失败'))
-  })
-}
-
-async function writeDatabaseBytes(bytes: Uint8Array): Promise<void> {
-  const storage = await openStorage()
-  await new Promise<void>((resolve, reject) => {
-    const transaction = storage.transaction(STORAGE_STORE, 'readwrite', { durability: 'strict' })
-    transaction.objectStore(STORAGE_STORE).put(bytes, STORAGE_KEY)
-    transaction.oncomplete = () => resolve()
-    transaction.onerror = () => reject(transaction.error || new Error('保存本地数据库失败'))
-    transaction.onabort = () => reject(transaction.error || new Error('保存本地数据库已中止'))
-  })
-}
+const MAX_WRITE_ATTEMPTS = 5
 
 function legacyDatabaseBytes(): Uint8Array | null {
   const stored = localStorage.getItem(LEGACY_DB_KEY)
@@ -72,14 +20,7 @@ function legacyDatabaseBytes(): Uint8Array | null {
   }
 }
 
-function persist(): Promise<void> {
-  const snapshot = db.export().slice()
-  const operation = persistenceQueue.then(() => writeDatabaseBytes(snapshot))
-  persistenceQueue = operation.catch(() => undefined)
-  return operation
-}
-
-function rows<T>(sql: string, params: SqlValue[] = []): T[] {
+function rows<T>(db: Database, sql: string, params: SqlValue[] = []): T[] {
   const statement = db.prepare(sql)
   try {
     statement.bind(params)
@@ -91,7 +32,7 @@ function rows<T>(sql: string, params: SqlValue[] = []): T[] {
   }
 }
 
-function runTransaction(work: () => void) {
+function runTransaction(db: Database, work: () => void) {
   db.run('BEGIN IMMEDIATE')
   try {
     work()
@@ -102,18 +43,18 @@ function runTransaction(work: () => void) {
   }
 }
 
-function upsertVehicle(vehicle: Vehicle) {
+function upsertVehicle(db: Database, vehicle: Vehicle) {
   db.run(`
     INSERT INTO vehicles (id, name, plate, fuelType, initialOdometer, createdAt, updatedAt, deletedAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       name = excluded.name, plate = excluded.plate, fuelType = excluded.fuelType,
-      initialOdometer = excluded.initialOdometer, updatedAt = excluded.updatedAt,
+      initialOdometer = excluded.initialOdometer, createdAt = excluded.createdAt, updatedAt = excluded.updatedAt,
       deletedAt = excluded.deletedAt
   `, [vehicle.id, vehicle.name, vehicle.plate, vehicle.fuelType, vehicle.initialOdometer, vehicle.createdAt, vehicle.updatedAt, vehicle.deletedAt])
 }
 
-function upsertRecord(record: FuelRecord) {
+function upsertRecord(db: Database, record: FuelRecord) {
   db.run(`
     INSERT INTO fuel_records (
       id, vehicleId, date, odometer, liters, amount, pumpAmount, pricePerLiter, isFull,
@@ -124,15 +65,15 @@ function upsertRecord(record: FuelRecord) {
       liters = excluded.liters, amount = excluded.amount, pumpAmount = excluded.pumpAmount,
       pricePerLiter = excluded.pricePerLiter,
       isFull = excluded.isFull, station = excluded.station, note = excluded.note,
-      updatedAt = excluded.updatedAt, deletedAt = excluded.deletedAt
+      createdAt = excluded.createdAt, updatedAt = excluded.updatedAt, deletedAt = excluded.deletedAt
   `, [record.id, record.vehicleId, record.date, record.odometer, record.liters, record.amount, record.pumpAmount, record.pricePerLiter, record.isFull ? 1 : 0, record.station, record.note, record.createdAt, record.updatedAt, record.deletedAt])
 }
 
-function migrateSchema() {
-  const version = Number(rows<{ user_version: number }>('PRAGMA user_version')[0]?.user_version || 0)
+function migrateSchema(db: Database) {
+  const version = Number(rows<{ user_version: number }>(db, 'PRAGMA user_version')[0]?.user_version || 0)
   if (version > SCHEMA_VERSION) throw new Error('本地数据库由更高版本的油迹创建，请升级应用')
 
-  runTransaction(() => {
+  runTransaction(db, () => {
     if (version < 1) {
       db.run(`
         CREATE TABLE IF NOT EXISTS vehicles (
@@ -185,36 +126,11 @@ function migrateSchema() {
   db.run('PRAGMA foreign_keys = ON')
 }
 
-function assertDatabaseIntegrity() {
-  const result = rows<{ quick_check: string }>('PRAGMA quick_check')[0]?.quick_check
+function assertDatabaseIntegrity(db: Database) {
+  const result = rows<{ quick_check: string }>(db, 'PRAGMA quick_check')[0]?.quick_check
   if (result !== 'ok') throw new Error(`本地 SQLite 数据库完整性检查失败：${result || '未知错误'}`)
-  const foreignKeyErrors = rows<Record<string, unknown>>('PRAGMA foreign_key_check')
+  const foreignKeyErrors = rows<Record<string, unknown>>(db, 'PRAGMA foreign_key_check')
   if (foreignKeyErrors.length) throw new Error('本地数据库存在引用不到车辆的加油记录，请从备份恢复或联系维护者')
-}
-
-async function init() {
-  const SQL = await initSqlJs({ locateFile: () => wasmUrl })
-  const indexedDbBytes = await readDatabaseBytes()
-  const legacyBytes = indexedDbBytes ? null : legacyDatabaseBytes()
-  const storedBytes = indexedDbBytes || legacyBytes
-
-  try {
-    db = storedBytes ? new SQL.Database(storedBytes) : new SQL.Database()
-    if (storedBytes) assertDatabaseIntegrity()
-    migrateSchema()
-    assertDatabaseIntegrity()
-  } catch (error) {
-    db?.close()
-    throw error
-  }
-
-  if (!storedBytes) {
-    const now = new Date().toISOString()
-    upsertVehicle({ id: crypto.randomUUID(), name: '我的车辆', plate: '', fuelType: '92#', initialOdometer: 0, createdAt: now, updatedAt: now, deletedAt: null })
-  }
-
-  await persist()
-  if (legacyBytes) localStorage.removeItem(LEGACY_DB_KEY)
 }
 
 function mapVehicle(row: Record<string, unknown>): Vehicle {
@@ -225,56 +141,146 @@ function mapRecord(row: Record<string, unknown>): FuelRecord {
   return { ...(row as unknown as FuelRecord), isFull: Boolean(row.isFull) }
 }
 
-function getVehicles(includeDeleted = false) {
-  return rows<Record<string, unknown>>(`SELECT * FROM vehicles ${includeDeleted ? '' : 'WHERE deletedAt IS NULL'} ORDER BY createdAt`).map(mapVehicle)
+function getVehicles(db: Database, includeDeleted = false) {
+  return rows<Record<string, unknown>>(db, `SELECT * FROM vehicles ${includeDeleted ? '' : 'WHERE deletedAt IS NULL'} ORDER BY createdAt`).map(mapVehicle)
 }
 
-function getRecords(includeDeleted = false) {
-  return rows<Record<string, unknown>>(`SELECT * FROM fuel_records ${includeDeleted ? '' : 'WHERE deletedAt IS NULL'} ORDER BY date DESC, odometer DESC`).map(mapRecord)
+function getRecords(db: Database, includeDeleted = false) {
+  return rows<Record<string, unknown>>(db, `SELECT * FROM fuel_records ${includeDeleted ? '' : 'WHERE deletedAt IS NULL'} ORDER BY date DESC, odometer DESC`).map(mapRecord)
 }
 
-export const webDatabase: DatabaseAdapter = {
-  init,
-  async vehicles(includeDeleted = false) {
-    return getVehicles(includeDeleted)
-  },
-  async records(includeDeleted = false) {
-    return getRecords(includeDeleted)
-  },
-  async saveVehicle(vehicle: Vehicle) {
-    runTransaction(() => upsertVehicle(vehicle))
-    await persist()
-  },
-  async saveRecord(record: FuelRecord) {
-    runTransaction(() => upsertRecord(record))
-    await persist()
-  },
-  async deleteVehicle(vehicleId: string, deletedAt: string) {
-    runTransaction(() => {
-      db.run('UPDATE vehicles SET deletedAt = ?, updatedAt = ? WHERE id = ?', [deletedAt, deletedAt, vehicleId])
-      db.run('UPDATE fuel_records SET deletedAt = ?, updatedAt = ? WHERE vehicleId = ? AND deletedAt IS NULL', [deletedAt, deletedAt, vehicleId])
-    })
-    await persist()
-  },
-  async exportData(): Promise<SyncPayload> {
-    return { version: 1, exportedAt: new Date().toISOString(), vehicles: getVehicles(true), records: getRecords(true) }
-  },
-  async mergeData(remote: SyncPayload) {
-    runTransaction(() => {
-      const localVehicles = new Map(getVehicles(true).map((item) => [item.id, item]))
-      const localRecords = new Map(getRecords(true).map((item) => [item.id, item]))
-      for (const item of remote.vehicles) {
-        const local = localVehicles.get(item.id)
-        if (shouldAcceptRemote(local, item)) upsertVehicle(item)
+export function createWebDatabase(loadSql: () => Promise<SqlJsStatic> = () => initSqlJs({ locateFile: () => wasmUrl })) {
+  const storage = createDatabaseStorage()
+  let SQL: SqlJsStatic | undefined
+  let db: Database | undefined
+  let loadedRevision = -1
+  let queue = Promise.resolve()
+  let lastWrite = Promise.resolve()
+
+  function enqueue<T>(work: () => Promise<T>): Promise<T> {
+    const operation = queue.then(work)
+    queue = operation.then(() => undefined, () => undefined)
+    return operation
+  }
+
+  function openDatabase(bytes: Uint8Array | null) {
+    if (!SQL) throw new Error('数据库尚未初始化')
+    const candidate = bytes ? new SQL.Database(bytes) : new SQL.Database()
+    candidate.run('PRAGMA foreign_keys = ON')
+    return candidate
+  }
+
+  function useDatabase(candidate: Database, revision: number) {
+    db?.close()
+    db = candidate
+    loadedRevision = revision
+  }
+
+  async function refresh() {
+    const snapshot = await storage.read()
+    if (!snapshot.bytes) throw new Error('本地数据库不存在，请刷新后重试')
+    if (!db || loadedRevision !== snapshot.revision) useDatabase(openDatabase(snapshot.bytes), snapshot.revision)
+    return db!
+  }
+
+  async function commit(work: (candidate: Database, hasBytes: boolean) => void, initializing = false) {
+    for (let attempt = 0; attempt < MAX_WRITE_ATTEMPTS; attempt += 1) {
+      const snapshot = await storage.read()
+      const legacyBytes = initializing && !snapshot.bytes ? legacyDatabaseBytes() : null
+      const bytes = snapshot.bytes || legacyBytes
+      if (!initializing && !bytes) throw new Error('本地数据库不存在，请刷新后重试')
+      const candidate = openDatabase(bytes)
+      let revision: number
+      try {
+        work(candidate, Boolean(bytes))
+        const exported = candidate.export().slice()
+        // sql.js export closes/reopens its connection, resetting connection pragmas.
+        candidate.run('PRAGMA foreign_keys = ON')
+        revision = await storage.write(exported, snapshot.revision)
+      } catch (error) {
+        candidate.close()
+        if (error instanceof SnapshotConflictError) continue
+        throw error
       }
-      for (const item of remote.records) {
-        const local = localRecords.get(item.id)
-        if (shouldAcceptRemote(local, item)) upsertRecord(item)
-      }
-    })
-    await persist()
-  },
-  async flush() {
-    await persistenceQueue
-  },
+      // Readers only see a candidate after its entire IndexedDB transaction commits.
+      useDatabase(candidate, revision)
+      if (legacyBytes) localStorage.removeItem(LEGACY_DB_KEY)
+      return
+    }
+    throw new Error('其他页面正在频繁保存数据，请稍后重试')
+  }
+
+  function mutate(work: (candidate: Database) => void) {
+    lastWrite = enqueue(() => commit((candidate) => runTransaction(candidate, () => work(candidate))))
+    return lastWrite
+  }
+
+  const adapter: DatabaseAdapter & { close(): Promise<void> } = {
+    init() {
+      lastWrite = enqueue(async () => {
+        SQL = await loadSql()
+        await commit((candidate, hasBytes) => {
+          if (hasBytes) assertDatabaseIntegrity(candidate)
+          migrateSchema(candidate)
+          assertDatabaseIntegrity(candidate)
+          if (!hasBytes) {
+            const now = new Date().toISOString()
+            upsertVehicle(candidate, { id: crypto.randomUUID(), name: '我的车辆', plate: '', fuelType: '92#', initialOdometer: 0, createdAt: now, updatedAt: now, deletedAt: null })
+          }
+        }, true)
+      })
+      return lastWrite
+    },
+    vehicles(includeDeleted = false) {
+      return enqueue(async () => getVehicles(await refresh(), includeDeleted))
+    },
+    records(includeDeleted = false) {
+      return enqueue(async () => getRecords(await refresh(), includeDeleted))
+    },
+    saveVehicle(vehicle) {
+      return mutate((candidate) => upsertVehicle(candidate, vehicle))
+    },
+    saveRecord(record) {
+      return mutate((candidate) => upsertRecord(candidate, record))
+    },
+    deleteVehicle(vehicleId, deletedAt) {
+      return mutate((candidate) => {
+        candidate.run('UPDATE vehicles SET deletedAt = ?, updatedAt = ? WHERE id = ?', [deletedAt, deletedAt, vehicleId])
+        candidate.run('UPDATE fuel_records SET deletedAt = ?, updatedAt = ? WHERE vehicleId = ? AND deletedAt IS NULL', [deletedAt, deletedAt, vehicleId])
+      })
+    },
+    exportData() {
+      return enqueue(async (): Promise<SyncPayload> => {
+        const current = await refresh()
+        return { version: 1, exportedAt: new Date().toISOString(), vehicles: getVehicles(current, true), records: getRecords(current, true) }
+      })
+    },
+    mergeData(remote) {
+      return mutate((candidate) => {
+        const localVehicles = new Map(getVehicles(candidate, true).map((item) => [item.id, item]))
+        const localRecords = new Map(getRecords(candidate, true).map((item) => [item.id, item]))
+        for (const item of remote.vehicles) {
+          if (shouldAcceptRemote(localVehicles.get(item.id), item)) upsertVehicle(candidate, item)
+        }
+        for (const item of remote.records) {
+          if (shouldAcceptRemote(localRecords.get(item.id), item)) upsertRecord(candidate, item)
+        }
+      })
+    },
+    async flush() {
+      await lastWrite
+    },
+    close() {
+      return enqueue(async () => {
+        db?.close()
+        db = undefined
+        loadedRevision = -1
+        SQL = undefined
+        await storage.close()
+      })
+    },
+  }
+  return adapter
 }
+
+export const webDatabase = createWebDatabase()

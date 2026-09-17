@@ -5,6 +5,15 @@ import type { FuelRecord, SyncPayload, Vehicle, WebDavConfig } from '../types'
 const CONFIG_KEY = 'fuel-track-webdav-config'
 const PASSWORD_KEY = 'fuel-track-webdav-password'
 let adapter: DatabaseAdapter
+let operationQueue = Promise.resolve()
+
+function enqueue<T>(work: () => Promise<T>): Promise<T> {
+  const operation = operationQueue.then(work)
+  // A failed operation must not prevent later retries. Keeping whole adapter
+  // calls in the queue also prevents overlapping native SQLite transactions.
+  operationQueue = operation.then(() => undefined, () => undefined)
+  return operation
+}
 
 function activeAdapter() {
   if (!adapter) throw new Error('数据库尚未初始化')
@@ -22,28 +31,28 @@ export async function initDatabase() {
 
 export const database = {
   vehicles(includeDeleted = false): Promise<Vehicle[]> {
-    return activeAdapter().vehicles(includeDeleted)
+    return enqueue(() => activeAdapter().vehicles(includeDeleted))
   },
   records(includeDeleted = false): Promise<FuelRecord[]> {
-    return activeAdapter().records(includeDeleted)
+    return enqueue(() => activeAdapter().records(includeDeleted))
   },
   saveVehicle(vehicle: Vehicle) {
-    return activeAdapter().saveVehicle(vehicle)
+    return enqueue(() => activeAdapter().saveVehicle(vehicle))
   },
   saveRecord(record: FuelRecord) {
-    return activeAdapter().saveRecord(record)
+    return enqueue(() => activeAdapter().saveRecord(record))
   },
   deleteVehicle(vehicleId: string, deletedAt: string) {
-    return activeAdapter().deleteVehicle(vehicleId, deletedAt)
+    return enqueue(() => activeAdapter().deleteVehicle(vehicleId, deletedAt))
   },
   exportData(): Promise<SyncPayload> {
-    return activeAdapter().exportData()
+    return enqueue(() => activeAdapter().exportData())
   },
   mergeData(remote: SyncPayload) {
-    return activeAdapter().mergeData(remote)
+    return enqueue(() => activeAdapter().mergeData(remote))
   },
   flush() {
-    return activeAdapter().flush()
+    return enqueue(() => activeAdapter().flush())
   },
   getConfig(): WebDavConfig {
     const defaults = { url: '', username: '', password: '', fileName: 'fuel-track.json' }

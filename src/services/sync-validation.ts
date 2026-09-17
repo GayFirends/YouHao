@@ -16,7 +16,7 @@ function stringField(value: unknown, field: string, allowEmpty = true): string {
 function timestamp(value: unknown, field: string): string {
   const text = stringField(value, field, false)
   if (!TIMESTAMP_RE.test(text) || !Number.isFinite(Date.parse(text))) fail(`${field} 不是有效时间`)
-  return text
+  return new Date(text).toISOString()
 }
 
 function dateOnly(value: unknown, field: string): string {

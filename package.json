@@ -28,6 +28,7 @@
     "@capacitor/cli": "^7.4.3",
     "@types/sql.js": "^1.4.9",
     "@vitejs/plugin-vue": "^5.2.1",
+    "fake-indexeddb": "^6.2.5",
     "typescript": "~5.7.2",
     "vite": "^6.0.5",
     "vitest": "^4.1.10",

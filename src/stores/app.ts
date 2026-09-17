@@ -20,9 +20,9 @@ export const useAppStore = defineStore('app', () => {
   const vehicleRecords = computed(() => state.records.filter((item) => item.vehicleId === selectedVehicle.value?.id && !item.deletedAt).sort((a, b) => b.odometer - a.odometer))
 
   async function reload() {
-    const [vehicles, records] = await Promise.all([database.vehicles(), database.records()])
-    state.vehicles = vehicles
-    state.records = records
+    const { vehicles, records } = await database.exportData()
+    state.vehicles = vehicles.filter((item) => !item.deletedAt)
+    state.records = records.filter((item) => !item.deletedAt)
     if (!activeVehicles.value.some((item) => item.id === state.selectedVehicleId)) state.selectedVehicleId = activeVehicles.value[0]?.id || ''
   }
 

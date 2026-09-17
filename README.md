@@ -1,76 +1,149 @@
-# 油迹 Fuel Track
+<div align="center">
+  <img src="./docs/readme-hero.svg" width="100%" alt="油迹 Fuel Track — 每一程，都心中有数" />
 
-面向 Web 与 Android 的车辆油耗记录应用。项目使用 Vue 3、TypeScript、Vite 和 Capacitor；Web 使用 SQLite WASM，Android 使用原生 SQLite，共用一套界面与业务代码，并通过 WebDAV 做记录级双向同步。
+  <br />
 
-## 功能
+  **本地优先、跨平台、可自托管同步的车辆油耗记录应用**
 
-- 多车辆管理，分别记录初始里程与燃油标号
-- 加油日期、里程、升数、金额、加油站、满箱状态与备注
-- 满箱区间油耗、本月费用、累计费用、记录里程与趋势统计
-- WebDAV 连接测试、下载合并和上传备份
-- UUID + 更新时间 + 软删除的多设备冲突合并
-- 桌面侧栏和 Android/移动 Web 底部导航响应式布局
-- 本地 SQLite WASM 数据库，无网络也可录入和查看
-- Web 将 SQLite 二进制文件持久化到 IndexedDB；Android 使用系统原生 SQLite 数据库
-- 部分加油累计、满箱区间和按里程加权的平均油耗算法
-- WebDAV ETag 条件写入与冲突自动重试
-- JSON 完整备份、JSON 合并恢复和 CSV 报表导出
+  [![Vue 3](https://img.shields.io/badge/Vue-3.5-42b883?style=flat-square&logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Android Debug Build](https://img.shields.io/github/actions/workflow/status/GayFirends/YouHao/android-debug.yml?style=flat-square&label=Android%20build)](https://github.com/GayFirends/YouHao/actions/workflows/android-debug.yml)
+  [![Tests](https://img.shields.io/badge/tests-Vitest-6e9f18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/)
+</div>
 
-## Web 开发
+## 为什么是油迹
+
+油迹（Fuel Track）把加油、里程和花费整理成真正有用的驾驶数据。它不依赖中心化账号：Web 与 Android 都把数据保存在本机，需要跨设备时，再同步到你自己的 WebDAV 空间。
+
+- **看清真实油耗**：基于连续满箱区间计算，支持部分加油，不用估算表显数据。
+- **数据属于自己**：Web 使用 SQLite WASM，Android 使用原生 SQLite；离线也能完整使用。
+- **同步不整库覆盖**：按记录更新时间合并，结合 UUID、软删除与 ETag 冲突重试。
+- **一套体验，多端运行**：Vue 3 界面通过 Capacitor 同时服务桌面 Web、移动 Web 与 Android。
+
+> [!NOTE]
+> 项目目前处于早期开发阶段（`0.1.x`）。数据结构与交互仍可能调整，重要记录建议定期导出 JSON 备份。
+
+## 功能一览
+
+| 记录与分析 | 数据与同步 | 多端体验 |
+| --- | --- | --- |
+| 多车辆独立账本 | WebDAV 双向合并 | 响应式桌面侧栏 |
+| 满箱区间油耗 | JSON 完整备份 | 移动端底部导航 |
+| 月度与累计费用 | CSV 报表导出 | Android 原生数据库 |
+| 油耗趋势图 | 多设备冲突处理 | Web SQLite 持久化 |
+| 优惠与实付单价 | 软删除跨端同步 | 完整离线录入 |
+
+每条记录可保存日期、里程、加油量、表显金额、实付金额、加油站、满箱状态和备注。异常里程或数值会在保存前提示。
+
+## 技术架构
+
+```text
+Vue 3 + TypeScript
+        │
+        ├── Web ───── SQLite WASM ─── IndexedDB
+        │
+        ├── Android ─ Capacitor ───── Native SQLite
+        │
+        └── Sync ──── Record merge ── Your WebDAV
+```
+
+Web 和 Android 共用界面、领域逻辑、数据约束与同步格式，只有数据库适配层不同。数据流与平台边界的进一步说明见 [客户端与服务端分仓约定](./docs/client-server-boundary.md)。
+
+## 快速开始
+
+需要 Node.js 20+ 与 npm。
 
 ```bash
+git clone https://github.com/GayFirends/YouHao.git
+cd YouHao
 npm install
 npm run dev
 ```
 
-生产构建：
+常用命令：
 
 ```bash
-npm run build
-npm run preview
+npm test             # 运行 Vitest 测试
+npm run build        # 类型检查并构建 Web 产物
+npm run preview      # 本地预览生产构建
+npm run android:sync # 构建并同步到 Android 工程
+npm run android:open # 在 Android Studio 中打开
+```
+
+Android 构建需要 Java 21。也可以直接使用 Gradle 生成 Debug APK：
+
+```bash
+./android/gradlew -p android assembleDebug
+```
+
+产物位于 `android/app/build/outputs/apk/debug/app-debug.apk`。仓库内的 GitHub Actions 也会在推送到 `main` 或手动触发后运行测试并上传 Debug APK。
+
+## WebDAV 配置
+
+应用可连接坚果云、Nextcloud、群晖等 WebDAV 服务，默认同步文件名为 `fuel-track.json`。
+
+浏览器直接连接 WebDAV 时，服务端需要允许当前站点的 CORS，并开放 `GET`、`PUT`、`PROPFIND` 及 `Authorization` 请求头。Android WebView 通常不受浏览器跨域策略限制，但仍需要有效的 HTTPS 证书。
+
+同步过程会：
+
+1. 下载云端快照；
+2. 按每条车辆与加油记录的 `updatedAt` 合并；
+3. 使用 ETag 条件写入上传；
+4. 遇到并发更新时重新拉取并重试。
+
+## 数据与隐私
+
+- Web 数据库二进制保存在 IndexedDB；Android 数据保存在系统原生 SQLite。
+- WebDAV 密码仅保留在当前应用会话中，不写入长期存储，也不进入同步文件。
+- 同步文件本身**没有加密**，请使用可信的 HTTPS WebDAV 服务并妥善保管账号。
+- Android 初始化会启用外键、运行 `PRAGMA quick_check`，关键写入与合并在事务内完成。
+- JSON 可用于完整备份与合并恢复；CSV 适合表格分析，不用于完整恢复。
+
+## Android 签名发布
+
+仓库提供 `android-generate-keystore.yml` 与 `android-release.yml`，可在 GitHub Actions 中生成 keystore，并构建签名 APK/AAB。需要配置以下 Repository Secrets：
+
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+keystore 是应用升级的唯一身份。请将原始 keystore 与密码离线备份；丢失后无法向现有安装发布升级。
+
+## 项目结构
+
+```text
+src/
+├── components/    页面与交互组件
+├── services/      数据库、同步、备份与油耗计算
+├── stores/        Pinia 应用状态
+└── types/         共享数据类型
+android/           Capacitor Android 原生工程
+docs/              设计与架构文档
+```
+
+## 路线图
+
+- 更完整的统计维度与数据可视化
+- 可选的专用同步服务端与账号体系
+- 更完善的导入、迁移与恢复体验
+- 自动化端到端测试与正式发行流程
+
+专用服务端会放在独立仓库中；当前仓库只负责客户端，账号登录和专用 API 同步尚未实现。
+
+## 参与开发
+
+欢迎提交 Issue 描述问题或建议。提交改动前请运行：
+
+```bash
 npm test
+npm run build
 ```
 
-浏览器直接访问 WebDAV 时，服务端必须允许当前站点的 CORS，并允许 `GET`、`PUT`、`PROPFIND` 与 `Authorization` 请求头。Android WebView 通常不受浏览器跨域策略限制，但仍需要有效的 HTTPS 证书。
+如果改动涉及同步、冲突合并或数据库迁移，请同时补充相应测试，并说明 Web 与 Android 两端的影响。
 
-## Android
+---
 
-Android 原生工程位于 `android/`。修改前端后同步资源：
-
-```bash
-npm run android:sync
-npm run android:open
-```
-
-也可以在命令行构建 Debug APK：
-
-```powershell
-.\android\gradlew.bat -p android assembleDebug
-```
-
-APK 生成在 `android/app/build/outputs/apk/debug/app-debug.apk`。
-
-仓库包含 `.github/workflows/android-debug.yml`。推送到 `main` 或手动触发工作流后，会依次运行测试、同步 Capacitor、构建 Debug APK 并上传构建产物。
-
-Android 构建使用 Java 21（Capacitor 7 和原生 SQLite 插件的 Gradle 配置要求 `sourceCompatibility = 21`）。
-
-### GitHub Actions 签名发布
-
-签名不需要在本机配置 Android 环境。仓库提供 `android-generate-keystore.yml` 和 `android-release.yml`：
-
-1. 在仓库 `Settings → Secrets and variables → Actions → Repository secrets` 中新建 `ANDROID_KEYSTORE_PASSWORD` 和 `ANDROID_KEY_PASSWORD`。注意必须建在 **Secrets**，不能建在 Variables；两个密码建议不同且使用密码管理器保存。
-2. 手动运行 `Generate Android Keystore`，填写 key alias（默认 `fuel-track-upload`）。
-3. 下载该工作流生成的短期 artifact，其中的 `.base64` 文件内容整体复制到 Secret `ANDROID_KEYSTORE_BASE64`；再创建 `ANDROID_KEY_ALIAS`，值与工作流输入一致。
-4. 删除本地下载的 base64 文件，并在 Actions 页面手动运行 `Android Signed Release`，填写版本名和版本号。
-
-签名工作流会生成签名的 APK 和 AAB 并上传为 artifact。也可以推送形如 `v1.0.0` 的 tag 自动触发。keystore 是应用升级的唯一身份，务必把原始 keystore 和四个 Secret 一起安全备份；丢失后无法向现有用户发布同包名的升级版本。`android-debug.yml` 仍用于不签名的日常构建。
-
-## 同步格式
-
-WebDAV 中默认保存 `fuel-track.json`。同步先下载云端快照，再按每条车辆和加油记录的 `updatedAt` 合并，最后上传合并结果。删除使用软删除标记同步到其他设备，避免旧设备把已删除记录重新上传。
-
-Web 端使用 SQLite WASM，并将数据库二进制文件保存在 IndexedDB 中。旧版本保存在 `localStorage` 的数据库会在首次启动时自动迁移，确认 IndexedDB 写入成功后才移除旧副本。Android 端通过 `@capacitor-community/sqlite` 使用系统原生 SQLite，数据库名为 `fuel-trackSQLite.db`。两种实现共用相同表结构、约束、软删除和 WebDAV 数据格式。
-
-数据库结构使用版本化迁移管理。Android 初始化时还会启用外键并执行 `PRAGMA quick_check`，写操作和 WebDAV 合并均在原生 SQLite 事务中完成。
-
-WebDAV 用户名和地址保存在当前设备，密码只保留在当前应用会话中，不会长期写入本地存储，也不会写入同步文件。同步文件本身未加密，应使用可信的 HTTPS WebDAV 服务并妥善保护账号。
+<div align="center">
+  把每一次补给，变成看得懂的旅程。
+</div>

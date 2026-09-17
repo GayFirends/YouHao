@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="480" viewBox="0 0 1280 480" role="img" aria-labelledby="title desc">
+  <title id="title">油迹 Fuel Track</title>
+  <desc id="desc">深松绿色背景上的油迹品牌与车辆油耗仪表卡片</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#173f34"/>
+      <stop offset="1" stop-color="#0c2922"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".72" cy=".22" r=".68">
+      <stop stop-color="#d8ff72" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#d8ff72" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#071b16" flood-opacity=".35"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="480" rx="26" fill="url(#bg)"/>
+  <rect width="1280" height="480" rx="26" fill="url(#glow)"/>
+  <g opacity=".08" stroke="#d8ff72" fill="none">
+    <circle cx="1180" cy="30" r="160"/>
+    <circle cx="1180" cy="30" r="205"/>
+    <circle cx="1180" cy="30" r="250"/>
+    <path d="M0 392C212 306 338 451 550 362S931 240 1280 351" stroke-dasharray="7 13"/>
+  </g>
+  <g transform="translate(86 86)">
+    <rect width="58" height="58" rx="17" fill="#d8ff72"/>
+    <path d="M20 15h17v28H20zM23 20h11M37 24l6 6v12c0 5 7 5 7 0V27l-5-5" fill="none" stroke="#15382f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="56" cy="56" r="7" fill="#d8ff72" stroke="#173f34" stroke-width="3"/>
+    <text x="78" y="37" fill="#f8fff9" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-size="35" font-weight="700" letter-spacing="4">油迹</text>
+    <text x="80" y="58" fill="#9db8aa" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="10" font-weight="700" letter-spacing="4">FUEL TRACK</text>
+  </g>
+  <g transform="translate(86 226)">
+    <text fill="#f7fff9" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-size="45" font-weight="650" letter-spacing="-1">每一程，都心中有数。</text>
+    <text y="52" fill="#a9c1b5" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-size="16">本地优先 · 真实油耗 · 自有同步</text>
+    <g transform="translate(0 90)" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="650">
+      <rect width="92" height="34" rx="17" fill="#d8ff72"/><text x="46" y="22" fill="#17372e" text-anchor="middle">WEB</text>
+      <rect x="102" width="108" height="34" rx="17" fill="#ffffff" fill-opacity=".08" stroke="#ffffff" stroke-opacity=".12"/><text x="156" y="22" fill="#d9e8df" text-anchor="middle">ANDROID</text>
+      <rect x="220" width="118" height="34" rx="17" fill="#ffffff" fill-opacity=".08" stroke="#ffffff" stroke-opacity=".12"/><text x="279" y="22" fill="#d9e8df" text-anchor="middle">WEBDAV</text>
+    </g>
+  </g>
+  <g transform="translate(755 94)" filter="url(#shadow)">
+    <rect width="410" height="292" rx="24" fill="#fbfcf8"/>
+    <rect x="20" y="20" width="370" height="146" rx="18" fill="#153f34"/>
+    <g opacity=".08" stroke="#d8ff72"><path d="M20 56h370M20 92h370M20 128h370M65 20v146M110 20v146M155 20v146M200 20v146M245 20v146M290 20v146M335 20v146"/></g>
+    <text x="42" y="53" fill="#aac4b7" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif" font-size="12">平均油耗</text>
+    <circle cx="354" cy="48" r="4" fill="#d8ff72"/><text x="343" y="51" fill="#d8ff72" font-family="-apple-system,sans-serif" font-size="7" font-weight="800" text-anchor="end" letter-spacing="1">LIVE</text>
+    <text x="42" y="123" fill="#d8ff72" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="62" font-weight="700" letter-spacing="-3">7.2</text>
+    <text x="150" y="123" fill="#aac4b7" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="12">L / 100 km</text>
+    <text x="42" y="148" fill="#8eaa9d" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif" font-size="10">最近 6 个满箱区间 · 2,418 km</text>
+    <g transform="translate(20 184)">
+      <rect width="176" height="88" rx="16" fill="#f1f5ef"/>
+      <text x="18" y="27" fill="#69766f" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif" font-size="10">本月油费</text>
+      <text x="18" y="61" fill="#17261f" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="24" font-weight="700">¥ 682.40</text>
+      <rect x="194" width="176" height="88" rx="16" fill="#f1f5ef"/>
+      <text x="212" y="27" fill="#69766f" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif" font-size="10">记录里程</text>
+      <text x="212" y="61" fill="#17261f" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="24" font-weight="700">12,840 <tspan font-size="10" fill="#69766f">km</tspan></text>
+    </g>
+  </g>
+</svg>

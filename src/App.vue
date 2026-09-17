@@ -23,6 +23,8 @@ const vehicleModal = ref(false)
 const deleteTarget = ref<{ kind: 'vehicle' | 'record'; id: string; label: string } | null>(null)
 const editingRecord = ref<FuelRecord | null>(null)
 const editingVehicle = ref<Vehicle | null>(null)
+const recordIdentity = ref<Pick<FuelRecord, 'id' | 'createdAt'>>()
+const vehicleIdentity = ref<Pick<Vehicle, 'id' | 'createdAt'>>()
 const saving = ref(false)
 const backupInput = ref<HTMLInputElement | null>(null)
 const toast = reactive({ message: '', type: 'success' as 'success' | 'error' })
@@ -50,9 +52,14 @@ function openRecord(item?: FuelRecord) {
     return
   }
   editingRecord.value = item || null
+  recordIdentity.value = { id: item?.id || crypto.randomUUID(), createdAt: item?.createdAt || new Date().toISOString() }
   recordModal.value = true
 }
-function openVehicle(item?: Vehicle) { editingVehicle.value = item || null; vehicleModal.value = true }
+function openVehicle(item?: Vehicle) {
+  editingVehicle.value = item || null
+  vehicleIdentity.value = { id: item?.id || crypto.randomUUID(), createdAt: item?.createdAt || new Date().toISOString() }
+  vehicleModal.value = true
+}
 
 async function submitRecord(event: Event) {
   if (saving.value) return
@@ -61,7 +68,7 @@ async function submitRecord(event: Event) {
   const amount = Number(data.get('amount'))
   const pumpAmount = Number(data.get('pumpAmount'))
   const draft = {
-    id: editingRecord.value?.id,
+    id: recordIdentity.value?.id,
     date: String(data.get('date')),
     odometer: Number(data.get('odometer')),
     liters,
@@ -74,7 +81,7 @@ async function submitRecord(event: Event) {
   saving.value = true
   try {
     await store.saveRecord({
-      id: editingRecord.value?.id, createdAt: editingRecord.value?.createdAt,
+      ...recordIdentity.value,
       vehicleId, date: draft.date,
       odometer: draft.odometer, liters, amount, pumpAmount,
       pricePerLiter: liters ? amount / liters : 0, isFull: draft.isFull,
@@ -94,7 +101,7 @@ async function submitVehicle(event: Event) {
   const data = new FormData(event.target as HTMLFormElement)
   saving.value = true
   try {
-    await store.saveVehicle({ id: editingVehicle.value?.id, createdAt: editingVehicle.value?.createdAt, name: String(data.get('name')), plate: String(data.get('plate')), fuelType: String(data.get('fuelType')), initialOdometer: Number(data.get('initialOdometer')) })
+    await store.saveVehicle({ ...vehicleIdentity.value, name: String(data.get('name')), plate: String(data.get('plate')), fuelType: String(data.get('fuelType')), initialOdometer: Number(data.get('initialOdometer')) })
     vehicleModal.value = false
     notify(editingVehicle.value ? '车辆已更新' : '车辆已添加')
   } catch (error) {
@@ -158,18 +165,29 @@ async function importBackup(event: Event) {
 }
 function today() { return localDateKey() }
 
-onMounted(async () => {
+async function refreshLocalData() {
   try { await store.reload() } catch (error) {
     notify(error instanceof Error ? error.message : '本地数据读取失败', 'error')
   }
+}
+function onVisibilityChange() {
+  if (document.visibilityState === 'visible') void refreshLocalData()
+}
+
+onMounted(() => {
+  void refreshLocalData()
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
-onBeforeUnmount(() => window.clearTimeout(toastTimer))
+onBeforeUnmount(() => {
+  window.clearTimeout(toastTimer)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+})
 </script>
 
 <template>
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand"><span class="brand-mark"><Fuel :size="22" /></span><div><strong>油迹</strong><small>Fuel Track</small></div></div>
+      <div class="brand"><span class="brand-mark"><Fuel :size="22" /></span><div><strong>油迹</strong><small>Drive ledger</small></div></div>
       <nav aria-label="主导航">
         <button v-for="item in nav" :key="item.id" :class="{ active: store.state.view === item.id }" :aria-current="store.state.view === item.id ? 'page' : undefined" @click="store.state.view = item.id">
           <component :is="item.icon" :size="19" /><span>{{ item.label }}</span>
@@ -190,7 +208,7 @@ onBeforeUnmount(() => window.clearTimeout(toastTimer))
           <ChevronDown :size="15" />
           <select v-model="store.state.selectedVehicleId" aria-label="切换车辆" :disabled="!store.activeVehicles.length"><option v-for="vehicle in store.activeVehicles" :key="vehicle.id" :value="vehicle.id">{{ vehicle.name }}</option></select>
         </div>
-        <div class="mobile-brand"><Fuel :size="18" /><strong>油迹</strong></div>
+        <div class="mobile-brand"><span><Fuel :size="17" /></span><strong>油迹</strong></div>
         <button class="button primary top-add" @click="openRecord()"><Plus :size="18" />记一笔加油</button>
       </header>
 
