@@ -9,6 +9,7 @@
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Android Debug Build](https://img.shields.io/github/actions/workflow/status/GayFirends/YouHao/android-debug.yml?style=flat-square&label=Android%20build)](https://github.com/GayFirends/YouHao/actions/workflows/android-debug.yml)
   [![Tests](https://img.shields.io/badge/tests-Vitest-6e9f18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/)
+  [![License](https://img.shields.io/badge/license-MIT-173f34?style=flat-square)](./LICENSE)
 </div>
 
 ## 为什么是油迹
@@ -80,6 +81,7 @@ npm run dev
 
 ```bash
 npm test             # 运行 Vitest 测试
+npm run test:e2e     # 运行 Playwright 端到端测试
 npm run build        # 类型检查并构建 Web 产物
 npm run preview      # 本地预览生产构建
 npm run android:sync # 构建并同步到 Android 工程
@@ -143,7 +145,7 @@ docs/              设计与架构文档
 - 更完整的统计维度与数据可视化
 - 可选的专用同步服务端与账号体系
 - 更完善的导入、迁移与恢复体验
-- 自动化端到端测试与正式发行流程
+- 更细致的无障碍支持与多浏览器兼容验证
 
 专用服务端会放在独立仓库中；当前仓库只负责客户端，账号登录和专用 API 同步尚未实现。
 
@@ -153,10 +155,17 @@ docs/              设计与架构文档
 
 ```bash
 npm test
+npm run test:e2e
 npm run build
 ```
 
 如果改动涉及同步、冲突合并或数据库迁移，请同时补充相应测试，并说明 Web 与 Android 两端的影响。
+
+完整说明见 [参与贡献](./CONTRIBUTING.md)。发现安全问题时，请按照[安全策略](./SECURITY.md)私密报告，不要在公开 Issue 中附带凭据或真实备份。
+
+## 开源许可
+
+本项目使用 [MIT License](./LICENSE)。
 
 ---
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { nextTick, shallowRef, watch } from 'vue'
-import { Check, X } from 'lucide-vue-next'
+import { Check, X } from '@lucide/vue'
 
 const props = defineProps<{ message: string; type: 'success' | 'error'; modalOpen: boolean }>()
 const target = shallowRef<HTMLElement>(document.body)

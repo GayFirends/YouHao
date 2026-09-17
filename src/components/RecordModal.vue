@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import { Check, ChevronDown, RefreshCw, ShieldCheck, Tag, X } from 'lucide-vue-next'
+import { Check, ChevronDown, RefreshCw, ShieldCheck, Tag, X } from '@lucide/vue'
 import ModalFrame from './ModalFrame.vue'
 import type { FuelRecord, Vehicle } from '../types'
 import { fuelPriceSummary } from '../services/fuel-calculations'

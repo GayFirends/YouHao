@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: 'App version name, for example 1.0.0'
+        description: 'App version name; must match package.json'
         required: true
-        default: '1.0.0'
+        default: '0.1.0'
       version_code:
         description: 'Android version code'
         required: true
-        default: '1'
+        default: '100'
   push:
     tags: ['v*']
 
@@ -24,8 +24,6 @@ jobs:
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-      ANDROID_VERSION_NAME: ${{ github.event.inputs.version_name || github.ref_name }}
-      ANDROID_VERSION_CODE: ${{ github.event.inputs.version_code || github.run_number }}
       RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', github.event.inputs.version_name) || github.ref_name }}
     steps:
       - name: Checkout
@@ -43,6 +41,36 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
+
+      - name: Resolve and validate release version
+        shell: bash
+        env:
+          INPUT_VERSION_NAME: ${{ github.event.inputs.version_name }}
+          INPUT_VERSION_CODE: ${{ github.event.inputs.version_code }}
+        run: |
+          set -euo pipefail
+          package_version="$(node -p "require('./package.json').version")"
+
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            release_version="${INPUT_VERSION_NAME}"
+            version_code="${INPUT_VERSION_CODE}"
+          else
+            release_version="${GITHUB_REF_NAME#v}"
+            IFS=. read -r major minor patch <<< "$package_version"
+            version_code=$((major * 10000 + minor * 100 + patch))
+          fi
+
+          if [ "$release_version" != "$package_version" ]; then
+            echo "::error::Release version $release_version does not match package.json version $package_version"
+            exit 1
+          fi
+          if ! [[ "$version_code" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::Android version code must be a positive integer"
+            exit 1
+          fi
+
+          echo "ANDROID_VERSION_NAME=$release_version" >> "$GITHUB_ENV"
+          echo "ANDROID_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
 
       - name: Decode signing keystore
         env:

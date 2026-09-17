@@ -757,3 +757,38 @@ input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 4px rgba(35, 107, 
   .bottom-nav button.active::before { background: var(--accent-soft); border-radius: 10px; }
   .bottom-add .add-icon { color: #153429; background: var(--signal); border-radius: 11px 11px 11px 4px; box-shadow: 0 7px 16px rgba(86,115,44,.16); }
 }
+
+/* First-run guide */
+.onboarding { position: relative; overflow: hidden; padding: 22px 26px 24px; text-align: center; }
+.onboarding::before { content: ""; position: absolute; inset: 0 0 auto; height: 205px; background: radial-gradient(circle at 78% 18%, rgba(216,255,114,.2), transparent 10rem), var(--hero); z-index: -1; }
+.onboarding-brand { display: flex; align-items: center; gap: 8px; color: white; text-align: left; }
+.onboarding-brand > span { width: 32px; height: 32px; display: grid; place-items: center; color: #16382e; background: var(--signal); border-radius: 10px 10px 10px 3px; }
+.onboarding-brand strong { font-size: 16px; letter-spacing: 1px; }
+.onboarding-brand small { margin-left: auto; color: #a9c4b7; font-size: 10px; letter-spacing: 1.2px; }
+.onboarding-visual { position: relative; width: 124px; height: 124px; display: grid; place-items: center; margin: 24px auto 30px; }
+.onboarding-orbit { position: absolute; inset: 0; border: 1px solid rgba(216,255,114,.2); border-radius: 50%; box-shadow: 0 0 0 18px rgba(216,255,114,.045); }
+.onboarding-icon { position: relative; width: 76px; height: 76px; display: grid; place-items: center; color: var(--signal); background: rgba(255,255,255,.07); border-radius: 24px 24px 24px 8px; }
+.onboarding-cloud { position: absolute; right: 2px; bottom: 5px; color: #153f34; background: var(--signal); padding: 5px; width: 31px; height: 31px; border-radius: 10px; }
+.onboarding-copy .eyebrow { margin-bottom: 8px; }
+.onboarding-copy h2 { margin: 0; font-size: 28px; letter-spacing: -.7px; }
+.onboarding-copy > p { color: var(--muted); font-size: 13px; line-height: 1.85; margin: 12px auto 0; max-width: 390px; }
+.onboarding-current { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 7px 11px; color: var(--accent-dark) !important; background: var(--accent-soft); border-radius: 999px; }
+.onboarding-current strong { font-weight: 650; }
+.onboarding-dots { display: flex; justify-content: center; gap: 8px; margin: 22px 0; }
+.onboarding-dots span { width: 23px; height: 5px; overflow: hidden; color: transparent; background: var(--line); border-radius: 9px; transition: width .18s ease, background .18s ease; }
+.onboarding-dots span.active { width: 40px; background: var(--accent); }
+.onboarding-actions { min-height: 44px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.onboarding-actions .button { min-width: 115px; }
+.onboarding-skip { color: var(--muted); }
+.onboarding-vehicle { min-height: 36px; margin-top: 10px; padding: 5px 10px; border: 0; color: var(--accent-dark); background: transparent; font-size: 12px; }
+.onboarding-vehicle:hover { text-decoration: underline; }
+
+@media (max-width: 760px) {
+  .onboarding { padding: 20px 20px calc(24px + env(safe-area-inset-bottom)); }
+  .onboarding::before { height: 194px; }
+  .onboarding-visual { width: 112px; height: 112px; margin-block: 22px 28px; }
+  .onboarding-icon { width: 70px; height: 70px; }
+  .onboarding-copy h2 { font-size: 25px; }
+  .onboarding-copy > p { font-size: 12px; }
+  .onboarding-actions .button { min-width: 108px; }
+}

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-import { Check, RefreshCw, X } from 'lucide-vue-next'
+import { Check, RefreshCw, X } from '@lucide/vue'
 import ModalFrame from './ModalFrame.vue'
 import type { Vehicle } from '../types'
 

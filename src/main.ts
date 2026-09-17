@@ -9,8 +9,8 @@ async function configureNativeUi() {
   if (!Capacitor.isNativePlatform()) return
   const { StatusBar, Style } = await import('@capacitor/status-bar')
   await StatusBar.setOverlaysWebView({ overlay: false })
-  await StatusBar.setStyle({ style: Style.Light })
-  await StatusBar.setBackgroundColor({ color: '#f4efe5' })
+  await StatusBar.setStyle({ style: Style.Dark })
+  await StatusBar.setBackgroundColor({ color: '#EDF1EB' })
 }
 
 async function bootstrap() {

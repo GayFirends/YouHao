@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { BarChart3, ChevronRight, Fuel, Gauge, Leaf, Plus, Route, ShieldCheck, Wallet } from 'lucide-vue-next'
+import { BarChart3, ChevronRight, Fuel, Gauge, Leaf, Plus, Route, ShieldCheck, Wallet } from '@lucide/vue'
 import { calculateAverageConsumption, calculateConsumptionIntervals } from '../services/fuel-calculations'
 import { localMonthKey } from '../services/local-date'
 import type { FuelRecord, Vehicle } from '../types'

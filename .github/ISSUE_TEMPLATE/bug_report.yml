@@ -1,0 +1,49 @@
+name: 问题报告
+description: 报告可复现的功能、数据或界面问题
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: 请勿提交密码、真实车牌、WebDAV 凭据或完整备份。安全问题请使用 Security Advisory 私密报告。
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 平台
+      options:
+        - Web
+        - Android
+        - Web 和 Android
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      placeholder: 例如 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: 请使用不含私人数据的示例描述
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充信息
+      description: 可提供已脱敏的日志或截图

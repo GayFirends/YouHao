@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { History, Pencil, Plus, Search, Trash2, X } from 'lucide-vue-next'
+import { History, Pencil, Plus, Search, Trash2, X } from '@lucide/vue'
 import RecordActions from './RecordActions.vue'
 import type { FuelRecord } from '../types'
 

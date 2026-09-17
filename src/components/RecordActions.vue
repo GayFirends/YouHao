@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
-import { Ellipsis, Pencil, Trash2 } from 'lucide-vue-next'
+import { Ellipsis, Pencil, Trash2 } from '@lucide/vue'
 
 defineProps<{ label: string }>()
 const emit = defineEmits<{ edit: []; remove: [] }>()

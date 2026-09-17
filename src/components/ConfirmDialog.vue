@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Trash2 } from 'lucide-vue-next'
+import { Trash2 } from '@lucide/vue'
 import ModalFrame from './ModalFrame.vue'
 
 defineProps<{ target: { kind: 'vehicle' | 'record'; id: string; label: string }; saving: boolean }>()

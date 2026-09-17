@@ -3,9 +3,10 @@ import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import {
   BarChart3, Car, Check, ChevronDown, Cloud, Download, FileJson, Fuel, History,
   Pencil, Plus, RefreshCw, Settings, Trash2, Upload,
-} from 'lucide-vue-next'
+} from '@lucide/vue'
 import AppToast from './components/AppToast.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
+import OnboardingGuide from './components/OnboardingGuide.vue'
 import RecordModal from './components/RecordModal.vue'
 import RecordsPage from './components/RecordsPage.vue'
 import OverviewPage from './components/OverviewPage.vue'
@@ -20,6 +21,7 @@ import type { FuelRecord, Vehicle, ViewName, WebDavConfig } from './types'
 const store = useAppStore()
 const recordModal = ref(false)
 const vehicleModal = ref(false)
+const onboarding = ref(false)
 const deleteTarget = ref<{ kind: 'vehicle' | 'record'; id: string; label: string } | null>(null)
 const editingRecord = ref<FuelRecord | null>(null)
 const editingVehicle = ref<Vehicle | null>(null)
@@ -165,6 +167,13 @@ async function importBackup(event: Event) {
 }
 function today() { return localDateKey() }
 
+function completeOnboarding(next?: 'record' | 'vehicle') {
+  localStorage.setItem('fuel-track-onboarding-v1', '1')
+  onboarding.value = false
+  if (next === 'record') openRecord()
+  if (next === 'vehicle') openVehicle(store.selectedVehicle)
+}
+
 async function refreshLocalData() {
   try { await store.reload() } catch (error) {
     notify(error instanceof Error ? error.message : '本地数据读取失败', 'error')
@@ -174,8 +183,9 @@ function onVisibilityChange() {
   if (document.visibilityState === 'visible') void refreshLocalData()
 }
 
-onMounted(() => {
-  void refreshLocalData()
+onMounted(async () => {
+  await refreshLocalData()
+  onboarding.value = localStorage.getItem('fuel-track-onboarding-v1') !== '1' && store.vehicleRecords.length === 0
   document.addEventListener('visibilitychange', onVisibilityChange)
 })
 onBeforeUnmount(() => {
@@ -261,6 +271,7 @@ onBeforeUnmount(() => {
     <RecordModal v-if="recordModal" :record="editingRecord" :vehicles="store.activeVehicles" :selected-vehicle-id="store.state.selectedVehicleId" :saving="saving" :today="today()" @close="recordModal = false" @submit="submitRecord" />
     <VehicleModal v-if="vehicleModal" :vehicle="editingVehicle" :saving="saving" @close="vehicleModal = false" @submit="submitVehicle" />
     <ConfirmDialog v-if="deleteTarget" :target="deleteTarget" :saving="saving" @close="deleteTarget = null" @confirm="confirmDelete" />
-    <AppToast :message="toast.message" :type="toast.type" :modal-open="recordModal || vehicleModal || !!deleteTarget" />
+    <OnboardingGuide v-if="onboarding" :vehicle-name="store.selectedVehicle?.name || '我的车辆'" @finish="completeOnboarding()" @record="completeOnboarding('record')" @vehicle="completeOnboarding('vehicle')" />
+    <AppToast :message="toast.message" :type="toast.type" :modal-open="recordModal || vehicleModal || !!deleteTarget || onboarding" />
   </div>
 </template>
