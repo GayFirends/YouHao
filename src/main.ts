@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { Capacitor } from '@capacitor/core'
 import App from './App.vue'
-import { initDatabase } from './services/database'
+import { initDatabase, loadSecureConfig } from './services/database'
 import './assets/main.css'
 
 async function configureNativeUi() {
@@ -15,6 +15,7 @@ async function configureNativeUi() {
 
 async function bootstrap() {
   await initDatabase()
+  await loadSecureConfig()
   await configureNativeUi()
   createApp(App).use(createPinia()).mount('#app')
 }

@@ -1,17 +1,7 @@
 import packageInfo from '../../package.json'
 import { Capacitor } from '@capacitor/core'
 import { database } from './database'
-
-const DEVICE_KEY = 'fuel-track-device-id'
-
-export function getDeviceId() {
-  let id = localStorage.getItem(DEVICE_KEY)
-  if (!id) {
-    id = crypto.randomUUID()
-    localStorage.setItem(DEVICE_KEY, id)
-  }
-  return id
-}
+import { getDeviceId } from './device-identity'
 
 export async function createDiagnosticReport() {
   let lastError: unknown = null

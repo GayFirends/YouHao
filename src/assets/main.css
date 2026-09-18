@@ -152,6 +152,15 @@ main { margin-left: var(--sidebar-width); min-height: 100vh; }
 .startup-recovery { max-width: 620px; margin: 10vh auto; padding: 32px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
 .startup-recovery h1, .startup-recovery p { margin: 0; }
 .startup-recovery p { color: var(--muted); line-height: 1.7; }
+.device-summary { font-size: 12px; color: var(--muted); }
+.conflict-panel { margin-top: 20px; padding: 24px; }
+.conflict-card { padding: 18px 0; border-top: 1px solid var(--line); }
+.conflict-card h3 { font-size: 15px; }
+.conflict-versions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.conflict-versions pre { max-height: 240px; overflow: auto; padding: 12px; background: var(--surface-alt); font-size: 11px; white-space: pre-wrap; }
+.conflict-card details { margin-top: 12px; }
+.conflict-card textarea { margin: 10px 0; font-family: ui-monospace, monospace; font-size: 12px; }
+@media (max-width: 720px) { .conflict-versions { grid-template-columns: 1fr; } }
 
 /* Overview */
 .metric-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }

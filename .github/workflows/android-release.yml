@@ -6,7 +6,7 @@ on:
       version_name:
         description: 'App version name; must match package.json'
         required: true
-        default: '0.1.0'
+        default: '0.2.0'
       version_code:
         description: 'Android version code'
         required: true
@@ -86,7 +86,11 @@ jobs:
       - name: Install, test and sync
         run: |
           npm ci
-          npm test
+          npx playwright install --with-deps chromium
+          npm run check
+          npm audit --audit-level=high
+          npm run size:check
+          npm run test:e2e
           npm run android:sync
 
       - name: Build signed APK and AAB
@@ -95,6 +99,26 @@ jobs:
         run: |
           chmod +x android/gradlew
           ./android/gradlew -p android --no-daemon assembleRelease bundleRelease
+
+      - name: Verify signed artifacts
+        run: |
+          set -euo pipefail
+          apksigner_path="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          test -n "$apksigner_path"
+          "$apksigner_path" verify --verbose android/app/build/outputs/apk/release/app-universal-release.apk
+          jarsigner -verify android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Install and launch release APK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: |
+            adb install -r android/app/build/outputs/apk/release/app-universal-release.apk
+            adb shell am start -W -n com.youhao.fueltrack/.MainActivity
+            adb shell pidof com.youhao.fueltrack
 
       - name: Rename release packages
         shell: bash

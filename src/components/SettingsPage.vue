@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
 import { Check, Cloud, Download, FileJson, RefreshCw, Upload } from '@lucide/vue'
-import type { WebDavConfig } from '../types'
+import type { SyncConflict, SyncDeviceState, WebDavConfig } from '../types'
 
 const props = defineProps<{
   config: WebDavConfig
@@ -9,6 +9,9 @@ const props = defineProps<{
   testing: boolean
   saving: boolean
   lastSync: string
+  nativePlatform: boolean
+  conflicts: SyncConflict[]
+  syncDevices: SyncDeviceState[]
 }>()
 const emit = defineEmits<{
   save: [config: WebDavConfig]
@@ -17,8 +20,10 @@ const emit = defineEmits<{
   export: [format: 'json' | 'csv']
   import: [event: Event]
   diagnostics: []
+  resolve: [id: string, resolution: 'local' | 'remote' | 'manual', manual?: string]
 }>()
 const draft = reactive<WebDavConfig>({ ...props.config })
+const manualDrafts = reactive<Record<string, string>>({})
 watch(
   () => props.config,
   (value) => Object.assign(draft, value),
@@ -57,7 +62,16 @@ watch(
           ><span>同步加密口令 <small>至少 8 个字符，无法找回</small></span
           ><input v-model="draft.encryptionPassphrase" type="password" minlength="8" autocomplete="new-password" required
         /></label>
-        <p v-if="draft.encryptionEnabled" class="privacy-note">口令只保留在当前会话，不会写入数据库、备份或 WebDAV 文件。</p>
+        <label v-if="draft.encryptionEnabled && nativePlatform" class="encryption-toggle"
+          ><input v-model="draft.rememberEncryptionPassphrase" type="checkbox" /><span>使用 Android Keystore 在此设备记住口令</span></label
+        >
+        <p v-if="draft.encryptionEnabled" class="privacy-note">
+          {{
+            draft.rememberEncryptionPassphrase && nativePlatform
+              ? '口令由 Android Keystore 加密保存在此设备，不会写入数据库、备份或 WebDAV 文件。'
+              : '口令只保留在当前会话，不会写入数据库、备份或 WebDAV 文件。'
+          }}
+        </p>
         <div class="form-actions">
           <button type="button" class="button secondary" :disabled="testing" @click="emit('test', { ...draft })">
             <RefreshCw :size="17" :class="{ spin: testing }" />测试连接</button
@@ -75,8 +89,46 @@ watch(
         <div class="privacy-note">
           <strong>记录级安全合并</strong><span>同步会比较每条记录的更新时间，多设备离线录入也不会整库覆盖。</span>
         </div>
+        <p v-if="syncDevices.length" class="device-summary">
+          {{ syncDevices.length }} 台已知设备 · 最早确认
+          {{ new Date(Math.min(...syncDevices.map((device) => Date.parse(device.acknowledgedThrough)))).toLocaleString('zh-CN') }}
+        </p>
       </aside>
     </div>
+    <section v-if="conflicts.length" class="panel conflict-panel">
+      <div class="section-heading">
+        <div>
+          <h2>等待处理的同步冲突</h2>
+          <p>本机与云端在上次同步后都修改了同一条数据，请明确选择版本。</p>
+        </div>
+      </div>
+      <article v-for="conflict in conflicts" :key="conflict.id" class="conflict-card">
+        <h3>{{ conflict.entityType === 'vehicle' ? '车辆' : '加油记录' }} · {{ conflict.entityId }}</h3>
+        <div class="conflict-versions">
+          <div>
+            <strong>本机版本</strong>
+            <pre>{{ JSON.stringify(conflict.localValue, null, 2) }}</pre>
+          </div>
+          <div>
+            <strong>云端版本</strong>
+            <pre>{{ JSON.stringify(conflict.remoteValue, null, 2) }}</pre>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="button secondary" @click="emit('resolve', conflict.id, 'local')">保留本机</button
+          ><button class="button secondary" @click="emit('resolve', conflict.id, 'remote')">保留云端</button>
+        </div>
+        <details>
+          <summary>手动合并 JSON</summary>
+          <textarea v-model="manualDrafts[conflict.id]" rows="8" :placeholder="JSON.stringify(conflict.localValue, null, 2)" /><button
+            class="button primary"
+            @click="emit('resolve', conflict.id, 'manual', manualDrafts[conflict.id] || JSON.stringify(conflict.localValue))"
+          >
+            保存合并结果
+          </button>
+        </details>
+      </article>
+    </section>
     <section class="panel backup-panel">
       <div class="section-heading">
         <span class="large-icon"><FileJson :size="24" /></span>

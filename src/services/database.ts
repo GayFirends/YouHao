@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core'
 import type { DatabaseAdapter } from './database-adapter'
 import type { FuelRecord, SyncPayload, Vehicle, WebDavConfig } from '../types'
+import { loadRememberedPassphrase, saveRememberedPassphrase } from './secure-secret'
 
 const CONFIG_KEY = 'fuel-track-webdav-config'
 const PASSWORD_KEY = 'fuel-track-webdav-password'
@@ -30,6 +31,17 @@ export async function initDatabase() {
     adapter = (await import('./database-web')).webDatabase
   }
   await adapter.init()
+}
+
+export async function loadSecureConfig() {
+  if (!Capacitor.isNativePlatform()) return
+  try {
+    const passphrase = await loadRememberedPassphrase()
+    if (passphrase) sessionStorage.setItem('fuel-track-sync-passphrase', passphrase)
+  } catch (error) {
+    sessionStorage.removeItem('fuel-track-sync-passphrase')
+    console.warn('Unable to restore the remembered sync passphrase', error)
+  }
 }
 
 export const database = {
@@ -75,6 +87,15 @@ export const database = {
   getSchemaInfo() {
     return enqueue(() => activeAdapter().getSchemaInfo())
   },
+  conflicts() {
+    return enqueue(() => activeAdapter().conflicts())
+  },
+  saveConflicts(conflicts: import('../types').SyncConflict[]) {
+    return enqueue(() => activeAdapter().saveConflicts(conflicts))
+  },
+  resolveConflict(id: string, resolution: 'local' | 'remote', merged?: Vehicle | FuelRecord) {
+    return enqueue(() => activeAdapter().resolveConflict(id, resolution, merged))
+  },
   flush() {
     return enqueue(() => activeAdapter().flush())
   },
@@ -86,6 +107,7 @@ export const database = {
       fileName: 'fuel-track.json',
       encryptionEnabled: false,
       encryptionPassphrase: '',
+      rememberEncryptionPassphrase: false,
     }
     try {
       const stored = JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}') as Partial<WebDavConfig>
@@ -104,12 +126,13 @@ export const database = {
       return defaults
     }
   },
-  saveConfig(config: WebDavConfig) {
+  async saveConfig(config: WebDavConfig) {
     const { password, encryptionPassphrase, ...persisted } = config
     localStorage.setItem(CONFIG_KEY, JSON.stringify(persisted))
     if (password) sessionStorage.setItem(PASSWORD_KEY, password)
     else sessionStorage.removeItem(PASSWORD_KEY)
     if (encryptionPassphrase) sessionStorage.setItem('fuel-track-sync-passphrase', encryptionPassphrase)
     else sessionStorage.removeItem('fuel-track-sync-passphrase')
+    await saveRememberedPassphrase(config.rememberEncryptionPassphrase ? encryptionPassphrase || null : null)
   },
 }

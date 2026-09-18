@@ -33,6 +33,7 @@ export interface WebDavConfig {
   fileName: string
   encryptionEnabled?: boolean
   encryptionPassphrase?: string
+  rememberEncryptionPassphrase?: boolean
 }
 
 export interface SyncPayloadV1 {
@@ -98,6 +99,26 @@ export interface SafetySnapshot {
 export interface SchemaInfo {
   version: number
   backend: 'web-sqlite-wasm' | 'android-native-sqlite'
+}
+
+export interface SyncConflict {
+  id: string
+  entityType: 'vehicle' | 'record'
+  entityId: string
+  localValue: Vehicle | FuelRecord
+  remoteValue: Vehicle | FuelRecord
+  detectedAt: string
+}
+
+export interface SyncDeviceState {
+  deviceId: string
+  lastSeenAt: string
+  acknowledgedThrough: string
+}
+
+export interface SyncMetadata {
+  version: 1
+  devices: Record<string, SyncDeviceState>
 }
 
 export type ViewName = 'overview' | 'records' | 'vehicles' | 'settings'

@@ -1,14 +1,14 @@
 import initSqlJs, { type Database, type SqlJsStatic, type SqlValue } from 'sql.js'
 import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url'
 import type { DatabaseAdapter } from './database-adapter'
-import type { FuelRecord, SyncPayload, Vehicle } from '../types'
+import type { FuelRecord, SyncConflict, SyncPayload, Vehicle } from '../types'
 import { shouldAcceptRemote } from './conflict-resolution'
 import { createDatabaseStorage, SnapshotConflictError } from './database-storage'
 import { listRecordPage, summarizeVehicle } from './record-query'
 import { AppError } from './app-error'
 
 const LEGACY_DB_KEY = 'fuel-track-sqlite-v1'
-const SCHEMA_VERSION = 4
+const SCHEMA_VERSION = 5
 const MAX_WRITE_ATTEMPTS = 5
 
 function legacyDatabaseBytes(): Uint8Array | null {
@@ -160,6 +160,16 @@ function migrateSchema(db: Database) {
         CREATE INDEX IF NOT EXISTS idx_records_deleted ON fuel_records(deletedAt);
         CREATE INDEX IF NOT EXISTS idx_vehicles_deleted ON vehicles(deletedAt);
         PRAGMA user_version = 4;
+      `)
+    }
+    if (version < 5) {
+      db.run(`
+        CREATE TABLE IF NOT EXISTS sync_conflicts (
+          id TEXT PRIMARY KEY, entityType TEXT NOT NULL CHECK (entityType IN ('vehicle', 'record')),
+          entityId TEXT NOT NULL, localJson TEXT NOT NULL, remoteJson TEXT NOT NULL, detectedAt TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_sync_conflicts_detected ON sync_conflicts(detectedAt DESC);
+        PRAGMA user_version = 5;
       `)
     }
   })
@@ -397,6 +407,47 @@ export function createWebDatabase(loadSql: () => Promise<SqlJsStatic> = () => in
         version: Number(rows<{ user_version: number }>(current, 'PRAGMA user_version')[0]?.user_version || 0),
         backend: 'web-sqlite-wasm' as const,
       }
+    },
+    conflicts() {
+      return enqueue(async () =>
+        rows<Record<string, unknown>>(await refresh(), 'SELECT * FROM sync_conflicts ORDER BY detectedAt DESC').map((row) => ({
+          id: String(row.id),
+          entityType: row.entityType as 'vehicle' | 'record',
+          entityId: String(row.entityId),
+          localValue: JSON.parse(String(row.localJson)) as Vehicle | FuelRecord,
+          remoteValue: JSON.parse(String(row.remoteJson)) as Vehicle | FuelRecord,
+          detectedAt: String(row.detectedAt),
+        })),
+      )
+    },
+    saveConflicts(conflicts: SyncConflict[]) {
+      return mutate((candidate) => {
+        for (const conflict of conflicts) {
+          candidate.run(
+            `INSERT OR IGNORE INTO sync_conflicts (id, entityType, entityId, localJson, remoteJson, detectedAt)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              conflict.id,
+              conflict.entityType,
+              conflict.entityId,
+              JSON.stringify(conflict.localValue),
+              JSON.stringify(conflict.remoteValue),
+              conflict.detectedAt,
+            ],
+          )
+        }
+      })
+    },
+    resolveConflict(id, resolution, merged) {
+      return mutate((candidate) => {
+        const row = rows<Record<string, unknown>>(candidate, 'SELECT * FROM sync_conflicts WHERE id = ? LIMIT 1', [id])[0]
+        if (!row) throw new Error('同步冲突不存在或已处理')
+        const selected = merged || (JSON.parse(String(resolution === 'local' ? row.localJson : row.remoteJson)) as Vehicle | FuelRecord)
+        const value = { ...selected, updatedAt: new Date().toISOString() }
+        if (row.entityType === 'vehicle') upsertVehicle(candidate, value as Vehicle)
+        else upsertRecord(candidate, value as FuelRecord)
+        candidate.run('DELETE FROM sync_conflicts WHERE id = ?', [id])
+      })
     },
     async flush() {
       await lastWrite

@@ -1,11 +1,23 @@
 import { database } from './database'
-import type { SyncPayload, WebDavConfig } from '../types'
+import type { SyncMetadata, SyncPayload, WebDavConfig } from '../types'
 import { decryptSyncDocument, encryptSyncPayload } from './sync-crypto'
 import { AppError } from './app-error'
+import { getDeviceId } from './device-identity'
+import { detectSyncConflicts, saveSyncBase, withoutConflicts } from './sync-conflicts'
 
 const MAX_SYNC_ATTEMPTS = 3
 const REQUEST_TIMEOUT_MS = 30_000
 const MAX_CLOCK_SKEW_MS = 5 * 60_000
+const TOMBSTONE_RETENTION_MS = 90 * 24 * 60 * 60_000
+const METADATA_CACHE_KEY = 'fuel-track-sync-metadata-v1'
+
+function syncTarget(config: WebDavConfig) {
+  return `${config.url.replace(/\/+$/, '')}/${config.fileName || 'fuel-track.json'}`
+}
+
+function metadataCacheKey(config?: WebDavConfig) {
+  return `${METADATA_CACHE_KEY}:${encodeURIComponent(config ? syncTarget(config) : 'default')}`
+}
 
 function validateConfig(config: WebDavConfig) {
   if (!config.url) throw new Error('请填写 WebDAV 地址')
@@ -73,6 +85,10 @@ function fileUrl(config: WebDavConfig) {
   return `${directoryUrl(config)}${encodeURIComponent(config.fileName || 'fuel-track.json')}`
 }
 
+function metadataUrl(config: WebDavConfig) {
+  return `${directoryUrl(config)}${encodeURIComponent(`${config.fileName || 'fuel-track.json'}.meta.json`)}`
+}
+
 async function request(config: WebDavConfig, url: string, method: string, body?: string, conditionalHeaders: Record<string, string> = {}) {
   const controller = new AbortController()
   const timer = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
@@ -105,8 +121,58 @@ export async function testWebDav(config: WebDavConfig) {
   if (!response.ok && response.status !== 207) throw new Error(`连接失败（HTTP ${response.status}）`)
 }
 
+export function getCachedSyncMetadata(config?: WebDavConfig): SyncMetadata {
+  try {
+    const value = JSON.parse(localStorage.getItem(metadataCacheKey(config)) || '') as SyncMetadata
+    if (value.version === 1 && value.devices && typeof value.devices === 'object') return value
+  } catch {
+    // A missing or malformed cache is replaced after the next successful sync.
+  }
+  return { version: 1, devices: {} }
+}
+
+async function syncDeviceMetadata(config: WebDavConfig, acknowledgedThrough: string) {
+  for (let attempt = 1; attempt <= MAX_SYNC_ATTEMPTS; attempt += 1) {
+    const download = await request(config, metadataUrl(config), 'GET')
+    let metadata: SyncMetadata = { version: 1, devices: {} }
+    const headers: Record<string, string> = {}
+    if (download.ok) {
+      const value = JSON.parse(await download.text()) as SyncMetadata
+      if (value.version !== 1 || !value.devices || typeof value.devices !== 'object') throw new Error('设备同步元数据格式无效')
+      metadata = value
+      const etag = download.headers.get('ETag')
+      if (etag) headers['If-Match'] = etag
+      else {
+        const lastModified = download.headers.get('Last-Modified')
+        if (lastModified) headers['If-Unmodified-Since'] = lastModified
+        else throw new Error('服务器未提供设备元数据的 ETag 或 Last-Modified，已跳过安全清理')
+      }
+    } else if (download.status === 404) headers['If-None-Match'] = '*'
+    else throw new Error(`设备同步元数据下载失败（HTTP ${download.status}）`)
+
+    const deviceId = getDeviceId()
+    metadata.devices[deviceId] = { deviceId, lastSeenAt: acknowledgedThrough, acknowledgedThrough }
+    const upload = await request(config, metadataUrl(config), 'PUT', JSON.stringify(metadata), headers)
+    if (upload.ok) {
+      localStorage.setItem(metadataCacheKey(config), JSON.stringify(metadata))
+      const acknowledgements = Object.values(metadata.devices)
+        .map((device) => Date.parse(device.acknowledgedThrough))
+        .filter(Number.isFinite)
+      if (acknowledgements.length === Object.keys(metadata.devices).length && acknowledgements.length) {
+        const retentionCutoff = Date.now() - TOMBSTONE_RETENTION_MS
+        const safeCutoff = new Date(Math.min(retentionCutoff, ...acknowledgements)).toISOString()
+        await database.compactTombstones(safeCutoff)
+      }
+      return metadata
+    }
+    if (upload.status !== 412 || attempt === MAX_SYNC_ATTEMPTS) throw new Error(`设备同步元数据上传失败（HTTP ${upload.status}）`)
+  }
+  throw new Error('设备同步元数据重试次数已用尽')
+}
+
 export async function syncWebDav(config: WebDavConfig) {
   validateConfig(config)
+  const target = syncTarget(config)
 
   for (let attempt = 1; attempt <= MAX_SYNC_ATTEMPTS; attempt += 1) {
     const download = await request(config, fileUrl(config), 'GET')
@@ -119,7 +185,10 @@ export async function syncWebDav(config: WebDavConfig) {
       lastModified = download.headers.get('Last-Modified')
       const remotePayload = await parseRemoteResponse(download, config.encryptionPassphrase)
       assertPayloadClock(remotePayload)
-      await database.mergeData(remotePayload)
+      const localBeforeMerge = await database.exportData()
+      const conflicts = await detectSyncConflicts(localBeforeMerge, remotePayload, target)
+      if (conflicts.length) await database.saveConflicts(conflicts)
+      await database.mergeData(withoutConflicts(remotePayload, conflicts))
     } else if (download.status !== 404) {
       if (download.status === 401 || download.status === 403) throw new Error('WebDAV 认证失败')
       throw new Error(`下载失败（HTTP ${download.status}）`)
@@ -135,7 +204,16 @@ export async function syncWebDav(config: WebDavConfig) {
     const document = config.encryptionEnabled ? await encryptSyncPayload(localPayload, config.encryptionPassphrase || '') : localPayload
     const payload = JSON.stringify(document)
     const upload = await request(config, fileUrl(config), 'PUT', payload, conditionalHeaders)
-    if (upload.ok) return new Date()
+    if (upload.ok) {
+      const completedAt = new Date()
+      await saveSyncBase(await database.exportData(), target)
+      try {
+        await syncDeviceMetadata(config, completedAt.toISOString())
+      } catch (error) {
+        console.warn('Record sync completed but device acknowledgement failed', error)
+      }
+      return completedAt
+    }
 
     if (upload.status === 412 && attempt < MAX_SYNC_ATTEMPTS) continue
     if (upload.status === 409) throw new Error('WebDAV 同步目录不存在，请先在服务器上创建该目录')

@@ -138,7 +138,7 @@ describe('web database persistence', () => {
     await database.saveRecord({ ...original, note: 'changed', updatedAt: '2026-09-15T01:00:00.000Z' })
     await database.restoreSafetySnapshot(snapshot.id)
     expect(await database.records()).toEqual([original])
-    expect(await database.getSchemaInfo()).toEqual({ version: 4, backend: 'web-sqlite-wasm' })
+    expect(await database.getSchemaInfo()).toEqual({ version: 5, backend: 'web-sqlite-wasm' })
   })
 
   it('paginates records and compacts old tombstones', async () => {
@@ -302,6 +302,52 @@ describe('web database persistence', () => {
     await database.mergeData({ version: 1, exportedAt: stamp, vehicles: [vehicle], records: [winning] })
     expect(await database.records()).toEqual([winning])
   })
+
+  it('persists conflicts and resolves local, remote, and manually merged versions atomically', async () => {
+    const database = client()
+    await database.init()
+    const vehicleId = (await database.vehicles())[0].id
+    const local = record(vehicleId, { id: 'conflicted', note: 'local' })
+    const remote = { ...local, note: 'remote' }
+
+    await database.saveConflicts([
+      {
+        id: 'record:conflicted',
+        entityType: 'record',
+        entityId: 'conflicted',
+        localValue: local,
+        remoteValue: remote,
+        detectedAt: stamp,
+      },
+    ])
+    expect(await database.conflicts()).toMatchObject([
+      { id: 'record:conflicted', localValue: { note: 'local' }, remoteValue: { note: 'remote' } },
+    ])
+    await database.resolveConflict('record:conflicted', 'remote')
+    expect((await database.getRecord('conflicted'))?.note).toBe('remote')
+    expect(await database.conflicts()).toEqual([])
+
+    for (const [id, resolution, merged, expected] of [
+      ['local-choice', 'local', undefined, 'local'],
+      ['manual-choice', 'local', { ...local, id: 'manual-choice', note: 'merged' }, 'merged'],
+    ] as const) {
+      const localValue = { ...local, id }
+      const remoteValue = { ...remote, id }
+      await database.saveConflicts([
+        {
+          id: `record:${id}`,
+          entityType: 'record',
+          entityId: id,
+          localValue,
+          remoteValue,
+          detectedAt: stamp,
+        },
+      ])
+      await database.resolveConflict(`record:${id}`, resolution, merged)
+      expect((await database.getRecord(id))?.note).toBe(expected)
+    }
+    expect(await database.conflicts()).toEqual([])
+  })
 })
 
 describe('web storage migrations', () => {
@@ -335,7 +381,7 @@ describe('web storage migrations', () => {
 
   it('does not overwrite a database created by a newer app', async () => {
     const fixture = new SQL.Database(legacyBytes(2))
-    fixture.run('PRAGMA user_version = 5')
+    fixture.run('PRAGMA user_version = 6')
     const bytes = fixture.export()
     fixture.close()
     await seedOldIndexedDb(bytes)

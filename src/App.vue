@@ -17,6 +17,7 @@ import { downloadText, parseBackup, recordsToCsv } from './services/backup'
 import { localDateKey } from './services/local-date'
 import { userErrorMessage } from './services/app-error'
 import { createDiagnosticReport } from './services/diagnostics'
+import { Capacitor } from '@capacitor/core'
 import type { FuelRecord, Vehicle, ViewName, WebDavConfig } from './types'
 
 const store = useAppStore()
@@ -186,7 +187,7 @@ async function saveSettings(config: WebDavConfig) {
       await store.sync()
       await exportBackup('json')
     }
-    store.saveConfig(config)
+    await store.saveConfig(config)
     if (passphraseChanged || disabling) await store.sync()
     notify('同步设置已保存')
   } catch (error) {
@@ -227,6 +228,14 @@ async function exportDiagnostics() {
     const report = await createDiagnosticReport()
     await downloadText(JSON.stringify(report, null, 2), `fuel-track-diagnostics-${today()}.json`, 'application/json;charset=utf-8')
     notify('脱敏诊断信息已导出')
+  } catch (error) {
+    notify(userErrorMessage(error), 'error')
+  }
+}
+async function resolveSyncConflict(id: string, resolution: 'local' | 'remote' | 'manual', manual?: string) {
+  try {
+    await store.resolveConflict(id, resolution, manual)
+    notify('同步冲突已处理，下次同步会上传所选版本')
   } catch (error) {
     notify(userErrorMessage(error), 'error')
   }
@@ -349,12 +358,16 @@ onBeforeUnmount(() => {
         :testing="testing"
         :saving="saving"
         :last-sync="store.state.lastSync"
+        :native-platform="Capacitor.isNativePlatform()"
+        :conflicts="store.state.conflicts"
+        :sync-devices="store.state.syncDevices"
         @save="saveSettings"
         @test="runTest"
         @sync="runSync"
         @export="exportBackup"
         @import="importBackup"
         @diagnostics="exportDiagnostics"
+        @resolve="resolveSyncConflict"
       />
     </main>
 

@@ -4,19 +4,29 @@ const { database } = vi.hoisted(() => ({
   database: {
     mergeData: vi.fn(async () => undefined),
     exportData: vi.fn(async () => ({ version: 1 as const, exportedAt: '', vehicles: [], records: [] })),
+    saveConflicts: vi.fn(async () => undefined),
+    compactTombstones: vi.fn(async () => 0),
   },
 }))
 
 vi.mock('../database', () => ({ database }))
 
-import { syncWebDav, testWebDav } from '../webdav'
+import { getCachedSyncMetadata, syncWebDav, testWebDav } from '../webdav'
 
 const config = { url: 'https://dav.example.com/fuel', username: 'user', password: 'pass', fileName: 'data.json' }
 const payload = JSON.stringify({ version: 1, exportedAt: '2026-01-01T00:00:00.000Z', vehicles: [], records: [] })
+let localValues: Map<string, string>
 
 describe('WebDAV synchronization', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    localValues = new Map<string, string>([['fuel-track-device-id', 'this-device']])
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => localValues.get(key) ?? null,
+      setItem: (key: string, value: string) => localValues.set(key, value),
+      removeItem: (key: string) => localValues.delete(key),
+      clear: () => localValues.clear(),
+    })
   })
 
   it('tests the configured directory instead of the data file', async () => {
@@ -63,11 +73,13 @@ describe('WebDAV synchronization', () => {
       .mockResolvedValueOnce(new Response('', { status: 412 }))
       .mockResolvedValueOnce(new Response(payload, { status: 200, headers: { ETag: '"v2"' } }))
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(new Response('', { status: 404 }))
+      .mockResolvedValueOnce(new Response(null, { status: 201 }))
     vi.stubGlobal('fetch', fetchMock)
 
     await syncWebDav(config)
 
-    expect(fetchMock).toHaveBeenCalledTimes(4)
+    expect(fetchMock).toHaveBeenCalledTimes(6)
     expect(fetchMock.mock.calls[1][1].headers['If-Match']).toBe('"v1"')
     expect(fetchMock.mock.calls[3][1].headers['If-Match']).toBe('"v2"')
     expect(database.mergeData).toHaveBeenCalledTimes(2)
@@ -76,6 +88,8 @@ describe('WebDAV synchronization', () => {
   it('creates a missing file conditionally', async () => {
     const fetchMock = vi
       .fn()
+      .mockResolvedValueOnce(new Response('', { status: 404 }))
+      .mockResolvedValueOnce(new Response(null, { status: 201 }))
       .mockResolvedValueOnce(new Response('', { status: 404 }))
       .mockResolvedValueOnce(new Response(null, { status: 201 }))
     vi.stubGlobal('fetch', fetchMock)
@@ -88,9 +102,65 @@ describe('WebDAV synchronization', () => {
       .fn()
       .mockResolvedValueOnce(new Response(payload, { status: 200, headers: { 'Last-Modified': 'Wed, 16 Sep 2026 00:00:00 GMT' } }))
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(new Response('', { status: 404 }))
+      .mockResolvedValueOnce(new Response(null, { status: 201 }))
     vi.stubGlobal('fetch', fetchMock)
     await syncWebDav(config)
     expect(fetchMock.mock.calls[1][1].headers['If-Unmodified-Since']).toContain('16 Sep 2026')
+  })
+
+  it('creates target-scoped device metadata conditionally and compacts only through the safe acknowledgement', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('', { status: 404 }))
+      .mockResolvedValueOnce(new Response(null, { status: 201 }))
+      .mockResolvedValueOnce(new Response('', { status: 404 }))
+      .mockResolvedValueOnce(new Response(null, { status: 201 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await syncWebDav(config)
+
+    expect(fetchMock.mock.calls[2][0]).toContain('data.json.meta.json')
+    expect(fetchMock.mock.calls[3][1].headers['If-None-Match']).toBe('*')
+    expect(JSON.parse(String(fetchMock.mock.calls[3][1].body)).devices['this-device']).toMatchObject({ deviceId: 'this-device' })
+    expect(database.compactTombstones).toHaveBeenCalledOnce()
+    expect(Object.keys(getCachedSyncMetadata(config).devices)).toEqual(['this-device'])
+    expect(getCachedSyncMetadata({ ...config, fileName: 'other.json' }).devices).toEqual({})
+  })
+
+  it('merges all known devices with ETag retries and uses the earliest acknowledgement', async () => {
+    const oldAcknowledgement = '2026-01-01T00:00:00.000Z'
+    const metadata = JSON.stringify({
+      version: 1,
+      devices: { old: { deviceId: 'old', lastSeenAt: oldAcknowledgement, acknowledgedThrough: oldAcknowledgement } },
+    })
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('', { status: 404 }))
+      .mockResolvedValueOnce(new Response(null, { status: 201 }))
+      .mockResolvedValueOnce(new Response(metadata, { status: 200, headers: { ETag: '"m1"' } }))
+      .mockResolvedValueOnce(new Response('', { status: 412 }))
+      .mockResolvedValueOnce(new Response(metadata, { status: 200, headers: { ETag: '"m2"' } }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await syncWebDav(config)
+
+    expect(fetchMock.mock.calls[3][1].headers['If-Match']).toBe('"m1"')
+    expect(fetchMock.mock.calls[5][1].headers['If-Match']).toBe('"m2"')
+    expect(JSON.parse(String(fetchMock.mock.calls[5][1].body)).devices).toHaveProperty('old')
+    expect(database.compactTombstones).toHaveBeenCalledWith(oldAcknowledgement)
+  })
+
+  it('keeps the completed record sync successful when metadata is malformed', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('', { status: 404 }))
+      .mockResolvedValueOnce(new Response(null, { status: 201 }))
+      .mockResolvedValueOnce(new Response('{broken', { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    await expect(syncWebDav(config)).resolves.toBeInstanceOf(Date)
+    expect(warning).toHaveBeenCalledOnce()
+    expect(database.compactTombstones).not.toHaveBeenCalled()
   })
 
   it.each([

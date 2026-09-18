@@ -1,4 +1,14 @@
-import type { FuelRecord, RecordListQuery, RecordPage, SafetySnapshot, SchemaInfo, SyncPayload, Vehicle, VehicleSummary } from '../types'
+import type {
+  FuelRecord,
+  RecordListQuery,
+  RecordPage,
+  SafetySnapshot,
+  SchemaInfo,
+  SyncConflict,
+  SyncPayload,
+  Vehicle,
+  VehicleSummary,
+} from '../types'
 
 export interface DatabaseAdapter {
   init(): Promise<void>
@@ -16,5 +26,8 @@ export interface DatabaseAdapter {
   restoreSafetySnapshot(id: string): Promise<void>
   compactTombstones(cutoff: string): Promise<number>
   getSchemaInfo(): Promise<SchemaInfo>
+  conflicts(): Promise<SyncConflict[]>
+  saveConflicts(conflicts: SyncConflict[]): Promise<void>
+  resolveConflict(id: string, resolution: 'local' | 'remote', merged?: Vehicle | FuelRecord): Promise<void>
   flush(): Promise<void>
 }

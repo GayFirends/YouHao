@@ -10,12 +10,28 @@ const { adapter } = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => true } }))
+vi.mock('@capacitor/core', () => ({
+  Capacitor: { isNativePlatform: () => true },
+  registerPlugin: () => ({
+    get: vi.fn(async () => ({ value: null })),
+    set: vi.fn(async () => undefined),
+    remove: vi.fn(async () => undefined),
+  }),
+}))
 vi.mock('../database-native', () => ({ nativeDatabase: adapter }))
 
 import { database, initDatabase } from '../database'
 
-const vehicle: Vehicle = { id: 'car', name: '车辆', plate: '', fuelType: '92#', initialOdometer: 0, createdAt: '', updatedAt: '', deletedAt: null }
+const vehicle: Vehicle = {
+  id: 'car',
+  name: '车辆',
+  plate: '',
+  fuelType: '92#',
+  initialOdometer: 0,
+  createdAt: '',
+  updatedAt: '',
+  deletedAt: null,
+}
 
 beforeEach(async () => {
   vi.clearAllMocks()
@@ -25,7 +41,12 @@ beforeEach(async () => {
 describe('database operation scheduling', () => {
   it('waits for a complete adapter operation before starting a native merge or export', async () => {
     let finish!: () => void
-    adapter.saveVehicle.mockImplementationOnce(() => new Promise<void>((resolve) => { finish = resolve }))
+    adapter.saveVehicle.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve
+        }),
+    )
     const write = database.saveVehicle(vehicle)
     const merge = database.mergeData({ version: 1, exportedAt: '', vehicles: [], records: [] })
     const snapshot = database.exportData()

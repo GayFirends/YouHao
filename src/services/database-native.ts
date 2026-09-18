@@ -1,11 +1,11 @@
 import { CapacitorSQLite, SQLiteConnection, type SQLiteDBConnection } from '@capacitor-community/sqlite'
 import type { DatabaseAdapter } from './database-adapter'
-import type { FuelRecord, SyncPayload, Vehicle } from '../types'
+import type { FuelRecord, SyncConflict, SyncPayload, Vehicle } from '../types'
 import { shouldAcceptRemote } from './conflict-resolution'
 import { listRecordPage, summarizeVehicle } from './record-query'
 
 const DATABASE_NAME = 'fuel-track'
-const DATABASE_VERSION = 4
+const DATABASE_VERSION = 5
 
 const VEHICLE_UPSERT = `
   INSERT INTO vehicles (id, name, plate, fuelType, initialOdometer, createdAt, updatedAt, deletedAt)
@@ -128,6 +128,16 @@ async function init() {
         'CREATE INDEX IF NOT EXISTS idx_records_vehicle_sort ON fuel_records(vehicleId, date DESC, odometer DESC, createdAt DESC, id DESC);',
         'CREATE INDEX IF NOT EXISTS idx_records_deleted ON fuel_records(deletedAt);',
         'CREATE INDEX IF NOT EXISTS idx_vehicles_deleted ON vehicles(deletedAt);',
+      ],
+    },
+    {
+      toVersion: 5,
+      statements: [
+        `CREATE TABLE IF NOT EXISTS sync_conflicts (
+          id TEXT PRIMARY KEY NOT NULL, entityType TEXT NOT NULL,
+          entityId TEXT NOT NULL, localJson TEXT NOT NULL, remoteJson TEXT NOT NULL, detectedAt TEXT NOT NULL
+        );`,
+        'CREATE INDEX IF NOT EXISTS idx_sync_conflicts_detected ON sync_conflicts(detectedAt DESC);',
       ],
     },
   ])
@@ -258,6 +268,58 @@ export const nativeDatabase: DatabaseAdapter = {
   async getSchemaInfo() {
     const result = await connection.query('PRAGMA user_version;')
     return { version: Number(result.values?.[0]?.user_version || DATABASE_VERSION), backend: 'android-native-sqlite' as const }
+  },
+  async conflicts() {
+    const result = await connection.query('SELECT * FROM sync_conflicts ORDER BY detectedAt DESC')
+    return (result.values || []).map((row) => ({
+      id: String(row.id),
+      entityType: row.entityType as 'vehicle' | 'record',
+      entityId: String(row.entityId),
+      localValue: JSON.parse(String(row.localJson)) as Vehicle | FuelRecord,
+      remoteValue: JSON.parse(String(row.remoteJson)) as Vehicle | FuelRecord,
+      detectedAt: String(row.detectedAt),
+    }))
+  },
+  async saveConflicts(conflicts: SyncConflict[]) {
+    await connection.beginTransaction()
+    try {
+      for (const conflict of conflicts) {
+        await connection.run(
+          `INSERT OR IGNORE INTO sync_conflicts (id, entityType, entityId, localJson, remoteJson, detectedAt)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            conflict.id,
+            conflict.entityType,
+            conflict.entityId,
+            JSON.stringify(conflict.localValue),
+            JSON.stringify(conflict.remoteValue),
+            conflict.detectedAt,
+          ],
+          false,
+        )
+      }
+      await connection.commitTransaction()
+    } catch (error) {
+      await connection.rollbackTransaction()
+      throw error
+    }
+  },
+  async resolveConflict(id, resolution, merged) {
+    const result = await connection.query('SELECT * FROM sync_conflicts WHERE id = ? LIMIT 1', [id])
+    const row = result.values?.[0]
+    if (!row) throw new Error('同步冲突不存在或已处理')
+    const selected = merged || (JSON.parse(String(resolution === 'local' ? row.localJson : row.remoteJson)) as Vehicle | FuelRecord)
+    const value = { ...selected, updatedAt: new Date().toISOString() }
+    await connection.beginTransaction()
+    try {
+      if (row.entityType === 'vehicle') await connection.run(VEHICLE_UPSERT, vehicleValues(value as Vehicle), false)
+      else await connection.run(RECORD_UPSERT, recordValues(value as FuelRecord), false)
+      await connection.run('DELETE FROM sync_conflicts WHERE id = ?', [id], false)
+      await connection.commitTransaction()
+    } catch (error) {
+      await connection.rollbackTransaction()
+      throw error
+    }
   },
   async flush() {
     // Native SQLite commits each awaited write before resolving.
