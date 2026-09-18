@@ -4,9 +4,11 @@ import type { DatabaseAdapter } from './database-adapter'
 import type { FuelRecord, SyncPayload, Vehicle } from '../types'
 import { shouldAcceptRemote } from './conflict-resolution'
 import { createDatabaseStorage, SnapshotConflictError } from './database-storage'
+import { listRecordPage, summarizeVehicle } from './record-query'
+import { AppError } from './app-error'
 
 const LEGACY_DB_KEY = 'fuel-track-sqlite-v1'
-const SCHEMA_VERSION = 3
+const SCHEMA_VERSION = 4
 const MAX_WRITE_ATTEMPTS = 5
 
 function legacyDatabaseBytes(): Uint8Array | null {
@@ -44,18 +46,31 @@ function runTransaction(db: Database, work: () => void) {
 }
 
 function upsertVehicle(db: Database, vehicle: Vehicle) {
-  db.run(`
+  db.run(
+    `
     INSERT INTO vehicles (id, name, plate, fuelType, initialOdometer, createdAt, updatedAt, deletedAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       name = excluded.name, plate = excluded.plate, fuelType = excluded.fuelType,
       initialOdometer = excluded.initialOdometer, createdAt = excluded.createdAt, updatedAt = excluded.updatedAt,
       deletedAt = excluded.deletedAt
-  `, [vehicle.id, vehicle.name, vehicle.plate, vehicle.fuelType, vehicle.initialOdometer, vehicle.createdAt, vehicle.updatedAt, vehicle.deletedAt])
+  `,
+    [
+      vehicle.id,
+      vehicle.name,
+      vehicle.plate,
+      vehicle.fuelType,
+      vehicle.initialOdometer,
+      vehicle.createdAt,
+      vehicle.updatedAt,
+      vehicle.deletedAt,
+    ],
+  )
 }
 
 function upsertRecord(db: Database, record: FuelRecord) {
-  db.run(`
+  db.run(
+    `
     INSERT INTO fuel_records (
       id, vehicleId, date, odometer, liters, amount, pumpAmount, pricePerLiter, isFull,
       station, note, createdAt, updatedAt, deletedAt
@@ -66,7 +81,24 @@ function upsertRecord(db: Database, record: FuelRecord) {
       pricePerLiter = excluded.pricePerLiter,
       isFull = excluded.isFull, station = excluded.station, note = excluded.note,
       createdAt = excluded.createdAt, updatedAt = excluded.updatedAt, deletedAt = excluded.deletedAt
-  `, [record.id, record.vehicleId, record.date, record.odometer, record.liters, record.amount, record.pumpAmount, record.pricePerLiter, record.isFull ? 1 : 0, record.station, record.note, record.createdAt, record.updatedAt, record.deletedAt])
+  `,
+    [
+      record.id,
+      record.vehicleId,
+      record.date,
+      record.odometer,
+      record.liters,
+      record.amount,
+      record.pumpAmount,
+      record.pricePerLiter,
+      record.isFull ? 1 : 0,
+      record.station,
+      record.note,
+      record.createdAt,
+      record.updatedAt,
+      record.deletedAt,
+    ],
+  )
 }
 
 function migrateSchema(db: Database) {
@@ -122,6 +154,14 @@ function migrateSchema(db: Database) {
         PRAGMA user_version = 3;
       `)
     }
+    if (version < 4) {
+      db.run(`
+        CREATE INDEX IF NOT EXISTS idx_records_vehicle_sort ON fuel_records(vehicleId, date DESC, odometer DESC, createdAt DESC, id DESC);
+        CREATE INDEX IF NOT EXISTS idx_records_deleted ON fuel_records(deletedAt);
+        CREATE INDEX IF NOT EXISTS idx_vehicles_deleted ON vehicles(deletedAt);
+        PRAGMA user_version = 4;
+      `)
+    }
   })
   db.run('PRAGMA foreign_keys = ON')
 }
@@ -142,11 +182,17 @@ function mapRecord(row: Record<string, unknown>): FuelRecord {
 }
 
 function getVehicles(db: Database, includeDeleted = false) {
-  return rows<Record<string, unknown>>(db, `SELECT * FROM vehicles ${includeDeleted ? '' : 'WHERE deletedAt IS NULL'} ORDER BY createdAt`).map(mapVehicle)
+  return rows<Record<string, unknown>>(
+    db,
+    `SELECT * FROM vehicles ${includeDeleted ? '' : 'WHERE deletedAt IS NULL'} ORDER BY createdAt`,
+  ).map(mapVehicle)
 }
 
 function getRecords(db: Database, includeDeleted = false) {
-  return rows<Record<string, unknown>>(db, `SELECT * FROM fuel_records ${includeDeleted ? '' : 'WHERE deletedAt IS NULL'} ORDER BY date DESC, odometer DESC`).map(mapRecord)
+  return rows<Record<string, unknown>>(
+    db,
+    `SELECT * FROM fuel_records ${includeDeleted ? '' : 'WHERE deletedAt IS NULL'} ORDER BY date DESC, odometer DESC`,
+  ).map(mapRecord)
 }
 
 export function createWebDatabase(loadSql: () => Promise<SqlJsStatic> = () => initSqlJs({ locateFile: () => wasmUrl })) {
@@ -159,7 +205,10 @@ export function createWebDatabase(loadSql: () => Promise<SqlJsStatic> = () => in
 
   function enqueue<T>(work: () => Promise<T>): Promise<T> {
     const operation = queue.then(work)
-    queue = operation.then(() => undefined, () => undefined)
+    queue = operation.then(
+      () => undefined,
+      () => undefined,
+    )
     return operation
   }
 
@@ -219,15 +268,30 @@ export function createWebDatabase(loadSql: () => Promise<SqlJsStatic> = () => in
     init() {
       lastWrite = enqueue(async () => {
         SQL = await loadSql()
-        await commit((candidate, hasBytes) => {
-          if (hasBytes) assertDatabaseIntegrity(candidate)
-          migrateSchema(candidate)
-          assertDatabaseIntegrity(candidate)
-          if (!hasBytes) {
-            const now = new Date().toISOString()
-            upsertVehicle(candidate, { id: crypto.randomUUID(), name: '我的车辆', plate: '', fuelType: '92#', initialOdometer: 0, createdAt: now, updatedAt: now, deletedAt: null })
-          }
-        }, true)
+        const before = await storage.read()
+        if (before.bytes) await storage.createSnapshot(before.bytes, `pre-migration-${before.revision}`)
+        try {
+          await commit((candidate, hasBytes) => {
+            if (hasBytes) assertDatabaseIntegrity(candidate)
+            migrateSchema(candidate)
+            assertDatabaseIntegrity(candidate)
+            if (!hasBytes) {
+              const now = new Date().toISOString()
+              upsertVehicle(candidate, {
+                id: crypto.randomUUID(),
+                name: '我的车辆',
+                plate: '',
+                fuelType: '92#',
+                initialOdometer: 0,
+                createdAt: now,
+                updatedAt: now,
+                deletedAt: null,
+              })
+            }
+          }, true)
+        } catch (error) {
+          throw new AppError('DATABASE_MIGRATION_FAILED', error instanceof Error ? error.message : '数据库升级失败', { cause: error })
+        }
       })
       return lastWrite
     },
@@ -236,6 +300,15 @@ export function createWebDatabase(loadSql: () => Promise<SqlJsStatic> = () => in
     },
     records(includeDeleted = false) {
       return enqueue(async () => getRecords(await refresh(), includeDeleted))
+    },
+    listRecords(query) {
+      return enqueue(async () => listRecordPage(getRecords(await refresh(), true), query))
+    },
+    getRecord(id) {
+      return enqueue(async () => getRecords(await refresh(), true).find((item) => item.id === id))
+    },
+    getVehicleSummary(vehicleId) {
+      return enqueue(async () => summarizeVehicle(getRecords(await refresh(), true), vehicleId))
     },
     saveVehicle(vehicle) {
       return mutate((candidate) => upsertVehicle(candidate, vehicle))
@@ -246,13 +319,22 @@ export function createWebDatabase(loadSql: () => Promise<SqlJsStatic> = () => in
     deleteVehicle(vehicleId, deletedAt) {
       return mutate((candidate) => {
         candidate.run('UPDATE vehicles SET deletedAt = ?, updatedAt = ? WHERE id = ?', [deletedAt, deletedAt, vehicleId])
-        candidate.run('UPDATE fuel_records SET deletedAt = ?, updatedAt = ? WHERE vehicleId = ? AND deletedAt IS NULL', [deletedAt, deletedAt, vehicleId])
+        candidate.run('UPDATE fuel_records SET deletedAt = ?, updatedAt = ? WHERE vehicleId = ? AND deletedAt IS NULL', [
+          deletedAt,
+          deletedAt,
+          vehicleId,
+        ])
       })
     },
     exportData() {
       return enqueue(async (): Promise<SyncPayload> => {
         const current = await refresh()
-        return { version: 1, exportedAt: new Date().toISOString(), vehicles: getVehicles(current, true), records: getRecords(current, true) }
+        return {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          vehicles: getVehicles(current, true),
+          records: getRecords(current, true),
+        }
       })
     },
     mergeData(remote) {
@@ -266,6 +348,55 @@ export function createWebDatabase(loadSql: () => Promise<SqlJsStatic> = () => in
           if (shouldAcceptRemote(localRecords.get(item.id), item)) upsertRecord(candidate, item)
         }
       })
+    },
+    createSafetySnapshot() {
+      return enqueue(async () => {
+        const current = await refresh()
+        const id = await storage.createSnapshot(current.export().slice())
+        current.run('PRAGMA foreign_keys = ON')
+        return { id, createdAt: new Date().toISOString() }
+      })
+    },
+    restoreSafetySnapshot(id) {
+      lastWrite = enqueue(async () => {
+        const bytes = await storage.readSnapshot(id)
+        const candidate = openDatabase(bytes)
+        try {
+          assertDatabaseIntegrity(candidate)
+          migrateSchema(candidate)
+          const current = await storage.read()
+          const revision = await storage.write(candidate.export().slice(), current.revision)
+          candidate.run('PRAGMA foreign_keys = ON')
+          useDatabase(candidate, revision)
+        } catch (error) {
+          candidate.close()
+          throw error
+        }
+      })
+      return lastWrite
+    },
+    compactTombstones(cutoff) {
+      let removed = 0
+      return mutate((candidate) => {
+        const recordCount =
+          rows<{ count: number }>(candidate, 'SELECT COUNT(*) AS count FROM fuel_records WHERE deletedAt IS NOT NULL AND deletedAt < ?', [
+            cutoff,
+          ])[0]?.count || 0
+        const vehicleCount =
+          rows<{ count: number }>(candidate, 'SELECT COUNT(*) AS count FROM vehicles WHERE deletedAt IS NOT NULL AND deletedAt < ?', [
+            cutoff,
+          ])[0]?.count || 0
+        candidate.run('DELETE FROM fuel_records WHERE deletedAt IS NOT NULL AND deletedAt < ?', [cutoff])
+        candidate.run('DELETE FROM vehicles WHERE deletedAt IS NOT NULL AND deletedAt < ?', [cutoff])
+        removed = recordCount + vehicleCount
+      }).then(() => removed)
+    },
+    async getSchemaInfo() {
+      const current = await refresh()
+      return {
+        version: Number(rows<{ user_version: number }>(current, 'PRAGMA user_version')[0]?.user_version || 0),
+        backend: 'web-sqlite-wasm' as const,
+      }
     },
     async flush() {
       await lastWrite

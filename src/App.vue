@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import {
-  BarChart3, Car, Check, ChevronDown, Cloud, Download, FileJson, Fuel, History,
-  Pencil, Plus, RefreshCw, Settings, Trash2, Upload,
-} from '@lucide/vue'
+import { BarChart3, Car, ChevronDown, Fuel, History, Plus, RefreshCw, Settings } from '@lucide/vue'
 import AppToast from './components/AppToast.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
 import OnboardingGuide from './components/OnboardingGuide.vue'
@@ -11,11 +8,15 @@ import RecordModal from './components/RecordModal.vue'
 import RecordsPage from './components/RecordsPage.vue'
 import OverviewPage from './components/OverviewPage.vue'
 import VehicleModal from './components/VehicleModal.vue'
+import VehiclesPage from './components/VehiclesPage.vue'
+import SettingsPage from './components/SettingsPage.vue'
 import { useAppStore } from './stores/app'
 import { testWebDav } from './services/webdav'
 import { fuelRecordWarnings } from './services/fuel-calculations'
 import { downloadText, parseBackup, recordsToCsv } from './services/backup'
 import { localDateKey } from './services/local-date'
+import { userErrorMessage } from './services/app-error'
+import { createDiagnosticReport } from './services/diagnostics'
 import type { FuelRecord, Vehicle, ViewName, WebDavConfig } from './types'
 
 const store = useAppStore()
@@ -28,10 +29,8 @@ const editingVehicle = ref<Vehicle | null>(null)
 const recordIdentity = ref<Pick<FuelRecord, 'id' | 'createdAt'>>()
 const vehicleIdentity = ref<Pick<Vehicle, 'id' | 'createdAt'>>()
 const saving = ref(false)
-const backupInput = ref<HTMLInputElement | null>(null)
 const toast = reactive({ message: '', type: 'success' as 'success' | 'error' })
 const testing = ref(false)
-const configDraft = reactive<WebDavConfig>({ ...store.state.config })
 
 const nav: { id: ViewName; label: string; shortLabel: string; icon: typeof BarChart3 }[] = [
   { id: 'overview', label: '行驶概览', shortLabel: '概览', icon: BarChart3 },
@@ -43,8 +42,11 @@ const nav: { id: ViewName; label: string; shortLabel: string; icon: typeof BarCh
 let toastTimer: number | undefined
 function notify(message: string, type: 'success' | 'error' = 'success') {
   window.clearTimeout(toastTimer)
-  toast.message = message; toast.type = type
-  toastTimer = window.setTimeout(() => { toast.message = '' }, 4200)
+  toast.message = message
+  toast.type = type
+  toastTimer = window.setTimeout(() => {
+    toast.message = ''
+  }, 4200)
 }
 
 function openRecord(item?: FuelRecord) {
@@ -78,21 +80,34 @@ async function submitRecord(event: Event) {
     isFull: data.get('isFull') === 'on',
   }
   const vehicleId = String(data.get('vehicleId'))
-  const warnings = fuelRecordWarnings(draft, store.state.records.filter(item => item.vehicleId === vehicleId))
-  if (warnings.length && !window.confirm(`这条记录可能存在异常：\n\n${warnings.map((warning) => `• ${warning}`).join('\n')}\n\n仍然保存吗？`)) return
+  const warnings = fuelRecordWarnings(
+    draft,
+    store.state.records.filter((item) => item.vehicleId === vehicleId),
+  )
+  if (
+    warnings.length &&
+    !window.confirm(`这条记录可能存在异常：\n\n${warnings.map((warning) => `• ${warning}`).join('\n')}\n\n仍然保存吗？`)
+  )
+    return
   saving.value = true
   try {
     await store.saveRecord({
       ...recordIdentity.value,
-      vehicleId, date: draft.date,
-      odometer: draft.odometer, liters, amount, pumpAmount,
-      pricePerLiter: liters ? amount / liters : 0, isFull: draft.isFull,
-      station: String(data.get('station')), note: String(data.get('note')),
+      vehicleId,
+      date: draft.date,
+      odometer: draft.odometer,
+      liters,
+      amount,
+      pumpAmount,
+      pricePerLiter: liters ? amount / liters : 0,
+      isFull: draft.isFull,
+      station: String(data.get('station')),
+      note: String(data.get('note')),
     })
     recordModal.value = false
     notify(editingRecord.value ? '记录已更新' : '加油记录已保存')
   } catch (error) {
-    notify(error instanceof Error ? error.message : '记录保存失败', 'error')
+    notify(userErrorMessage(error), 'error')
   } finally {
     saving.value = false
   }
@@ -103,11 +118,17 @@ async function submitVehicle(event: Event) {
   const data = new FormData(event.target as HTMLFormElement)
   saving.value = true
   try {
-    await store.saveVehicle({ ...vehicleIdentity.value, name: String(data.get('name')), plate: String(data.get('plate')), fuelType: String(data.get('fuelType')), initialOdometer: Number(data.get('initialOdometer')) })
+    await store.saveVehicle({
+      ...vehicleIdentity.value,
+      name: String(data.get('name')),
+      plate: String(data.get('plate')),
+      fuelType: String(data.get('fuelType')),
+      initialOdometer: Number(data.get('initialOdometer')),
+    })
     vehicleModal.value = false
     notify(editingVehicle.value ? '车辆已更新' : '车辆已添加')
   } catch (error) {
-    notify(error instanceof Error ? error.message : '车辆保存失败', 'error')
+    notify(userErrorMessage(error), 'error')
   } finally {
     saving.value = false
   }
@@ -121,32 +142,68 @@ async function confirmDelete() {
     deleteTarget.value = null
     notify('已删除')
   } catch (error) {
-    notify(error instanceof Error ? error.message : '删除失败', 'error')
+    notify(userErrorMessage(error), 'error')
   } finally {
     saving.value = false
   }
 }
 
 async function runSync() {
-  try { await store.sync(); notify('同步完成') } catch (error) { notify(error instanceof Error ? error.message : '同步失败', 'error') }
+  try {
+    await store.sync()
+    notify('同步完成')
+  } catch (error) {
+    notify(userErrorMessage(error), 'error')
+  }
 }
 
-async function runTest() {
+async function runTest(config: WebDavConfig) {
   testing.value = true
-  try { await testWebDav(configDraft); notify('连接成功') } catch (error) { notify(error instanceof Error ? `${error.message}。网页端还需服务器允许 CORS。` : '连接失败', 'error') } finally { testing.value = false }
+  try {
+    await testWebDav(config)
+    notify('连接成功')
+  } catch (error) {
+    notify(`${userErrorMessage(error)} 网页端还需服务器允许 CORS。`, 'error')
+  } finally {
+    testing.value = false
+  }
 }
 
-function saveSettings() { store.saveConfig({ ...configDraft }); notify('同步设置已保存') }
+async function saveSettings(config: WebDavConfig) {
+  try {
+    const wasEncrypted = Boolean(store.state.config.encryptionEnabled)
+    const willEncrypt = Boolean(config.encryptionEnabled)
+    const passphraseChanged = wasEncrypted && willEncrypt && config.encryptionPassphrase !== store.state.config.encryptionPassphrase
+    const disabling = wasEncrypted && !willEncrypt
+
+    if (willEncrypt && !wasEncrypted) {
+      if (!window.confirm('启用加密后，旧版客户端将无法同步。请确认所有设备都已升级。继续前会自动下载一份明文本地备份。')) return
+      await exportBackup('json')
+    }
+    if (passphraseChanged || disabling) {
+      const action = passphraseChanged ? '修改同步口令' : '停用同步加密'
+      if (!window.confirm(`${action}前会先使用当前口令拉取云端数据并导出本地备份，然后以新设置重新上传。是否继续？`)) return
+      await store.sync()
+      await exportBackup('json')
+    }
+    store.saveConfig(config)
+    if (passphraseChanged || disabling) await store.sync()
+    notify('同步设置已保存')
+  } catch (error) {
+    notify(userErrorMessage(error), 'error')
+  }
+}
 async function exportBackup(format: 'json' | 'csv') {
   try {
     const payload = await store.exportData()
     const stamp = new Date().toISOString().slice(0, 10)
-    const location = format === 'json'
-      ? await downloadText(JSON.stringify(payload, null, 2), `fuel-track-${stamp}.json`, 'application/json;charset=utf-8')
-      : await downloadText(recordsToCsv(payload.records, payload.vehicles), `fuel-track-${stamp}.csv`, 'text/csv;charset=utf-8')
+    const location =
+      format === 'json'
+        ? await downloadText(JSON.stringify(payload, null, 2), `fuel-track-${stamp}.json`, 'application/json;charset=utf-8')
+        : await downloadText(recordsToCsv(payload.records, payload.vehicles), `fuel-track-${stamp}.csv`, 'text/csv;charset=utf-8')
     notify(location)
   } catch (error) {
-    notify(error instanceof Error ? error.message : '导出失败', 'error')
+    notify(userErrorMessage(error), 'error')
   }
 }
 
@@ -159,13 +216,24 @@ async function importBackup(event: Event) {
     await store.importData(parseBackup(await file.text()))
     notify('备份已合并导入')
   } catch (error) {
-    notify(error instanceof Error ? error.message : '导入失败', 'error')
+    notify(userErrorMessage(error), 'error')
   } finally {
     saving.value = false
     input.value = ''
   }
 }
-function today() { return localDateKey() }
+async function exportDiagnostics() {
+  try {
+    const report = await createDiagnosticReport()
+    await downloadText(JSON.stringify(report, null, 2), `fuel-track-diagnostics-${today()}.json`, 'application/json;charset=utf-8')
+    notify('脱敏诊断信息已导出')
+  } catch (error) {
+    notify(userErrorMessage(error), 'error')
+  }
+}
+function today() {
+  return localDateKey()
+}
 
 function completeOnboarding(next?: 'record' | 'vehicle') {
   localStorage.setItem('fuel-track-onboarding-v1', '1')
@@ -175,8 +243,10 @@ function completeOnboarding(next?: 'record' | 'vehicle') {
 }
 
 async function refreshLocalData() {
-  try { await store.reload() } catch (error) {
-    notify(error instanceof Error ? error.message : '本地数据读取失败', 'error')
+  try {
+    await store.reload()
+  } catch (error) {
+    notify(userErrorMessage(error), 'error')
   }
 }
 function onVisibilityChange() {
@@ -197,16 +267,30 @@ onBeforeUnmount(() => {
 <template>
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand"><span class="brand-mark"><Fuel :size="22" /></span><div><strong>油迹</strong><small>Drive ledger</small></div></div>
+      <div class="brand">
+        <span class="brand-mark"><Fuel :size="22" /></span>
+        <div><strong>油迹</strong><small>Drive ledger</small></div>
+      </div>
       <nav aria-label="主导航">
-        <button v-for="item in nav" :key="item.id" :class="{ active: store.state.view === item.id }" :aria-current="store.state.view === item.id ? 'page' : undefined" @click="store.state.view = item.id">
+        <button
+          v-for="item in nav"
+          :key="item.id"
+          :class="{ active: store.state.view === item.id }"
+          :aria-current="store.state.view === item.id ? 'page' : undefined"
+          @click="store.state.view = item.id"
+        >
           <component :is="item.icon" :size="19" /><span>{{ item.label }}</span>
         </button>
       </nav>
       <div class="sidebar-sync">
         <span :class="['sync-dot', { online: store.state.lastSync }]" />
-        <div><strong>{{ store.state.lastSync ? '上次同步' : '尚未同步' }}</strong><small>{{ store.state.lastSync ? new Date(store.state.lastSync).toLocaleString('zh-CN') : '配置 WebDAV 开始同步' }}</small></div>
-        <button class="icon-button" title="立即同步" :disabled="store.state.syncing" @click="runSync"><RefreshCw :size="17" :class="{ spin: store.state.syncing }" /></button>
+        <div>
+          <strong>{{ store.state.lastSync ? '上次同步' : '尚未同步' }}</strong
+          ><small>{{ store.state.lastSync ? new Date(store.state.lastSync).toLocaleString('zh-CN') : '配置 WebDAV 开始同步' }}</small>
+        </div>
+        <button class="icon-button" title="立即同步" :disabled="store.state.syncing" @click="runSync">
+          <RefreshCw :size="17" :class="{ spin: store.state.syncing }" />
+        </button>
       </div>
     </aside>
 
@@ -214,64 +298,100 @@ onBeforeUnmount(() => {
       <header class="topbar">
         <div class="vehicle-select">
           <span class="vehicle-select-icon"><Car :size="20" /></span>
-          <div class="vehicle-caption"><strong>{{ store.selectedVehicle?.name || '暂无车辆' }}</strong><small>{{ store.selectedVehicle?.plate || store.selectedVehicle?.fuelType || '从第一辆车开始' }}</small></div>
+          <div class="vehicle-caption">
+            <strong>{{ store.selectedVehicle?.name || '暂无车辆' }}</strong
+            ><small>{{ store.selectedVehicle?.plate || store.selectedVehicle?.fuelType || '从第一辆车开始' }}</small>
+          </div>
           <ChevronDown :size="15" />
-          <select v-model="store.state.selectedVehicleId" aria-label="切换车辆" :disabled="!store.activeVehicles.length"><option v-for="vehicle in store.activeVehicles" :key="vehicle.id" :value="vehicle.id">{{ vehicle.name }}</option></select>
+          <select v-model="store.state.selectedVehicleId" aria-label="切换车辆" :disabled="!store.activeVehicles.length">
+            <option v-for="vehicle in store.activeVehicles" :key="vehicle.id" :value="vehicle.id">{{ vehicle.name }}</option>
+          </select>
         </div>
-        <div class="mobile-brand"><span><Fuel :size="17" /></span><strong>油迹</strong></div>
+        <div class="mobile-brand">
+          <span><Fuel :size="17" /></span><strong>油迹</strong>
+        </div>
         <button class="button primary top-add" @click="openRecord()"><Plus :size="18" />记一笔加油</button>
       </header>
 
-      <OverviewPage v-if="store.state.view === 'overview'" :vehicle="store.selectedVehicle" :records="store.vehicleRecords" @add="openRecord()" @edit="openRecord" @records="store.state.view = 'records'" />
+      <OverviewPage
+        v-if="store.state.view === 'overview'"
+        :vehicle="store.selectedVehicle"
+        :records="store.vehicleRecords"
+        @add="openRecord()"
+        @edit="openRecord"
+        @records="store.state.view = 'records'"
+      />
 
-      <RecordsPage v-else-if="store.state.view === 'records'" :records="store.vehicleRecords" :vehicle-id="store.selectedVehicle?.id" @add="openRecord()" @edit="openRecord" @remove="deleteTarget = { kind: 'record', id: $event.id, label: $event.date + ' 的加油记录' }" />
+      <RecordsPage
+        v-else-if="store.state.view === 'records'"
+        :records="store.vehicleRecords"
+        :vehicle-id="store.selectedVehicle?.id"
+        @add="openRecord()"
+        @edit="openRecord"
+        @remove="deleteTarget = { kind: 'record', id: $event.id, label: $event.date + ' 的加油记录' }"
+      />
 
-      <section v-else-if="store.state.view === 'vehicles'" class="page">
-        <div class="page-title row"><div><span class="eyebrow">车库</span><h1>我的车辆</h1><p>分别追踪每辆车的油耗表现</p></div><button class="button primary" @click="openVehicle()"><Plus :size="18" />添加车辆</button></div>
-        <div class="vehicle-grid">
-          <article v-for="vehicle in store.activeVehicles" :key="vehicle.id" :class="['vehicle-card', { selected: store.state.selectedVehicleId === vehicle.id }]" @click="store.state.selectedVehicleId = vehicle.id">
-            <div class="vehicle-art"><Car :size="42" /><span>{{ vehicle.fuelType }}</span></div><div class="vehicle-card-body"><div><h2>{{ vehicle.name }}</h2><p>{{ vehicle.plate || '未设置车牌' }}</p></div><span v-if="store.state.selectedVehicleId === vehicle.id" class="selected-label"><Check :size="14" />当前车辆</span></div><dl><div><dt>加油次数</dt><dd>{{ store.state.records.filter(r => r.vehicleId === vehicle.id).length }}</dd></div><div><dt>初始里程</dt><dd>{{ vehicle.initialOdometer.toLocaleString() }} km</dd></div></dl><div class="card-actions"><button class="button subtle" @click.stop="openVehicle(vehicle)"><Pencil :size="16" />编辑</button><button class="icon-button danger" title="删除车辆" :disabled="store.activeVehicles.length === 1" @click.stop="deleteTarget = { kind: 'vehicle', id: vehicle.id, label: vehicle.name }"><Trash2 :size="17" /></button></div>
-          </article>
-        </div>
-      </section>
+      <VehiclesPage
+        v-else-if="store.state.view === 'vehicles'"
+        :vehicles="store.activeVehicles"
+        :records="store.state.records"
+        :selected-vehicle-id="store.state.selectedVehicleId"
+        @add="openVehicle()"
+        @edit="openVehicle"
+        @select="store.state.selectedVehicleId = $event"
+        @remove="deleteTarget = { kind: 'vehicle', id: $event.id, label: $event.name }"
+      />
 
-      <section v-else class="page settings-page">
-        <div class="page-title"><span class="eyebrow">记录随行，安心留存</span><h1>数据与同步</h1><p>连接你的 WebDAV 空间，让不同设备的记录随行。</p></div>
-        <div class="settings-layout">
-          <form class="panel settings-form" @submit.prevent="saveSettings">
-            <div class="section-heading"><span class="large-icon"><Cloud :size="24" /></span><div><h2>云端连接</h2><p>支持坚果云、Nextcloud、群晖等 WebDAV 服务</p></div></div>
-            <label><span>服务器地址</span><input v-model.trim="configDraft.url" type="url" placeholder="https://dav.example.com/fuel-track" /></label>
-            <div class="form-grid"><label><span>用户名</span><input v-model="configDraft.username" autocomplete="username" placeholder="你的账号" /></label><label><span>应用密码</span><input v-model="configDraft.password" type="password" autocomplete="current-password" placeholder="WebDAV 应用密码" /></label></div>
-            <label><span>同步文件名</span><input v-model.trim="configDraft.fileName" placeholder="fuel-track.json" /></label>
-            <div class="form-actions"><button type="button" class="button secondary" :disabled="testing" @click="runTest"><RefreshCw :size="17" :class="{ spin: testing }" />测试连接</button><button class="button primary"><Check :size="17" />保存设置</button></div>
-          </form>
-          <aside class="sync-summary">
-            <h2>同步状态</h2><div class="sync-illustration"><Cloud :size="32" /><span :class="{ active: store.state.lastSync }" /></div><strong>{{ store.state.lastSync ? '数据已同步' : '等待首次同步' }}</strong><p>{{ store.state.lastSync ? `上次同步：${new Date(store.state.lastSync).toLocaleString('zh-CN')}` : '保存连接信息后，点击立即同步。' }}</p><button class="button primary full" :disabled="store.state.syncing || !store.state.config.url" @click="runSync"><RefreshCw :size="18" :class="{ spin: store.state.syncing }" />{{ store.state.syncing ? '正在合并数据…' : '立即同步' }}</button><div class="privacy-note"><strong>记录级安全合并</strong><span>同步会比较每条记录的更新时间，多设备离线录入也不会整库覆盖。</span></div>
-          </aside>
-        </div>
-        <section class="panel backup-panel">
-          <div class="section-heading"><span class="large-icon"><FileJson :size="24" /></span><div><h2>本地备份</h2><p>导出完整 JSON 备份、CSV 报表，或将 JSON 备份安全合并到当前数据库</p></div></div>
-          <div class="backup-actions">
-            <button class="button secondary" @click="exportBackup('json')"><Download :size="17" />导出 JSON</button>
-            <button class="button secondary" @click="exportBackup('csv')"><Download :size="17" />导出 CSV</button>
-            <button class="button primary" :disabled="saving" @click="backupInput?.click()"><Upload :size="17" />合并导入 JSON</button>
-            <input ref="backupInput" class="visually-hidden" type="file" accept="application/json,.json" @change="importBackup" />
-          </div>
-        </section>
-      </section>
+      <SettingsPage
+        v-else
+        :config="store.state.config"
+        :syncing="store.state.syncing"
+        :testing="testing"
+        :saving="saving"
+        :last-sync="store.state.lastSync"
+        @save="saveSettings"
+        @test="runTest"
+        @sync="runSync"
+        @export="exportBackup"
+        @import="importBackup"
+        @diagnostics="exportDiagnostics"
+      />
     </main>
 
     <nav class="bottom-nav" aria-label="底部导航">
       <template v-for="(item, index) in nav" :key="item.id">
-        <button v-if="index === 2" class="bottom-add" aria-label="记一笔加油" @click="openRecord()"><span class="add-icon"><Plus :size="23" /></span><span>记一笔</span></button>
-        <button :class="{ active: store.state.view === item.id }" :aria-current="store.state.view === item.id ? 'page' : undefined" @click="store.state.view = item.id"><component :is="item.icon" :size="21" /><span>{{ item.shortLabel }}</span></button>
+        <button v-if="index === 2" class="bottom-add" aria-label="记一笔加油" @click="openRecord()">
+          <span class="add-icon"><Plus :size="23" /></span><span>记一笔</span>
+        </button>
+        <button
+          :class="{ active: store.state.view === item.id }"
+          :aria-current="store.state.view === item.id ? 'page' : undefined"
+          @click="store.state.view = item.id"
+        >
+          <component :is="item.icon" :size="21" /><span>{{ item.shortLabel }}</span>
+        </button>
       </template>
     </nav>
 
-    <RecordModal v-if="recordModal" :record="editingRecord" :vehicles="store.activeVehicles" :selected-vehicle-id="store.state.selectedVehicleId" :saving="saving" :today="today()" @close="recordModal = false" @submit="submitRecord" />
+    <RecordModal
+      v-if="recordModal"
+      :record="editingRecord"
+      :vehicles="store.activeVehicles"
+      :selected-vehicle-id="store.state.selectedVehicleId"
+      :saving="saving"
+      :today="today()"
+      @close="recordModal = false"
+      @submit="submitRecord"
+    />
     <VehicleModal v-if="vehicleModal" :vehicle="editingVehicle" :saving="saving" @close="vehicleModal = false" @submit="submitVehicle" />
     <ConfirmDialog v-if="deleteTarget" :target="deleteTarget" :saving="saving" @close="deleteTarget = null" @confirm="confirmDelete" />
-    <OnboardingGuide v-if="onboarding" :vehicle-name="store.selectedVehicle?.name || '我的车辆'" @finish="completeOnboarding()" @record="completeOnboarding('record')" @vehicle="completeOnboarding('vehicle')" />
+    <OnboardingGuide
+      v-if="onboarding"
+      :vehicle-name="store.selectedVehicle?.name || '我的车辆'"
+      @finish="completeOnboarding()"
+      @record="completeOnboarding('record')"
+      @vehicle="completeOnboarding('vehicle')"
+    />
     <AppToast :message="toast.message" :type="toast.type" :modal-open="recordModal || vehicleModal || !!deleteTarget || onboarding" />
   </div>
 </template>

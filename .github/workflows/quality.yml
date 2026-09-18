@@ -33,11 +33,14 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Unit tests
-        run: npm test
+      - name: Static checks and coverage
+        run: npm run check
 
-      - name: Production build
-        run: npm run build
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+
+      - name: Bundle size budget
+        run: npm run size:check
 
       - name: End-to-end tests
         run: npm run test:e2e

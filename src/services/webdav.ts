@@ -1,6 +1,7 @@
 import { database } from './database'
 import type { SyncPayload, WebDavConfig } from '../types'
-import { validateSyncPayload } from './sync-validation'
+import { decryptSyncDocument, encryptSyncPayload } from './sync-crypto'
+import { AppError } from './app-error'
 
 const MAX_SYNC_ATTEMPTS = 3
 const REQUEST_TIMEOUT_MS = 30_000
@@ -9,9 +10,16 @@ const MAX_CLOCK_SKEW_MS = 5 * 60_000
 function validateConfig(config: WebDavConfig) {
   if (!config.url) throw new Error('请填写 WebDAV 地址')
   let url: URL
-  try { url = new URL(config.url) } catch { throw new Error('WebDAV 地址格式无效') }
+  try {
+    url = new URL(config.url)
+  } catch {
+    throw new Error('WebDAV 地址格式无效')
+  }
   if (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname))) {
     throw new Error('WebDAV 必须使用 HTTPS（本机调试除外）')
+  }
+  if (config.encryptionEnabled && (config.encryptionPassphrase?.length || 0) < 8) {
+    throw new AppError('SYNC_ENCRYPTION_FAILED', '启用加密时，同步口令至少需要 8 个字符')
   }
 }
 
@@ -31,14 +39,23 @@ function assertPayloadClock(payload: SyncPayload) {
   if (futureItem) throw new Error('同步数据包含未来时间，请先校准产生该数据的设备时间')
 }
 
-async function parseRemoteResponse(response: Response) {
+async function parseRemoteResponse(response: Response, passphrase = '') {
   const declaredSize = Number(response.headers.get('Content-Length') || 0)
   if (declaredSize > 20 * 1024 * 1024) throw new Error('云端备份超过 20 MB，拒绝同步')
   const text = await response.text()
   if (text.length > 20 * 1024 * 1024) throw new Error('云端备份超过 20 MB，拒绝同步')
   let value: unknown
-  try { value = JSON.parse(text) } catch { throw new Error('云端数据不是有效的 JSON') }
-  return validatePayload(value)
+  try {
+    value = JSON.parse(text)
+  } catch {
+    throw new Error('云端数据不是有效的 JSON')
+  }
+  try {
+    return await decryptSyncDocument(value, passphrase)
+  } catch (error) {
+    if (error instanceof AppError) throw error
+    throw new AppError('SYNC_FORMAT_INVALID', '云端数据格式不受支持', { cause: error })
+  }
 }
 
 function authHeader(config: WebDavConfig) {
@@ -60,15 +77,23 @@ async function request(config: WebDavConfig, url: string, method: string, body?:
   const controller = new AbortController()
   const timer = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   try {
-    return await fetch(url, { method, headers: { Authorization: authHeader(config), ...conditionalHeaders, ...(body ? { 'Content-Type': 'application/json; charset=utf-8' } : {}) }, body, signal: controller.signal })
+    return await fetch(url, {
+      method,
+      headers: {
+        Authorization: authHeader(config),
+        ...conditionalHeaders,
+        ...(body ? { 'Content-Type': 'application/json; charset=utf-8' } : {}),
+      },
+      body,
+      signal: controller.signal,
+    })
   } catch (error) {
-    if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') throw new Error('WebDAV 请求超时，请检查网络后重试')
-    throw error
-  } finally { globalThis.clearTimeout(timer) }
-}
-
-function validatePayload(value: unknown): SyncPayload {
-  try { return validateSyncPayload(value) } catch { throw new Error('云端数据格式不受支持') }
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError')
+      throw new AppError('SYNC_TIMEOUT', 'WebDAV 请求超时')
+    throw new AppError('NETWORK_FAILED', error instanceof Error ? error.message : 'WebDAV 网络请求失败', { cause: error })
+  } finally {
+    globalThis.clearTimeout(timer)
+  }
 }
 
 export async function testWebDav(config: WebDavConfig) {
@@ -92,7 +117,7 @@ export async function syncWebDav(config: WebDavConfig) {
     if (download.ok) {
       etag = download.headers.get('ETag')
       lastModified = download.headers.get('Last-Modified')
-      const remotePayload = await parseRemoteResponse(download)
+      const remotePayload = await parseRemoteResponse(download, config.encryptionPassphrase)
       assertPayloadClock(remotePayload)
       await database.mergeData(remotePayload)
     } else if (download.status !== 404) {
@@ -107,7 +132,8 @@ export async function syncWebDav(config: WebDavConfig) {
 
     const localPayload = await database.exportData()
     assertPayloadClock(localPayload)
-    const payload = JSON.stringify(localPayload, null, 2)
+    const document = config.encryptionEnabled ? await encryptSyncPayload(localPayload, config.encryptionPassphrase || '') : localPayload
+    const payload = JSON.stringify(document)
     const upload = await request(config, fileUrl(config), 'PUT', payload, conditionalHeaders)
     if (upload.ok) return new Date()
 

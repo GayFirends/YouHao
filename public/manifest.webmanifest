@@ -1,0 +1,10 @@
+{
+  "name": "油迹 · Fuel Track",
+  "short_name": "油迹",
+  "description": "本地优先、支持 WebDAV 同步的车辆油耗记录应用",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4efe5",
+  "theme_color": "#102b24",
+  "icons": [{ "src": "app-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }]
+}

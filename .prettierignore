@@ -1,0 +1,8 @@
+android/
+dist/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+package-lock.json
+docs/readme-hero.svg

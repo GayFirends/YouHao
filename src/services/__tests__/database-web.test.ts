@@ -24,8 +24,12 @@ beforeEach(() => {
   vi.stubGlobal('indexedDB', new IDBFactory())
   vi.stubGlobal('localStorage', {
     getItem: (key: string) => localValues.get(key) ?? null,
-    setItem: (key: string, value: string) => { localValues.set(key, value) },
-    removeItem: (key: string) => { localValues.delete(key) },
+    setItem: (key: string, value: string) => {
+      localValues.set(key, value)
+    },
+    removeItem: (key: string) => {
+      localValues.delete(key)
+    },
   })
 })
 
@@ -43,9 +47,20 @@ function client() {
 
 function record(vehicleId: string, overrides: Partial<FuelRecord> = {}): FuelRecord {
   return {
-    id: crypto.randomUUID(), vehicleId, date: '2026-09-15', odometer: 1000,
-    liters: 40, amount: 280, pumpAmount: 320, pricePerLiter: 7, isFull: true,
-    station: '', note: '', createdAt: stamp, updatedAt: stamp, deletedAt: null,
+    id: crypto.randomUUID(),
+    vehicleId,
+    date: '2026-09-15',
+    odometer: 1000,
+    liters: 40,
+    amount: 280,
+    pumpAmount: 320,
+    pricePerLiter: 7,
+    isFull: true,
+    station: '',
+    note: '',
+    createdAt: stamp,
+    updatedAt: stamp,
+    deletedAt: null,
     ...overrides,
   }
 }
@@ -72,7 +87,21 @@ function legacyBytes(version: 1 | 2) {
     PRAGMA user_version = ${version};
   `)
   fixture.run('INSERT INTO vehicles VALUES (?, ?, ?, ?, ?, ?, ?, ?)', ['old-car', '旧车辆', '', '92#', 100, stamp, stamp, null])
-  fixture.run('INSERT INTO fuel_records VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', ['old-record', 'old-car', '2026-09-15', 500, 40, 280, 7, 1, '旧加油站', '旧备注', stamp, stamp, null])
+  fixture.run('INSERT INTO fuel_records VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    'old-record',
+    'old-car',
+    '2026-09-15',
+    500,
+    40,
+    280,
+    7,
+    1,
+    '旧加油站',
+    '旧备注',
+    stamp,
+    stamp,
+    null,
+  ])
   const bytes = fixture.export()
   fixture.close()
   return bytes
@@ -87,13 +116,43 @@ async function seedOldIndexedDb(bytes: Uint8Array) {
       const storage = request.result
       const transaction = storage.transaction('databases', 'readwrite')
       transaction.objectStore('databases').put(bytes, 'main')
-      transaction.oncomplete = () => { storage.close(); resolve() }
-      transaction.onabort = () => { storage.close(); reject(transaction.error) }
+      transaction.oncomplete = () => {
+        storage.close()
+        resolve()
+      }
+      transaction.onabort = () => {
+        storage.close()
+        reject(transaction.error)
+      }
     }
   })
 }
 
 describe('web database persistence', () => {
+  it('supports safety snapshot restore and reports schema information', async () => {
+    const database = client()
+    await database.init()
+    const original = record((await database.vehicles())[0].id)
+    await database.saveRecord(original)
+    const snapshot = await database.createSafetySnapshot()
+    await database.saveRecord({ ...original, note: 'changed', updatedAt: '2026-09-15T01:00:00.000Z' })
+    await database.restoreSafetySnapshot(snapshot.id)
+    expect(await database.records()).toEqual([original])
+    expect(await database.getSchemaInfo()).toEqual({ version: 4, backend: 'web-sqlite-wasm' })
+  })
+
+  it('paginates records and compacts old tombstones', async () => {
+    const database = client()
+    await database.init()
+    const vehicleId = (await database.vehicles())[0].id
+    await database.saveRecord(record(vehicleId, { id: 'old', deletedAt: '2026-01-01T00:00:00.000Z' }))
+    await database.saveRecord(record(vehicleId, { id: 'active', odometer: 2000 }))
+    expect((await database.listRecords({ vehicleId, limit: 1 })).items[0].id).toBe('active')
+    expect((await database.getVehicleSummary(vehicleId)).recordCount).toBe(1)
+    expect(await database.compactTombstones('2026-04-01T00:00:00.000Z')).toBe(1)
+    expect((await database.exportData()).records.map((item) => item.id)).toEqual(['active'])
+  })
+
   it('keeps concurrent first launches on the same default vehicle', async () => {
     const first = client()
     const second = client()
@@ -203,10 +262,14 @@ describe('web database persistence', () => {
     await database.init()
     const existing = (await database.vehicles())[0]
     const remoteVehicle: Vehicle = { ...existing, id: 'remote-car' }
-    await expect(database.mergeData({
-      version: 1, exportedAt: stamp, vehicles: [remoteVehicle],
-      records: [record(remoteVehicle.id), record(remoteVehicle.id, { liters: -1 })],
-    })).rejects.toThrow(/CHECK/)
+    await expect(
+      database.mergeData({
+        version: 1,
+        exportedAt: stamp,
+        vehicles: [remoteVehicle],
+        records: [record(remoteVehicle.id), record(remoteVehicle.id, { liters: -1 })],
+      }),
+    ).rejects.toThrow(/CHECK/)
     expect(await database.vehicles()).toEqual([existing])
     expect(await database.records()).toEqual([])
   })
@@ -218,7 +281,9 @@ describe('web database persistence', () => {
     const saved = record(vehicle.id, { note: 'z' })
     await database.saveRecord(saved)
     const remote = validateSyncPayload({
-      version: 1, exportedAt: stamp, vehicles: [vehicle],
+      version: 1,
+      exportedAt: stamp,
+      vehicles: [vehicle],
       records: [{ ...saved, note: 'a' }],
     })
     await database.mergeData(remote)
@@ -245,7 +310,13 @@ describe('web storage migrations', () => {
     const database = client()
     await database.init()
     expect(await database.vehicles()).toHaveLength(1)
-    expect((await database.records())[0]).toMatchObject({ id: 'old-record', amount: 280, pumpAmount: 280, station: '旧加油站', note: '旧备注' })
+    expect((await database.records())[0]).toMatchObject({
+      id: 'old-record',
+      amount: 280,
+      pumpAmount: 280,
+      station: '旧加油站',
+      note: '旧备注',
+    })
     const reopened = client()
     await reopened.init()
     expect(await reopened.exportData()).toMatchObject({ vehicles: await database.vehicles(), records: await database.records() })
@@ -264,13 +335,17 @@ describe('web storage migrations', () => {
 
   it('does not overwrite a database created by a newer app', async () => {
     const fixture = new SQL.Database(legacyBytes(2))
-    fixture.run('PRAGMA user_version = 4')
+    fixture.run('PRAGMA user_version = 5')
     const bytes = fixture.export()
     fixture.close()
     await seedOldIndexedDb(bytes)
     await expect(client().init()).rejects.toThrow('更高版本')
     const storage = createDatabaseStorage()
-    try { expect((await storage.read()).bytes).toEqual(bytes) } finally { await storage.close() }
+    try {
+      expect((await storage.read()).bytes).toEqual(bytes)
+    } finally {
+      await storage.close()
+    }
   })
 })
 
@@ -281,7 +356,9 @@ describe('snapshot compare-and-swap', () => {
       await storage.write(new Uint8Array([1]), 0)
       await expect(storage.write(new Uint8Array([2]), 0)).rejects.toBeInstanceOf(SnapshotConflictError)
       expect(await storage.read()).toEqual({ bytes: new Uint8Array([1]), revision: 1 })
-    } finally { await storage.close() }
+    } finally {
+      await storage.close()
+    }
   })
 
   it('rolls back both bytes and revision if writing the revision fails', async () => {
@@ -290,10 +367,16 @@ describe('snapshot compare-and-swap', () => {
       await storage.write(new Uint8Array([1]), 0)
       const put = FakeObjectStore.prototype.put
       vi.spyOn(FakeObjectStore.prototype, 'put')
-        .mockImplementationOnce(function (this: IDBObjectStore, value, key) { return put.call(this, value, key) })
-        .mockImplementationOnce(() => { throw new Error('版本写入失败') })
+        .mockImplementationOnce(function (this: IDBObjectStore, value, key) {
+          return put.call(this, value, key)
+        })
+        .mockImplementationOnce(() => {
+          throw new Error('版本写入失败')
+        })
       await expect(storage.write(new Uint8Array([2]), 1)).rejects.toThrow('版本写入失败')
       expect(await storage.read()).toEqual({ bytes: new Uint8Array([1]), revision: 1 })
-    } finally { await storage.close() }
+    } finally {
+      await storage.close()
+    }
   })
 })

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
 
 async function skipGuide(page: Page) {
   const skip = page.getByRole('button', { name: '跳过引导' })
@@ -19,7 +20,7 @@ async function addRecord(page: Page, station = '测试能源站') {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await page.getByText('油迹', { exact: true }).first().waitFor()
+  await page.getByRole('heading', { name: '每一程，都心中有数。' }).waitFor()
 })
 
 test('首次使用引导解释车辆、满箱油耗和本地数据', async ({ page }) => {
@@ -46,7 +47,8 @@ test('可以新增并编辑一笔加油记录', async ({ page }) => {
 
 test('可以导出并合并导入 JSON 备份', async ({ page }) => {
   await skipGuide(page)
-  await page.getByRole('button', { name: '数据与同步', exact: true }).click()
+  const compact = (page.viewportSize()?.width || 1280) <= 720
+  await page.getByRole('button', { name: compact ? '同步' : '数据与同步', exact: true }).click()
 
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: '导出 JSON' }).click()
@@ -73,4 +75,10 @@ test('移动端底部导航可以切换到加油账本', async ({ page }) => {
   await page.getByRole('button', { name: '记录', exact: true }).click()
   await expect(page.getByRole('heading', { name: '加油账本' })).toBeVisible()
   await expect(page.getByRole('navigation', { name: '底部导航' })).toBeVisible()
+})
+
+test('主要页面没有严重的自动化无障碍问题', async ({ page }) => {
+  await skipGuide(page)
+  const results = await new AxeBuilder({ page }).disableRules(['color-contrast']).analyze()
+  expect(results.violations.filter((item) => ['critical', 'serious'].includes(item.impact || ''))).toEqual([])
 })

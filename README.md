@@ -3,13 +3,13 @@
 
   <br />
 
-  **本地优先、跨平台、可自托管同步的车辆油耗记录应用**
+**本地优先、跨平台、可自托管同步的车辆油耗记录应用**
 
-  [![Vue 3](https://img.shields.io/badge/Vue-3.5-42b883?style=flat-square&logo=vuedotjs&logoColor=white)](https://vuejs.org/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-  [![Android Debug Build](https://img.shields.io/github/actions/workflow/status/GayFirends/YouHao/android-debug.yml?style=flat-square&label=Android%20build)](https://github.com/GayFirends/YouHao/actions/workflows/android-debug.yml)
-  [![Tests](https://img.shields.io/badge/tests-Vitest-6e9f18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/)
-  [![License](https://img.shields.io/badge/license-MIT-173f34?style=flat-square)](./LICENSE)
+[![Vue 3](https://img.shields.io/badge/Vue-3.5-42b883?style=flat-square&logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Android Debug Build](https://img.shields.io/github/actions/workflow/status/GayFirends/YouHao/android-debug.yml?style=flat-square&label=Android%20build)](https://github.com/GayFirends/YouHao/actions/workflows/android-debug.yml)
+[![Tests](https://img.shields.io/badge/tests-Vitest-6e9f18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![License](https://img.shields.io/badge/license-MIT-173f34?style=flat-square)](./LICENSE)
 </div>
 
 ## 为什么是油迹
@@ -42,13 +42,13 @@
 
 ## 功能一览
 
-| 记录与分析 | 数据与同步 | 多端体验 |
-| --- | --- | --- |
-| 多车辆独立账本 | WebDAV 双向合并 | 响应式桌面侧栏 |
-| 满箱区间油耗 | JSON 完整备份 | 移动端底部导航 |
-| 月度与累计费用 | CSV 报表导出 | Android 原生数据库 |
-| 油耗趋势图 | 多设备冲突处理 | Web SQLite 持久化 |
-| 优惠与实付单价 | 软删除跨端同步 | 完整离线录入 |
+| 记录与分析     | 数据与同步      | 多端体验           |
+| -------------- | --------------- | ------------------ |
+| 多车辆独立账本 | WebDAV 双向合并 | 响应式桌面侧栏     |
+| 满箱区间油耗   | JSON 完整备份   | 移动端底部导航     |
+| 月度与累计费用 | CSV 报表导出    | Android 原生数据库 |
+| 油耗趋势图     | 多设备冲突处理  | Web SQLite 持久化  |
+| 优惠与实付单价 | 软删除跨端同步  | 完整离线录入       |
 
 每条记录可保存日期、里程、加油量、表显金额、实付金额、加油站、满箱状态和备注。异常里程或数值会在保存前提示。
 
@@ -116,6 +116,8 @@ Android 构建需要 Java 21。也可以直接使用 Gradle 生成 Debug APK：
 - 同步文件本身**没有加密**，请使用可信的 HTTPS WebDAV 服务并妥善保管账号。
 - Android 初始化会启用外键、运行 `PRAGMA quick_check`，关键写入与合并在事务内完成。
 - JSON 可用于完整备份与合并恢复；CSV 适合表格分析，不用于完整恢复。
+
+详细操作见[数据恢复与升级](./docs/data-recovery.md)、[同步加密](./docs/sync-encryption.md)和[发布兼容政策](./docs/release-policy.md)。
 
 ## Android 签名发布
 

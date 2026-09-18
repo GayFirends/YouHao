@@ -31,13 +31,73 @@ export interface WebDavConfig {
   username: string
   password: string
   fileName: string
+  encryptionEnabled?: boolean
+  encryptionPassphrase?: string
 }
 
-export interface SyncPayload {
+export interface SyncPayloadV1 {
   version: 1
   exportedAt: string
   vehicles: Vehicle[]
   records: FuelRecord[]
+}
+
+/** Backwards-compatible name used by v1 backups and the local database. */
+export type SyncPayload = SyncPayloadV1
+
+export interface EncryptedSyncEnvelopeV2 {
+  version: 2
+  encrypted: true
+  createdAt: string
+  crypto: {
+    algorithm: 'AES-GCM'
+    kdf: 'PBKDF2-SHA-256'
+    iterations: number
+    salt: string
+    iv: string
+  }
+  compression: 'gzip'
+  ciphertext: string
+}
+
+export type SyncDocument = SyncPayloadV1 | EncryptedSyncEnvelopeV2
+
+export interface RecordCursor {
+  date: string
+  odometer: number
+  createdAt: string
+  id: string
+}
+
+export interface RecordListQuery {
+  vehicleId?: string
+  includeDeleted?: boolean
+  search?: string
+  month?: string
+  limit?: number
+  cursor?: RecordCursor
+}
+
+export interface RecordPage {
+  items: FuelRecord[]
+  nextCursor: RecordCursor | null
+}
+
+export interface VehicleSummary {
+  vehicleId: string
+  recordCount: number
+  totalPaid: number
+  currentOdometer: number | null
+}
+
+export interface SafetySnapshot {
+  id: string
+  createdAt: string
+}
+
+export interface SchemaInfo {
+  version: number
+  backend: 'web-sqlite-wasm' | 'android-native-sqlite'
 }
 
 export type ViewName = 'overview' | 'records' | 'vehicles' | 'settings'

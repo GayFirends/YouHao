@@ -4,6 +4,7 @@ const STORAGE_VERSION = 2
 const STORAGE_STORE = 'databases'
 const STORAGE_KEY = 'main'
 const REVISION_KEY = 'main-revision'
+const SNAPSHOT_PREFIX = 'safety:'
 
 export interface DatabaseSnapshot {
   bytes: Uint8Array | null
@@ -80,7 +81,9 @@ export function createDatabaseStorage() {
         transaction.oncomplete = () => {
           try {
             resolve({ bytes: readBytes(bytes.result), revision: readRevision(revision.result) })
-          } catch (error) { reject(error) }
+          } catch (error) {
+            reject(error)
+          }
         }
         transaction.onerror = () => reject(transaction.error || new Error('读取本地数据库失败'))
         transaction.onabort = () => reject(transaction.error || new Error('读取本地数据库已中止'))
@@ -108,6 +111,52 @@ export function createDatabaseStorage() {
         transaction.oncomplete = () => resolve(expectedRevision + 1)
         transaction.onerror = () => reject(failure || transaction.error || new Error('保存本地数据库失败'))
         transaction.onabort = () => reject(failure || transaction.error || new Error('保存本地数据库已中止'))
+      })
+    },
+
+    async createSnapshot(bytes: Uint8Array, id: string = `${Date.now()}-${crypto.randomUUID()}`) {
+      const storage = await openStorage()
+      await new Promise<void>((resolve, reject) => {
+        const transaction = storage.transaction(STORAGE_STORE, 'readwrite', { durability: 'strict' })
+        transaction.objectStore(STORAGE_STORE).put(bytes.slice(), SNAPSHOT_PREFIX + id)
+        transaction.oncomplete = () => resolve()
+        transaction.onerror = () => reject(transaction.error || new Error('创建安全快照失败'))
+        transaction.onabort = () => reject(transaction.error || new Error('创建安全快照已中止'))
+      })
+      return id
+    },
+
+    async readSnapshot(id: string) {
+      const storage = await openStorage()
+      return new Promise<Uint8Array>((resolve, reject) => {
+        const transaction = storage.transaction(STORAGE_STORE, 'readonly')
+        const request = transaction.objectStore(STORAGE_STORE).get(SNAPSHOT_PREFIX + id)
+        transaction.oncomplete = () => {
+          try {
+            const bytes = readBytes(request.result)
+            if (!bytes) throw new Error('安全快照不存在')
+            resolve(bytes)
+          } catch (error) {
+            reject(error)
+          }
+        }
+        transaction.onerror = () => reject(transaction.error || new Error('读取安全快照失败'))
+      })
+    },
+
+    async listSnapshots() {
+      const storage = await openStorage()
+      return new Promise<string[]>((resolve, reject) => {
+        const transaction = storage.transaction(STORAGE_STORE, 'readonly')
+        const request = transaction.objectStore(STORAGE_STORE).getAllKeys()
+        transaction.oncomplete = () =>
+          resolve(
+            request.result
+              .map(String)
+              .filter((key) => key.startsWith(SNAPSHOT_PREFIX))
+              .map((key) => key.slice(SNAPSHOT_PREFIX.length)),
+          )
+        transaction.onerror = () => reject(transaction.error || new Error('读取安全快照列表失败'))
       })
     },
 
