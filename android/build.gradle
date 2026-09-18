@@ -24,9 +24,9 @@ allprojects {
     }
     configurations.configureEach {
         resolutionStrategy.force(
-            'org.jetbrains.kotlin:kotlin-stdlib:1.8.22',
-            'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22',
-            'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
+            'org.jetbrains.kotlin:kotlin-stdlib:2.4.20',
+            'org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.4.20',
+            'org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.20'
         )
     }
 }
