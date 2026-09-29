@@ -31,7 +31,7 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       - name: Build debug APK
         run: ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
       - name: Instrumentation tests and launch smoke test on API ${{ matrix.api-level }}
