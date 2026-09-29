@@ -23,7 +23,7 @@ jobs:
         # The app's minSdk is 26, so the emulator matrix starts there.
         api-level: [26, 35]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
       - uses: actions/setup-java@v4
