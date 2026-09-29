@@ -95,6 +95,8 @@ fun RecordRow(
             if (record.note.isNotBlank()) {
                 Text(
                     text = record.note,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 5.dp),

@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.youhao.fueltrack.appContainer
 import com.youhao.fueltrack.data.prefs.DEFAULT_SYNC_FILE_NAME
 import com.youhao.fueltrack.ui.components.HeroCard
+import com.youhao.fueltrack.ui.theme.PineHeroInk
 import com.youhao.fueltrack.ui.components.HeroStat
 import com.youhao.fueltrack.ui.components.MessageCard
 import com.youhao.fueltrack.ui.components.PageHeader
@@ -251,7 +252,7 @@ fun SettingsScreen(onOpenConflicts: () -> Unit, modifier: Modifier = Modifier) {
             Text(
                 text = "设备标识：${state.deviceId.ifBlank { "—" }}",
                 style = MaterialTheme.typography.labelSmall.numeric(),
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = PineHeroInk,
                 modifier = Modifier.padding(top = 12.dp),
             )
         }
@@ -341,7 +342,7 @@ private fun SyncSummary(
                 else -> "同步已就绪"
             },
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onPrimary,
+            color = PineHeroInk,
         )
         Text(
             text = when {
@@ -351,14 +352,14 @@ private fun SyncSummary(
                 else -> "数据会在每次改动后上传，后台每 6 小时核对一次。"
             },
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = PineHeroInk,
             modifier = Modifier.padding(top = 6.dp),
         )
         if (conflictCount > 0) {
             Text(
                 text = "另有 $conflictCount 条冲突待处理",
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = PineHeroInk,
                 modifier = Modifier.padding(top = 10.dp),
             )
         }

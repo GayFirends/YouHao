@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,6 +50,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntOffset
@@ -313,7 +317,7 @@ private fun BrandMark() {
 private fun AddButton(onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .size(42.dp)
+            .size(48.dp)
             .shadow(
                 elevation = 8.dp,
                 shape = MaterialTheme.shapes.small,
@@ -339,7 +343,7 @@ private fun AddButton(onClick: () -> Unit) {
 private fun BackButton(onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .size(42.dp)
+            .size(48.dp)
             .clip(MaterialTheme.shapes.small)
             .background(accentChipColor())
             .pressable(onClick = onClick, scaleTo = 0.92f, onClickLabel = "返回"),
@@ -381,7 +385,7 @@ private fun YouHaoBottomBar(
             .padding(start = 10.dp, end = 10.dp, top = 7.dp, bottom = 12.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().selectableGroup(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             MainSection.entries.forEachIndexed { index, entry ->
@@ -422,19 +426,16 @@ private fun BottomTab(
     val chip = accentChipColor()
 
     Column(
-        modifier = modifier.pressable(onClick = onClick, scaleTo = 0.94f),
+        modifier = modifier
+            .heightIn(min = 56.dp)
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
                 .size(width = 33.dp, height = 27.dp)
-                .graphicsLayer {
-                    alpha = indicator
-                    scaleX = 0.72f + 0.28f * indicator
-                    scaleY = 0.72f + 0.28f * indicator
-                }
                 .clip(RoundedCornerShape(10.dp))
-                .background(chip),
+                .background(chip.copy(alpha = indicator)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -458,7 +459,7 @@ private fun BottomTab(
 @Composable
 private fun BottomAddButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.pressable(onClick = onClick, scaleTo = 0.92f, onClickLabel = "记一笔"),
+        modifier = modifier.heightIn(min = 56.dp).pressable(onClick = onClick, scaleTo = 0.92f, onClickLabel = "记一笔"),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(

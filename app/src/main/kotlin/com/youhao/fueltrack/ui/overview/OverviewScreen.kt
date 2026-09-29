@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -129,7 +130,8 @@ private fun OverviewContent(
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                 PageHeader(
                     eyebrow = "${formatMonthTitle()} · ${state.selectedVehicleName ?: "行驶概览"}",
-                    title = "每一程，都心中有数。",
+                    title = "行驶概览",
+                    subtitle = "每一程，都心中有数。",
                     modifier = Modifier.weight(1f),
                 )
                 Text(
@@ -145,14 +147,14 @@ private fun OverviewContent(
         StaggeredAppear(index = 4) {
             MetricCard(
                 title = "平均油耗",
-                value = formatConsumptionValue(state.averageConsumption),
+                value = if (state.averageConsumption > 0.0) formatConsumptionValue(state.averageConsumption) else "—",
                 caption = if (state.intervals.isNotEmpty()) {
-                    "基于 ${state.intervals.size} 个满箱区间 · ${formatNumber(state.measuredDistance)} km"
+                    "基于 ${state.intervalCount} 个满箱区间 · ${formatNumber(state.measuredDistance)} km"
                 } else {
-                    "两次满箱后，计算更准确"
+                    "记录两次满箱后，即可计算油耗"
                 },
                 featured = true,
-                liveLabel = "LIVE",
+                liveLabel = "L/100km",
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -227,7 +229,9 @@ private fun VehicleChips(state: OverviewUiState, onSelectVehicle: (String) -> Un
                         },
                     )
                     .pressable(onClick = { onSelectVehicle(vehicle.id) })
+                    .heightIn(min = 48.dp)
                     .padding(horizontal = 14.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = vehicle.name,

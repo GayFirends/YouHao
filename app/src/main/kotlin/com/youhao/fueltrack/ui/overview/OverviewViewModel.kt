@@ -35,6 +35,7 @@ data class OverviewUiState(
     val monthRecordCount: Int = 0,
     /** 所有满箱区间的里程之和，对应「基于 N 个满箱区间 · X km」。 */
     val measuredDistance: Double = 0.0,
+    val intervalCount: Int = 0,
     val lastError: LastError? = null,
     val conflictCount: Int = 0,
 )
@@ -90,6 +91,7 @@ class OverviewViewModel(
                 monthCost = monthRecords.sumOf { it.amount },
                 monthRecordCount = monthRecords.size,
                 measuredDistance = intervals.sumOf { it.distance },
+                intervalCount = intervals.size,
                 lastError = settings.lastError(),
                 conflictCount = store.conflictCount(),
             )

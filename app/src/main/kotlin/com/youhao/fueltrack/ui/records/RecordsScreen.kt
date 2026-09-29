@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -44,6 +45,7 @@ import com.youhao.fueltrack.ui.components.youHaoFieldColors
 import com.youhao.fueltrack.ui.formatMoney
 import com.youhao.fueltrack.ui.theme.MetricValueStyle
 import com.youhao.fueltrack.ui.theme.Signal
+import com.youhao.fueltrack.ui.theme.PineHeroInk
 import com.youhao.fueltrack.ui.theme.numeric
 
 @Composable
@@ -105,28 +107,30 @@ private fun RecordsContent(
 
         PageHeader(eyebrow = "把每一次补给，记在这里", title = "加油账本")
 
-        // `.toolbar`：搜索占满剩余宽度，月份固定窄列，两者并排而不是上下堆叠。
-        Row(
+        // 分行显示，给搜索文案和月份格式说明留出足够空间。
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(9.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             OutlinedTextField(
                 value = state.search,
                 onValueChange = onSearch,
                 placeholder = { Text("搜索加油站、日期或备注") },
+                label = { Text("搜索记录") },
                 singleLine = true,
                 colors = youHaoFieldColors(),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
                 value = state.month,
                 onValueChange = onMonth,
                 placeholder = { Text("全部月份") },
+                label = { Text("月份筛选") },
+                supportingText = { Text("输入 YYYY-MM，例如 2026-09；留空显示全部") },
                 singleLine = true,
                 colors = youHaoFieldColors(),
-                modifier = Modifier.width(116.dp),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
@@ -217,20 +221,20 @@ private fun SummaryBanner(count: Int, amount: Double, saved: Double, monthLabel:
                 Text(
                     text = (monthLabel?.let { "$it · " } ?: "") + "$count 笔记录 · 实付合计",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = PineHeroInk,
                 )
                 if (saved > 0.0) {
                     Text(
                         text = "累计优惠 ${formatMoney(saved)}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = PineHeroInk,
                         modifier = Modifier.padding(top = 6.dp),
                     )
                 } else {
                     Text(
                         text = "本页记录已全部加载",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = PineHeroInk,
                     )
                 }
             }
@@ -273,7 +277,9 @@ private fun QuickFilter(text: String, onClick: () -> Unit) {
             .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.surface)
             .pressable(onClick = onClick)
+            .heightIn(min = 48.dp)
             .padding(horizontal = 12.dp, vertical = 7.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
@@ -292,7 +298,9 @@ private fun VehicleChip(name: String, selected: Boolean, onClick: () -> Unit) {
                 if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
             )
             .pressable(onClick = onClick)
+            .heightIn(min = 48.dp)
             .padding(horizontal = 14.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = name,
