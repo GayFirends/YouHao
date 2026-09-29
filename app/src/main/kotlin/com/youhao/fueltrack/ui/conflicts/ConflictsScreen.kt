@@ -38,7 +38,7 @@ import com.youhao.fueltrack.ui.components.PrimaryButton
 import com.youhao.fueltrack.ui.components.SoftBadge
 import com.youhao.fueltrack.ui.components.StaggeredAppear
 import com.youhao.fueltrack.ui.components.pressable
-import com.youhao.fueltrack.ui.components.softCardModifier
+import com.youhao.fueltrack.ui.components.softCard
 import com.youhao.fueltrack.ui.formatDate
 import com.youhao.fueltrack.ui.formatLiters
 import com.youhao.fueltrack.ui.formatMoney
@@ -114,7 +114,7 @@ private fun ConflictCard(
     onKeepRemote: () -> Unit,
 ) {
     Column(
-        modifier = softCardModifier(Modifier.fillMaxWidth())
+        modifier = Modifier.fillMaxWidth().softCard()
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 18.dp, vertical = 16.dp),

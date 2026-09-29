@@ -36,6 +36,8 @@ data class OverviewUiState(
     /** 所有满箱区间的里程之和，对应「基于 N 个满箱区间 · X km」。 */
     val measuredDistance: Double = 0.0,
     val intervalCount: Int = 0,
+    val recordedDistance: Double = 0.0,
+    val error: String? = null,
     val lastError: LastError? = null,
     val conflictCount: Int = 0,
 )
@@ -67,34 +69,41 @@ class OverviewViewModel(
 
     fun refresh() {
         viewModelScope.launch {
-            val vehicles = store.vehicles()
-            val previous = _state.value.selectedVehicleId
-            val selected = vehicles.firstOrNull { it.id == previous } ?: vehicles.firstOrNull()
-            val records = selected
-                ?.let { vehicle -> store.records().filter { it.vehicleId == vehicle.id } }
-                .orEmpty()
-            val intervals = calculateConsumptionIntervals(records)
-            val monthKey = LocalDateKeys.localMonthKey()
-            val monthRecords = records.filter { it.date.startsWith(monthKey) }
-            _state.value = OverviewUiState(
-                loading = false,
-                vehicles = vehicles,
-                selectedVehicleId = selected?.id,
-                selectedVehicleName = selected?.name,
-                selectedVehicleInitialOdometer = selected?.initialOdometer,
-                summary = selected?.let { store.getVehicleSummary(it.id) },
-                averageConsumption = calculateAverageConsumption(intervals),
-                intervals = intervals.takeLast(RECENT_LIMIT).reversed(),
-                recentRecords = records
-                    .sortedWith(compareByDescending<FuelRecord> { it.date }.thenByDescending { it.odometer })
-                    .take(RECENT_LIMIT),
-                monthCost = monthRecords.sumOf { it.amount },
-                monthRecordCount = monthRecords.size,
-                measuredDistance = intervals.sumOf { it.distance },
-                intervalCount = intervals.size,
-                lastError = settings.lastError(),
-                conflictCount = store.conflictCount(),
-            )
+            try {
+                val vehicles = store.vehicles()
+                val previous = _state.value.selectedVehicleId
+                val selected = vehicles.firstOrNull { it.id == previous } ?: vehicles.firstOrNull()
+                val records = selected
+                    ?.let { vehicle -> store.records().filter { it.vehicleId == vehicle.id } }
+                    .orEmpty()
+                val intervals = calculateConsumptionIntervals(records)
+                val monthKey = LocalDateKeys.localMonthKey()
+                val monthRecords = records.filter { it.date.startsWith(monthKey) }
+                _state.value = OverviewUiState(
+                    loading = false,
+                    vehicles = vehicles,
+                    selectedVehicleId = selected?.id,
+                    selectedVehicleName = selected?.name,
+                    selectedVehicleInitialOdometer = selected?.initialOdometer,
+                    summary = selected?.let { store.getVehicleSummary(it.id) },
+                    averageConsumption = calculateAverageConsumption(intervals),
+                    intervals = intervals.takeLast(RECENT_LIMIT).reversed(),
+                    recentRecords = records
+                        .sortedWith(compareByDescending<FuelRecord> { it.date }.thenByDescending { it.odometer })
+                        .take(RECENT_LIMIT),
+                    monthCost = monthRecords.sumOf { it.amount },
+                    monthRecordCount = monthRecords.size,
+                    measuredDistance = intervals.sumOf { it.distance },
+                    intervalCount = intervals.size,
+                    recordedDistance = ((records.maxOfOrNull { it.odometer } ?: 0.0) -
+                        (selected?.initialOdometer ?: records.minOfOrNull { it.odometer } ?: 0.0)).coerceAtLeast(0.0),
+                    lastError = settings.lastError(),
+                    conflictCount = store.conflictCount(),
+                )
+            } catch (error: Exception) {
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                _state.update { it.copy(loading = false, error = com.youhao.fueltrack.domain.error.userErrorMessage(error)) }
+            }
         }
     }
 

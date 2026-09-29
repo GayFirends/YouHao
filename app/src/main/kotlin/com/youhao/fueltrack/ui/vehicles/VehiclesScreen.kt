@@ -49,16 +49,13 @@ import com.youhao.fueltrack.ui.components.PageHeader
 import com.youhao.fueltrack.ui.components.PrimaryButton
 import com.youhao.fueltrack.ui.components.StaggeredAppear
 import com.youhao.fueltrack.ui.components.pressable
-import com.youhao.fueltrack.ui.components.softCardModifier
+import com.youhao.fueltrack.ui.components.softCard
 import com.youhao.fueltrack.ui.components.youHaoFieldColors
 import com.youhao.fueltrack.ui.formatMoney
 import com.youhao.fueltrack.ui.formatOdometer
 import com.youhao.fueltrack.ui.orDash
 import com.youhao.fueltrack.ui.theme.NightDanger
-import com.youhao.fueltrack.ui.theme.Signal
-import com.youhao.fueltrack.ui.theme.heroColor
 import com.youhao.fueltrack.ui.theme.numeric
-import com.youhao.fueltrack.ui.theme.softShadowColor
 import com.youhao.fueltrack.ui.toDoubleOrNullField
 import com.youhao.fueltrack.ui.toFieldText
 
@@ -89,7 +86,7 @@ fun VehiclesScreen(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(start = 18.dp, end = 18.dp, top = 22.dp, bottom = 28.dp),
+            .padding(start = 24.dp, end = 24.dp, top = 18.dp, bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         state.error?.let { error ->
@@ -101,11 +98,10 @@ fun VehiclesScreen(modifier: Modifier = Modifier) {
         }
 
         // Vue 把「添加车辆」放在标题行右侧，而不是页面底部整行的大按钮。
-        Row(verticalAlignment = Alignment.Bottom) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             PageHeader(
-                eyebrow = "车库",
+                eyebrow = "每一程，都心中有数",
                 title = "我的车辆",
-                subtitle = "分别追踪每辆车的油耗表现",
                 modifier = Modifier.weight(1f),
             )
             PrimaryButton(
@@ -183,61 +179,9 @@ private fun VehicleCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val hero = heroColor()
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(
-                elevation = 12.dp,
-                shape = MaterialTheme.shapes.medium,
-                clip = true,
-                ambientColor = softShadowColor(),
-                spotColor = softShadowColor(),
-            )
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surface),
+        modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(138.dp)
-                .background(hero)
-                .drawBehind {
-                    val center = Offset(size.width * 0.72f, size.height * 0.20f)
-                    val radius = size.minDimension * 0.72f
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(Signal.copy(alpha = 0.18f), Color.Transparent),
-                            center = center,
-                            radius = radius,
-                        ),
-                        radius = radius,
-                        center = center,
-                    )
-                },
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_nav_vehicles),
-                contentDescription = null,
-                tint = Signal,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .height(42.dp),
-            )
-            Text(
-                text = vehicle.fuelType.orDash(),
-                style = MaterialTheme.typography.labelMedium,
-                color = Color(0xFFDFF4E8),
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(14.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .background(Color.White.copy(alpha = 0.08f))
-                    .border(1.dp, Color.White.copy(alpha = 0.13f), MaterialTheme.shapes.small)
-                    .padding(horizontal = 10.dp, vertical = 5.dp),
-            )
-        }
-
         Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
             Text(
                 text = vehicle.name,
@@ -247,24 +191,23 @@ private fun VehicleCard(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = vehicle.plate.ifBlank { "未设置车牌" },
+                text = "${vehicle.plate.ifBlank { "未设置车牌" }} · ${vehicle.fuelType.orDash()}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 3.dp),
             )
 
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                VehicleFact(label = "加油次数", value = recordCountText, modifier = Modifier.weight(1f))
-                VehicleFact(label = "当前里程", value = currentOdometerText, modifier = Modifier.weight(1f))
+                VehicleFact(label = "加油次数", value = recordCountText)
+                VehicleFact(label = "当前里程", value = currentOdometerText)
                 VehicleFact(
                     label = "初始里程",
                     value = formatOdometer(vehicle.initialOdometer),
-                    modifier = Modifier.weight(1f),
                 )
             }
 
@@ -298,19 +241,19 @@ private fun VehicleCard(
 
 @Composable
 private fun VehicleFact(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
         )
         Text(
             text = value,
             style = MaterialTheme.typography.titleSmall.numeric(),
             color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 3.dp),
+            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+            modifier = Modifier.weight(1f),
         )
     }
 }

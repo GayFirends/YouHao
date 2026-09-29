@@ -3,14 +3,9 @@ package com.youhao.fueltrack.ui.records
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.youhao.fueltrack.data.FuelTrackStore
-import com.youhao.fueltrack.domain.calc.AmountField
+import com.youhao.fueltrack.domain.calc.FuelPaymentCalculation
 import com.youhao.fueltrack.domain.calc.RecordDraft
-import com.youhao.fueltrack.domain.calc.RefuelEntry
-import com.youhao.fueltrack.domain.calc.createRefuelEntry
-import com.youhao.fueltrack.domain.calc.createRefuelEntryFor
-import com.youhao.fueltrack.domain.calc.effectivePumpAmount
 import com.youhao.fueltrack.domain.calc.fuelRecordWarnings
-import com.youhao.fueltrack.domain.calc.updateRefuelAmount
 import com.youhao.fueltrack.domain.error.AppErrorCode
 import com.youhao.fueltrack.domain.error.userErrorMessage
 import com.youhao.fueltrack.domain.model.FuelRecord
@@ -28,14 +23,10 @@ import java.util.UUID
 data class RecordEditorUiState(
     val loading: Boolean = true,
     val isNew: Boolean = true,
+    val vehicleName: String = "",
     val date: String = "",
     val odometerText: String = "",
-    /** The four coupled amount inputs, kept as raw text so partial typing is never reformatted. */
-    val litersText: String = "",
-    val amountText: String = "",
-    val pumpAmountText: String = "",
-    val pumpPriceText: String = "",
-    val entry: RefuelEntry = RefuelEntry(),
+    val amounts: FuelAmountForm = FuelAmountForm(),
     val isFull: Boolean = true,
     val station: String = "",
     val note: String = "",
@@ -44,22 +35,18 @@ data class RecordEditorUiState(
     val saving: Boolean = false,
     val saved: Boolean = false,
     val deleted: Boolean = false,
-) {
-    /** The pump amount that will be stored: the shown amount, or the charged amount when blank. */
-    val pumpAmountOrNull: Double? get() = effectivePumpAmount(entry)
-}
+)
 
 /**
  * Add / edit form for a single fill-up.
  *
- * The amount fields are coupled exactly like the legacy form (`updateRefuelAmount`): typing litres
- * or the shown amount re-derives the pump price, and a manual pump override wins until it is reset.
- * Because Compose text fields are string-backed, only the field the user is actually typing into is
- * left alone — the other three are rewritten from the resulting [RefuelEntry].
+ * Amounts are computed directly from the visible form. An incomplete or invalid calculation
+ * cannot save a stale result; editing other record details preserves the receipt amounts.
  */
 class RecordEditorViewModel(
     private val store: FuelTrackStore,
     private val recordId: String?,
+    private val requestedVehicleId: String? = null,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RecordEditorUiState())
@@ -80,11 +67,11 @@ class RecordEditorViewModel(
                 existing = recordId?.let { store.getRecord(it) }
                 val record = existing
                 val vehicle = record?.let { saved -> vehicles.firstOrNull { it.id == saved.vehicleId } }
+                    ?: requestedVehicleId?.let { id -> vehicles.firstOrNull { it.id == id } }
                     ?: vehicles.firstOrNull()
                 vehicleId = record?.vehicleId ?: vehicle?.id
                 history = store.records().filter { it.vehicleId == vehicleId }
 
-                val entry = record?.let { createRefuelEntryFor(it) } ?: createRefuelEntry()
                 val odometer = record?.odometer
                     ?: history.filter { it.deletedAt == null }.maxOfOrNull { it.odometer }
                     ?: vehicle?.initialOdometer
@@ -93,13 +80,10 @@ class RecordEditorViewModel(
                 _state.value = RecordEditorUiState(
                     loading = false,
                     isNew = record == null,
+                    vehicleName = vehicle?.name.orEmpty(),
                     date = record?.date ?: LocalDateKeys.localDateKey(),
                     odometerText = odometer.toFieldText(),
-                    litersText = entry.liters.toFieldText(),
-                    amountText = entry.amount.toFieldText(),
-                    pumpAmountText = entry.pumpAmount.toFieldText(),
-                    pumpPriceText = entry.pumpPrice.toFieldText(),
-                    entry = entry,
+                    amounts = record?.let(FuelAmountForm::fromRecord) ?: FuelAmountForm(),
                     isFull = record?.isFull ?: true,
                     station = record?.station.orEmpty(),
                     note = record?.note.orEmpty(),
@@ -122,30 +106,21 @@ class RecordEditorViewModel(
 
     fun onFullChange(value: Boolean) = update { it.copy(isFull = value) }
 
-    fun onLitersChange(value: String) = editAmount(AmountField.LITERS, value) { it.copy(litersText = value) }
-
-    fun onAmountChange(value: String) = editAmount(AmountField.AMOUNT, value) { it.copy(amountText = value) }
-
-    fun onPumpAmountChange(value: String) =
-        editAmount(AmountField.PUMP_AMOUNT, value) { it.copy(pumpAmountText = value) }
-
-    fun onPumpPriceChange(value: String) =
-        editAmount(AmountField.PUMP_PRICE, value) { it.copy(pumpPriceText = value) }
+    fun onAmountsChange(value: FuelAmountForm) = update { it.copy(amounts = value, error = null) }
 
     fun clearError() = update { it.copy(error = null) }
 
     fun save() {
         val current = _state.value
         val odometer = current.odometerText.toDoubleOrNullField()
-        val liters = current.entry.liters
-        val amount = current.entry.amount
+        val payment = current.amounts.result
         val target = vehicleId
 
         val problem = when {
             target == null -> "还没有车辆，无法保存记录"
-            odometer == null -> "请填写里程"
-            liters == null || liters <= 0.0 -> "请填写加油量"
-            amount == null || amount < 0.0 -> "请填写实付金额"
+            odometer == null || !odometer.isFinite() || odometer < 0 -> "请填写有效里程"
+            payment == null -> (current.amounts.calculation as? FuelPaymentCalculation.Invalid)?.message
+                ?: "请补全加油数据与优惠，完成自动计算后再保存"
             else -> null
         }
         if (problem != null) {
@@ -155,18 +130,18 @@ class RecordEditorViewModel(
 
         val now = Timestamps.nowIso()
         val previous = existing
-        val pumpAmount = current.pumpAmountOrNull ?: amount!!
+        val amounts = payment!!
         val saved = FuelRecord(
             id = previous?.id ?: UUID.randomUUID().toString(),
             vehicleId = target!!,
             date = current.date,
             odometer = odometer!!,
-            liters = liters!!,
-            amount = amount!!,
-            pumpAmount = pumpAmount,
+            liters = amounts.liters,
+            amount = amounts.amount,
+            pumpAmount = amounts.pumpAmount,
             // `pricePerLiter` is the discounted unit price — that is what the CSV export and the
             // legacy records mean by it (see `recordsToCsv` in backup.ts).
-            pricePerLiter = if (liters > 0.0) amount / liters else 0.0,
+            pricePerLiter = amounts.paidPrice,
             isFull = current.isFull,
             station = current.station.trim(),
             note = current.note.trim(),
@@ -215,35 +190,14 @@ class RecordEditorViewModel(
         _state.update { transform(it).recompute() }
     }
 
-    private fun editAmount(
-        field: AmountField,
-        text: String,
-        assignText: (RecordEditorUiState) -> RecordEditorUiState,
-    ) {
-        _state.update { current ->
-            val entry = updateRefuelAmount(current.entry, field, text.toDoubleOrNullField())
-            assignText(current).copy(entry = entry).withDerivedAmounts(entry, field).recompute()
-        }
-    }
-
-    /** Rewrites every amount field except the one being typed into. */
-    private fun RecordEditorUiState.withDerivedAmounts(
-        entry: RefuelEntry,
-        edited: AmountField,
-    ): RecordEditorUiState = copy(
-        litersText = if (edited == AmountField.LITERS) litersText else entry.liters.toFieldText(),
-        amountText = if (edited == AmountField.AMOUNT) amountText else entry.amount.toFieldText(),
-        pumpAmountText = if (edited == AmountField.PUMP_AMOUNT) pumpAmountText else entry.pumpAmount.toFieldText(),
-        pumpPriceText = if (edited == AmountField.PUMP_PRICE) pumpPriceText else entry.pumpPrice.toFieldText(),
-    )
-
     private fun RecordEditorUiState.recompute(): RecordEditorUiState {
+        val payment = amounts.result ?: return copy(warnings = emptyList())
         val draft = RecordDraft(
             id = existing?.id,
             date = date,
             odometer = odometerText.toDoubleOrNullField() ?: 0.0,
-            liters = entry.liters ?: 0.0,
-            amount = entry.amount ?: 0.0,
+            liters = payment.liters,
+            amount = payment.amount,
             isFull = isFull,
         )
         return copy(warnings = fuelRecordWarnings(draft, history))

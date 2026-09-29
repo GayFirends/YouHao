@@ -28,7 +28,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.youhao.fueltrack.appContainer
 import com.youhao.fueltrack.data.prefs.DEFAULT_SYNC_FILE_NAME
 import com.youhao.fueltrack.ui.components.HeroCard
-import com.youhao.fueltrack.ui.theme.PineHeroInk
 import com.youhao.fueltrack.ui.components.HeroStat
 import com.youhao.fueltrack.ui.components.MessageCard
 import com.youhao.fueltrack.ui.components.PageHeader
@@ -79,7 +78,7 @@ fun SettingsScreen(onOpenConflicts: () -> Unit, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(start = 18.dp, end = 18.dp, top = 22.dp, bottom = 28.dp),
+            .padding(start = 24.dp, end = 24.dp, top = 18.dp, bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         state.lastError?.let { lastError ->
@@ -110,8 +109,8 @@ fun SettingsScreen(onOpenConflicts: () -> Unit, modifier: Modifier = Modifier) {
         }
 
         PageHeader(
-            eyebrow = "记录随行，安心留存",
-            title = "数据与同步",
+            eyebrow = "每一程，都心中有数",
+            title = "设置",
             subtitle = "连接你的 WebDAV 空间，让不同设备的记录随行。",
         )
 
@@ -124,7 +123,7 @@ fun SettingsScreen(onOpenConflicts: () -> Unit, modifier: Modifier = Modifier) {
             onOpenConflicts = onOpenConflicts,
         )
 
-        SectionTitle("同步")
+        com.youhao.fueltrack.ui.components.ExpandableSection("WebDAV 同步设置") {
         OutlinedTextField(
             value = state.config.url,
             onValueChange = viewModel::onUrlChange,
@@ -158,7 +157,7 @@ fun SettingsScreen(onOpenConflicts: () -> Unit, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
         )
         Hint(
-            "开启后密码会加密保存在 Android Keystore 中，每 6 小时的后台同步才有凭据可用。" +
+            "开启后密码会加密保存在本机，用于每 6 小时的后台同步。" +
                 "关闭时密码只保留在本次运行期间，进程结束后后台同步会直接跳过。",
         )
         OutlinedTextField(
@@ -196,7 +195,7 @@ fun SettingsScreen(onOpenConflicts: () -> Unit, modifier: Modifier = Modifier) {
                         onCheckedChange = viewModel::onRememberPassphraseChange,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Hint("开启后口令会加密保存在 Android Keystore 中，只有本机应用可以读取。")
+                    Hint("开启后口令会加密保存在本机，供后台同步使用。")
                 }
             }
         }
@@ -234,27 +233,6 @@ fun SettingsScreen(onOpenConflicts: () -> Unit, modifier: Modifier = Modifier) {
             CircularProgressIndicator(modifier = Modifier.padding(top = 4.dp))
         }
 
-        SectionTitle("数据")
-        HeroCard(modifier = Modifier.fillMaxWidth()) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                HeroStat(
-                    label = "本地数据库",
-                    value = state.schemaInfo?.let { "v${it.version}" } ?: "—",
-                    emphasize = true,
-                    modifier = Modifier.weight(1f),
-                )
-                HeroStat(
-                    label = "存储引擎",
-                    value = state.schemaInfo?.backend ?: "—",
-                    modifier = Modifier.weight(1.3f),
-                )
-            }
-            Text(
-                text = "设备标识：${state.deviceId.ifBlank { "—" }}",
-                style = MaterialTheme.typography.labelSmall.numeric(),
-                color = PineHeroInk,
-                modifier = Modifier.padding(top = 12.dp),
-            )
         }
 
         SectionTitle("备份与导出")
@@ -322,6 +300,31 @@ fun SettingsScreen(onOpenConflicts: () -> Unit, modifier: Modifier = Modifier) {
                 )
             }
         }
+        com.youhao.fueltrack.ui.components.ExpandableSection("设备与存储详情") {
+        HeroCard(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                HeroStat(
+                    label = "本地数据库",
+                    value = state.schemaInfo?.let { "v${it.version}" } ?: "—",
+                    emphasize = true,
+                    modifier = Modifier.weight(1f),
+                )
+                HeroStat(
+                    label = "存储引擎",
+                    value = state.schemaInfo?.backend ?: "—",
+                    modifier = Modifier.weight(1.3f),
+                )
+            }
+            Text(
+                text = "设备标识：${state.deviceId.ifBlank { "—" }}",
+                style = MaterialTheme.typography.labelSmall.numeric(),
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
+
+        }
+
     }
 }
 
@@ -342,24 +345,24 @@ private fun SyncSummary(
                 else -> "同步已就绪"
             },
             style = MaterialTheme.typography.titleMedium,
-            color = PineHeroInk,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = when {
                 busy -> "同步进行中，请稍候，不要离开这一页。"
-                !configured -> "填好下面的 WebDAV 地址与账号，就能把记录同步到你自己的网盘。"
+                !configured -> "展开同步设置，连接你的 WebDAV 空间。未配置时也能完整离线使用。"
                 encryptionEnabled -> "端到端加密已开启：云端只保存密文，口令不出本机。"
-                else -> "数据会在每次改动后上传，后台每 6 小时核对一次。"
+                else -> "点「立即同步」合并云端记录；记住密码后，后台每 6 小时同步一次。"
             },
             style = MaterialTheme.typography.bodySmall,
-            color = PineHeroInk,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(top = 6.dp),
         )
         if (conflictCount > 0) {
             Text(
                 text = "另有 $conflictCount 条冲突待处理",
                 style = MaterialTheme.typography.labelMedium,
-                color = PineHeroInk,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(top = 10.dp),
             )
         }

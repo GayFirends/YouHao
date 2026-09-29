@@ -1,0 +1,4 @@
+# Shell scripts must remain executable-compatible on Linux runners, even when edited on Windows.
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf

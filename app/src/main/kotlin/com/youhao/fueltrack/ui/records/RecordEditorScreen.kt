@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import com.youhao.fueltrack.ui.components.ExpandableSection
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -35,18 +36,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.youhao.fueltrack.appContainer
-import com.youhao.fueltrack.domain.calc.fuelPriceSummary
 import com.youhao.fueltrack.domain.time.LocalDateKeys
 import com.youhao.fueltrack.ui.components.EmptyHint
 import com.youhao.fueltrack.ui.components.MessageCard
 import com.youhao.fueltrack.ui.components.PrimaryButton
-import com.youhao.fueltrack.ui.components.SectionTitle
 import com.youhao.fueltrack.ui.components.StaggeredAppear
 import com.youhao.fueltrack.ui.components.SwitchRow
 import com.youhao.fueltrack.ui.components.pressable
 import com.youhao.fueltrack.ui.components.youHaoFieldColors
-import com.youhao.fueltrack.ui.formatMoney
-import com.youhao.fueltrack.ui.formatPrice
 import com.youhao.fueltrack.ui.theme.numeric
 
 @Composable
@@ -54,11 +51,12 @@ fun RecordEditorScreen(
     recordId: String?,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
+    vehicleId: String? = null,
 ) {
     val container = LocalContext.current.appContainer
     val viewModel: RecordEditorViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { RecordEditorViewModel(container.store, recordId) }
+            initializer { RecordEditorViewModel(container.store, recordId, vehicleId) }
         },
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -72,10 +70,7 @@ fun RecordEditorScreen(
         state = state,
         onDateChange = viewModel::onDateChange,
         onOdometerChange = viewModel::onOdometerChange,
-        onLitersChange = viewModel::onLitersChange,
-        onAmountChange = viewModel::onAmountChange,
-        onPumpAmountChange = viewModel::onPumpAmountChange,
-        onPumpPriceChange = viewModel::onPumpPriceChange,
+        onAmountsChange = viewModel::onAmountsChange,
         onFullChange = viewModel::onFullChange,
         onStationChange = viewModel::onStationChange,
         onNoteChange = viewModel::onNoteChange,
@@ -91,10 +86,7 @@ private fun RecordEditorContent(
     state: RecordEditorUiState,
     onDateChange: (String) -> Unit,
     onOdometerChange: (String) -> Unit,
-    onLitersChange: (String) -> Unit,
-    onAmountChange: (String) -> Unit,
-    onPumpAmountChange: (String) -> Unit,
-    onPumpPriceChange: (String) -> Unit,
+    onAmountsChange: (FuelAmountForm) -> Unit,
     onFullChange: (Boolean) -> Unit,
     onStationChange: (String) -> Unit,
     onNoteChange: (String) -> Unit,
@@ -117,11 +109,11 @@ private fun RecordEditorContent(
             .fillMaxSize()
             .imePadding()
             .verticalScroll(rememberScrollState())
-            .padding(start = 18.dp, end = 18.dp, top = 22.dp, bottom = 28.dp),
+            .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         state.error?.let { message ->
-            StaggeredAppear(0) {
+            StaggeredAppear(index = 0) {
                 MessageCard(
                     text = message,
                     containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -131,111 +123,19 @@ private fun RecordEditorContent(
             }
         }
 
-        // 对应 Vue 表单里的 `.form-intro`：先给一句「这一步不难」的预期。
-        Text(
-            text = "几项信息，就能记好一笔。",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            OutlinedTextField(
-                value = state.date,
-                onValueChange = onDateChange,
-                label = { Text("日期") },
-                placeholder = { Text("YYYY-MM-DD") },
-                singleLine = true,
-                textStyle = numericFieldStyle,
-                colors = youHaoFieldColors(),
-                modifier = Modifier.weight(1f),
-            )
-            TodayChip(onClick = { onDateChange(LocalDateKeys.localDateKey()) })
+        Text(state.vehicleName.ifBlank { "请先添加车辆" }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        FuelAmountFields(state.amounts, onAmountsChange)
+        OutlinedTextField(state.odometerText, onOdometerChange, Modifier.fillMaxWidth(), label = { Text("当前里程 · km") }, singleLine = true,
+            textStyle = numericFieldStyle, colors = youHaoFieldColors(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+        SwitchRow("这次加满了 · 用于计算油耗", state.isFull, onFullChange)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(state.date, onDateChange, Modifier.weight(1f), label = { Text("加油日期") }, placeholder = { Text("YYYY-MM-DD") }, singleLine = true, colors = youHaoFieldColors())
+            TodayChip { onDateChange(LocalDateKeys.localDateKey()) }
         }
-
-        OutlinedTextField(
-            value = state.odometerText,
-            onValueChange = onOdometerChange,
-            label = { Text("里程 (km)") },
-            singleLine = true,
-            textStyle = numericFieldStyle,
-            colors = youHaoFieldColors(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        SectionTitle("油量与金额")
-        OutlinedTextField(
-            value = state.litersText,
-            onValueChange = onLitersChange,
-            label = { Text("加油量 (L)") },
-            singleLine = true,
-            textStyle = numericFieldStyle,
-            colors = youHaoFieldColors(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = state.amountText,
-            onValueChange = onAmountChange,
-            label = { Text("实付金额 (¥)") },
-            singleLine = true,
-            textStyle = numericFieldStyle,
-            colors = youHaoFieldColors(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = state.pumpAmountText,
-            onValueChange = onPumpAmountChange,
-            label = { Text("表显金额 (¥)") },
-            supportingText = { Text("留空则与实付金额相同") },
-            singleLine = true,
-            textStyle = numericFieldStyle,
-            colors = youHaoFieldColors(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = state.pumpPriceText,
-            onValueChange = onPumpPriceChange,
-            label = { Text("表显单价 (¥/L)") },
-            singleLine = true,
-            textStyle = numericFieldStyle,
-            colors = youHaoFieldColors(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        PriceSummary(state)
-
-        SwitchRow(
-            text = "这次加满了",
-            checked = state.isFull,
-            onCheckedChange = onFullChange,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        SectionTitle("其他")
-        OutlinedTextField(
-            value = state.station,
-            onValueChange = onStationChange,
-            label = { Text("加油站") },
-            singleLine = true,
-            colors = youHaoFieldColors(),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = state.note,
-            onValueChange = onNoteChange,
-            label = { Text("备注") },
-            minLines = 2,
-            colors = youHaoFieldColors(),
-            modifier = Modifier.fillMaxWidth(),
-        )
+        OutlinedTextField(state.station, onStationChange, Modifier.fillMaxWidth(), label = { Text("加油站 · 选填") }, singleLine = true, colors = youHaoFieldColors())
+        ExpandableSection("备注 · 选填", initiallyExpanded = state.note.isNotBlank()) {
+            OutlinedTextField(state.note, onNoteChange, Modifier.fillMaxWidth(), label = { Text("备注") }, minLines = 2, colors = youHaoFieldColors())
+        }
 
         state.warnings.forEach { warning ->
             MessageCard(
@@ -246,9 +146,9 @@ private fun RecordEditorContent(
         }
 
         PrimaryButton(
-            text = if (state.saving) "保存中…" else "保存",
+            text = if (state.saving) "保存中…" else "保存记录",
             onClick = onSave,
-            enabled = !state.saving,
+            enabled = !state.saving && state.amounts.result != null,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 4.dp),
@@ -277,7 +177,7 @@ private fun RecordEditorContent(
         AlertDialog(
             onDismissRequest = { confirmingDelete = false },
             title = { Text("删除记录") },
-            text = { Text("删除后该记录会从列表和统计中消失，并在同步时作为删除标记保留。") },
+            text = { Text("删除后，这条记录将从账本和统计中移除，并同步到其他设备。") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -333,20 +233,4 @@ private fun DangerButton(
             color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = if (enabled) 1f else 0.5f),
         )
     }
-}
-
-/** Shows what the two prices work out to once litres and both amounts are known. */
-@Composable
-private fun PriceSummary(state: RecordEditorUiState) {
-    val liters = state.entry.liters ?: return
-    if (liters <= 0.0) return
-    val amount = state.entry.amount ?: 0.0
-    val summary = fuelPriceSummary(liters, amount, state.pumpAmountOrNull ?: 0.0)
-    Text(
-        text = "实付单价 ${formatPrice(summary.discountedPricePerLiter)} · " +
-            "表显单价 ${formatPrice(summary.pumpPricePerLiter)} · " +
-            "优惠 ${formatMoney(summary.discountAmount)}",
-        style = MaterialTheme.typography.bodySmall.numeric(),
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
 }
