@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Compose 主题负责真正的界面配色（见 ui/theme/Color.kt）。
+      这里只留系统窗口背景，也就是 Compose 首次绘制前的那一瞬间底色：
+      浅色对应 PebbleBg #F2F6F1，深色对应 NightBg #0E1A17。
+    -->
+    <color name="brand_window">#FFF2F6F1</color>
+    <color name="brand_window_night">#FF0E1A17</color>
+</resources>

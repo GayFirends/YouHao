@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>油迹 · 界面风格挑选台</title>
+<style>
+:root{
+  --page-bg:#0A0E0D;
+  --page-panel:#111816;
+  --page-panel-2:#0E1513;
+  --page-line:#1F2B27;
+  --page-fg:#E7EFE9;
+  --page-fg2:#8FA39A;
+  --page-fg3:#64766E;
+  --page-accent:#C6F04A;
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1100px 560px at 15% -8%, #16281F 0%, rgba(22,40,31,0) 62%),
+    radial-gradient(900px 500px at 95% 0%, #1D2A12 0%, rgba(29,42,18,0) 55%),
+    var(--page-bg);
+  color:var(--page-fg);
+  font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  font-size:14px;
+  line-height:1.6;
+}
+a{color:var(--page-accent)}
+code{font-family:var(--mono);font-size:.92em;background:#182220;border:1px solid var(--page-line);border-radius:5px;padding:1px 5px}
+
+/* ---------- page chrome ---------- */
+.head{position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);background:rgba(10,14,13,.82);border-bottom:1px solid var(--page-line)}
+.head-inner{max-width:1560px;margin:0 auto;padding:16px 28px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.brand{display:flex;gap:14px;align-items:flex-start}
+.brand-dot{width:34px;height:34px;border-radius:11px;flex:0 0 auto;margin-top:2px;
+  background:linear-gradient(140deg,#C6F04A,#1E5346);box-shadow:0 0 0 1px rgba(198,240,74,.25),0 6px 18px rgba(198,240,74,.12)}
+h1{margin:0;font-size:19px;letter-spacing:.01em;font-weight:650}
+.sub{margin:4px 0 0;color:var(--page-fg2);font-size:13px;max-width:900px}
+.seg{display:inline-flex;background:var(--page-panel);border:1px solid var(--page-line);border-radius:11px;padding:3px;gap:2px}
+.seg button{appearance:none;border:0;background:transparent;color:var(--page-fg2);font:inherit;font-size:13px;padding:7px 13px;border-radius:8px;cursor:pointer}
+.seg button:hover{color:var(--page-fg)}
+.seg button.on{background:#22302C;color:var(--page-fg);box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+.seg-label{font-size:12px;color:var(--page-fg3);margin-right:8px;letter-spacing:.04em}
+
+main{max-width:1560px;margin:0 auto;padding:22px 28px 90px}
+
+/* ---------- steps ---------- */
+.steps{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.step{flex:1 1 260px;background:var(--page-panel-2);border:1px solid var(--page-line);border-radius:14px;padding:13px 15px;display:flex;gap:11px;align-items:flex-start}
+.step-n{width:22px;height:22px;border-radius:7px;background:#22302C;color:var(--page-accent);font-family:var(--mono);font-size:12px;display:grid;place-items:center;flex:0 0 auto;margin-top:1px}
+.step b{font-weight:600}
+.step span{color:var(--page-fg2);font-size:12.5px}
+
+/* ---------- presets ---------- */
+.presets{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 22px}
+.presets .lbl{font-size:12px;color:var(--page-fg3);letter-spacing:.06em;margin-right:2px}
+.preset{appearance:none;font:inherit;font-size:13px;cursor:pointer;color:var(--page-fg);
+  background:var(--page-panel);border:1px solid var(--page-line);border-radius:999px;padding:7px 15px;display:inline-flex;gap:8px;align-items:center}
+.preset:hover{border-color:#33463F;background:#16201D}
+.preset i{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+/* ---------- grid ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(352px,1fr));gap:22px;align-items:start}
+.card{background:var(--page-panel);border:1px solid var(--page-line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:14px;position:relative;transition:border-color .18s,transform .18s}
+.card:hover{border-color:#2C3C37}
+.card.sel{border-color:var(--page-accent);box-shadow:0 0 0 1px rgba(198,240,74,.28),0 18px 44px rgba(0,0,0,.4)}
+.card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.card-title{margin:0;font-size:16px;font-weight:640;display:flex;align-items:center;gap:9px}
+.card-title em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--page-fg3);font-weight:400}
+.card-tagline{margin:5px 0 0;color:var(--page-fg2);font-size:12.5px;line-height:1.55}
+.badge{font-size:11px;font-family:var(--mono);padding:3px 8px;border-radius:999px;border:1px solid var(--page-line);color:var(--page-fg2);background:#141C1A;white-space:nowrap}
+.badge.pick{border-color:var(--page-accent);color:var(--page-accent);background:rgba(198,240,74,.08)}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:11px;padding:3px 9px;border-radius:999px;background:#16201D;border:1px solid var(--page-line);color:var(--page-fg2)}
+.phone-wrap{display:flex;justify-content:center;padding:6px 0 2px}
+.card-foot{display:flex;gap:9px;align-items:center}
+.btn{appearance:none;font:inherit;cursor:pointer;border-radius:11px;padding:10px 16px;font-size:13.5px;border:1px solid var(--page-line);background:#16201D;color:var(--page-fg);transition:.16s}
+.btn:hover{border-color:#3A4E47;background:#1A2622}
+.btn.primary{background:var(--page-accent);color:#12250A;border-color:transparent;font-weight:640}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent}
+.btn.wide{flex:1;text-align:center}
+.muted{color:var(--page-fg3)}
+
+/* ---------- phone ---------- */
+.phone{--pw:300px;--ph:628px;width:var(--pw);height:var(--ph);padding:8px;border-radius:44px;position:relative;
+  background:linear-gradient(160deg,#2C3532 0%,#0C1110 42%,#242C2A 100%);
+  box-shadow:0 22px 54px rgba(0,0,0,.58),0 0 0 1px rgba(255,255,255,.05) inset}
+.phone::after{content:"";position:absolute;top:16px;left:50%;transform:translateX(-50%);width:74px;height:5px;border-radius:99px;background:#000;opacity:.55;z-index:6}
+.phone-screen{width:100%;height:100%;border-radius:36px;overflow:hidden;position:relative;
+  background-color:var(--bg);background-image:var(--bg-img,none);color:var(--text);
+  display:flex;flex-direction:column;font-size:13px;line-height:1.45}
+.phone-holder{display:flex;justify-content:center}
+
+/* status + app bar */
+.m-status{display:flex;justify-content:space-between;align-items:center;padding:9px 20px 2px;font-size:10.5px;font-weight:650;
+  background:var(--header-bg);color:var(--header-ink);letter-spacing:.02em}
+.m-status-r{display:flex;gap:5px;align-items:center;opacity:.9}
+.m-appbar{background:var(--header-bg);color:var(--header-ink);padding:4px 0 0;flex:0 0 auto;position:relative;z-index:4}
+.m-title{text-align:center;font-size:15px;font-weight:640;padding:5px 16px 9px;letter-spacing:.01em}
+.m-tabs{display:flex;gap:2px;padding:0 10px;position:relative}
+.m-tab{flex:1;text-align:center;font-size:12px;padding:8px 4px 9px;cursor:pointer;color:var(--header-ink);opacity:.62;border-radius:9px 9px 0 0;position:relative;user-select:none;transition:.15s}
+.m-tab:hover{opacity:.85}
+.m-tab.is-on{opacity:1;font-weight:640;color:var(--header-ink)}
+.m-tab.is-on::after{content:"";position:absolute;left:22%;right:22%;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--accent)}
+
+/* body */
+.m-body{flex:1;min-height:0;overflow-y:auto;padding:var(--pad,16px);display:flex;flex-direction:column;gap:var(--gap,12px);scrollbar-width:none}
+.m-body::-webkit-scrollbar{width:0;height:0}
+
+/* hero */
+.m-hero{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius,16px);box-shadow:var(--shadow,none);padding:15px 16px 12px;position:relative;overflow:hidden}
+.m-hero-label{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2);font-weight:600}
+.m-hero-value{font-family:var(--num-font);font-size:38px;line-height:1.05;font-weight:650;letter-spacing:-.02em;margin-top:6px;display:flex;align-items:baseline;gap:7px}
+.m-hero-value .m-unit{font-size:12px;font-weight:500;letter-spacing:0;color:var(--text-2);font-family:inherit}
+.m-hero-sub{margin-top:6px;font-size:11.5px;color:var(--text-2)}
+.m-spark{width:100%;height:40px;margin-top:10px;display:block;overflow:visible}
+.m-spark .sp-line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.m-spark .sp-area{fill:var(--accent);opacity:.14;stroke:none}
+.m-spark .sp-dot{fill:var(--accent)}
+.m-spark .sp-grid{stroke:var(--line);stroke-width:1;stroke-dasharray:2 4}
+
+/* chips */
+.m-chips{display:flex;gap:7px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.m-chips::-webkit-scrollbar{height:0}
+.m-chip{font-size:11.5px;padding:5px 12px;border-radius:999px;background:var(--chip-bg);color:var(--chip-ink);border:1px solid transparent;white-space:nowrap}
+.m-chip.is-on{background:var(--accent);color:var(--accent-ink);font-weight:620}
+
+/* stats */
+.m-stats{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap,12px)}
+.m-stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius,16px);box-shadow:var(--shadow,none);padding:var(--row-pad,13px)}
+.m-stat-wide{grid-column:1 / -1}
+.m-stat-k{font-size:10.5px;color:var(--text-2);letter-spacing:.04em}
+.m-stat-v{font-family:var(--num-font);font-size:17px;font-weight:640;margin-top:3px;letter-spacing:-.01em}
+.m-stat-c{font-size:10.5px;color:var(--text-2);margin-top:2px}
+
+/* section + cards */
+.m-sec{font-size:11px;letter-spacing:.1em;color:var(--text-2);font-weight:640;margin-top:4px}
+.m-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius,16px);box-shadow:var(--shadow,none);padding:var(--row-pad,13px)}
+.m-banner{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11.5px;
+  background:var(--banner-bg,rgba(198,240,74,.16));border:1px solid var(--banner-line,rgba(198,240,74,.3));color:var(--banner-ink,var(--text));
+  border-radius:var(--radius,16px);padding:11px 13px}
+.m-banner.err{background:var(--err-bg,rgba(179,38,30,.14));border-color:rgba(179,38,30,.32)}
+.m-link{color:var(--accent);font-size:11.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+
+/* interval / record rows */
+.m-interval{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:var(--row-pad,13px)}
+.m-int-l{min-width:0}
+.m-int-d{font-size:12.5px;font-weight:620}
+.m-int-s{font-size:11px;color:var(--text-2);margin-top:2px}
+.m-int-v{font-family:var(--num-font);font-size:15px;font-weight:650;color:var(--accent);white-space:nowrap}
+.m-rec{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:var(--row-pad,13px)}
+.m-rec-l{min-width:0}
+.m-rec-d{font-size:12.5px;font-weight:600}
+.m-rec-s{font-size:11px;color:var(--text-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.m-rec-r{text-align:right;white-space:nowrap}
+.m-rec-amt{font-family:var(--num-font);font-size:14.5px;font-weight:640}
+.m-rec-lit{font-size:11px;color:var(--text-2);margin-top:2px}
+
+/* buttons / fields / switch */
+.m-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:620;
+  padding:10px 14px;border-radius:var(--radius-sm,10px);background:var(--surface);border:1px solid var(--line);color:var(--text);cursor:pointer}
+.m-btn.m-primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.m-btn.m-block{display:flex;width:100%}
+.m-btn.m-outline{background:transparent}
+.m-btnrow{display:flex;gap:8px}
+.m-btnrow>*{flex:1}
+.m-field{display:flex;flex-direction:column;gap:3px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius-sm,10px);background:var(--surface)}
+.m-flabel{font-size:10.5px;color:var(--text-2);letter-spacing:.03em}
+.m-fval{font-size:12.5px;color:var(--text)}
+.m-fplaceholder{color:var(--text-2);opacity:.75}
+.m-form{display:flex;flex-direction:column;gap:9px}
+.m-switchrow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px}
+.m-switch{width:38px;height:22px;border-radius:999px;background:var(--line);position:relative;flex:0 0 auto}
+.m-switch::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--surface);transition:.2s}
+.m-switch.is-on{background:var(--accent)}
+.m-switch.is-on::after{left:19px;background:var(--accent-ink)}
+.m-hint{font-size:10.5px;color:var(--text-2);line-height:1.5;padding:0 2px}
+.m-note{font-size:11px;color:var(--text-2);font-family:var(--num-font)}
+.m-empty{text-align:center;font-size:12px;color:var(--text-2);padding:26px 12px}
+
+/* bottom nav */
+.m-botnav{flex:0 0 auto;display:flex;background:var(--surface);border-top:1px solid var(--line);padding:7px 6px 9px;position:relative;z-index:4}
+.m-navitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--text-2);cursor:pointer;padding:3px 0;user-select:none}
+.m-navitem.is-on{color:var(--accent);font-weight:640}
+.m-ico{width:20px;height:20px;display:block}
+
+/* ---------- per style structure ---------- */
+[data-style="glass"] .m-appbar{background:var(--header-bg);backdrop-filter:blur(14px) saturate(150%)}
+[data-style="glass"] .m-card,[data-style="glass"] .m-stat,[data-style="glass"] .m-hero{backdrop-filter:blur(20px) saturate(160%)}
+[data-style="glass"] .m-botnav{background:var(--surface);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--line);border-radius:26px;margin:0 10px 10px;padding:7px 6px}
+
+[data-style="paper"] .m-appbar{background:var(--bg);border-bottom:1px solid var(--line)}
+[data-style="paper"] .m-tabs{padding:0;gap:0}
+[data-style="paper"] .m-tab{border-radius:0;font-size:12px;letter-spacing:.06em}
+[data-style="paper"] .m-tab.is-on::after{left:0;right:0;height:2px;border-radius:0}
+[data-style="paper"] .m-hero,[data-style="paper"] .m-card,[data-style="paper"] .m-stat{background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;padding-left:0;padding-right:0}
+[data-style="paper"] .m-hero{border-top:1px solid var(--line);padding-top:13px}
+[data-style="paper"] .m-sec{text-transform:uppercase;letter-spacing:.22em;font-size:9.5px;border-bottom:1px solid var(--line);padding-bottom:5px}
+[data-style="paper"] .m-btn{border-radius:0}
+[data-style="paper"] .m-field{border-radius:0;border:0;border-bottom:1px solid var(--line);background:transparent;padding-left:0;padding-right:0}
+[data-style="paper"] .m-banner{border-radius:0;background:transparent;border:0;border-left:3px solid var(--accent);padding-left:11px}
+
+[data-style="midnight"] .m-hero{box-shadow:0 0 0 1px rgba(198,240,74,.20),0 0 26px rgba(198,240,74,.10)}
+[data-style="midnight"] .m-hero-value{text-shadow:0 0 20px rgba(198,240,74,.35)}
+[data-style="midnight"] .m-tab.is-on::after{box-shadow:0 0 12px rgba(198,240,74,.7)}
+[data-style="midnight"] .m-tab.is-on{opacity:1}
+[data-style="midnight"] .m-card,[data-style="midnight"] .m-stat{box-shadow:0 0 0 1px rgba(198,240,74,.08),0 10px 26px rgba(0,0,0,.45)}
+[data-style="midnight"] .m-botnav{border-top:1px solid var(--line);background:linear-gradient(180deg,rgba(198,240,74,.05),transparent),var(--surface)}
+
+[data-style="pebble"] .m-hero{padding:17px 17px 14px}
+[data-style="pebble"] .m-hero-value{font-size:40px}
+[data-style="pebble"] .m-sec{letter-spacing:.06em;font-size:11.5px}
+[data-style="pebble"] .m-btn{padding:11px 16px}
+[data-style="pebble"] .m-botnav{border-top:0;background:transparent;padding-bottom:12px}
+[data-style="pebble"] .m-navitem.is-on{background:var(--chip-bg);border-radius:16px;margin:0 4px;padding:5px 0}
+
+[data-style="hud"] .m-appbar{border-bottom:1px solid var(--line)}
+[data-style="hud"] .m-title{text-align:left;padding-left:16px;letter-spacing:.14em;font-size:13.5px;text-transform:uppercase}
+[data-style="hud"] .m-tabs{padding:0 6px;gap:0}
+[data-style="hud"] .m-tab{border-radius:0;font-size:11.5px;letter-spacing:.06em;border-left:1px solid var(--line)}
+[data-style="hud"] .m-tab:first-child{border-left:0}
+[data-style="hud"] .m-tab.is-on::after{left:0;right:0;height:3px;border-radius:0}
+[data-style="hud"] .m-sec::before{content:"// ";color:var(--accent);letter-spacing:0}
+[data-style="hud"] .m-sec{border-bottom:1px solid var(--line);padding-bottom:6px;letter-spacing:.18em}
+[data-style="hud"] .m-btn{border-radius:var(--radius,4px)}
+[data-style="hud"] .m-rec{border-left:3px solid var(--accent)}
+[data-style="hud"] .m-card,[data-style="hud"] .m-stat{border:1px solid var(--line)}
+[data-style="hud"] .m-botnav{border-top:1px solid var(--line)}
+
+/* ---------- detail ---------- */
+.detail{margin-top:44px;border-top:1px solid var(--page-line);padding-top:30px}
+.detail-empty{color:var(--page-fg3);font-size:13.5px;padding:26px 0}
+.detail-grid{display:grid;grid-template-columns:minmax(360px,400px) 1fr;gap:34px;align-items:start}
+@media (max-width:1000px){.detail-grid{grid-template-columns:1fr}}
+.zoom{width:345px;height:722px;position:relative}
+.zoom .phone{transform:scale(1.15);transform-origin:top left}
+.detail-col{display:flex;flex-direction:column;gap:18px;min-width:0}
+h2{margin:0;font-size:17px;font-weight:640}
+h3{margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--page-fg3);font-weight:650}
+.panel{background:var(--page-panel);border:1px solid var(--page-line);border-radius:16px;padding:17px}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:9px}
+.sw{border:1px solid var(--page-line);border-radius:11px;overflow:hidden;background:#141C1A}
+.sw i{display:block;height:36px}
+.sw b{display:block;font-size:11px;font-weight:600;padding:7px 9px 1px}
+.sw span{display:block;font-family:var(--mono);font-size:10px;color:var(--page-fg3);padding:0 9px 8px}
+.ctrls{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.ctrl{display:flex;flex-direction:column;gap:6px}
+.ctrl label{font-size:11.5px;color:var(--page-fg2)}
+select{appearance:none;font:inherit;font-size:13px;color:var(--page-fg);background:#141C1A url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2.5 4.5L6 8l3.5-3.5' fill='none' stroke='%238FA39A' stroke-width='1.4' stroke-linecap='round'/></svg>") no-repeat right 11px center;
+  border:1px solid var(--page-line);border-radius:10px;padding:9px 30px 9px 11px;cursor:pointer}
+select:focus{outline:2px solid rgba(198,240,74,.35);outline-offset:1px}
+.prompt-box{position:relative}
+pre#promptOut{margin:0;background:#0B100F;border:1px solid var(--page-line);border-radius:13px;padding:16px;max-height:430px;overflow:auto;
+  font-family:var(--mono);font-size:11.5px;line-height:1.7;color:#CFE0D8;white-space:pre-wrap;word-break:break-word}
+.prompt-actions{display:flex;gap:9px;align-items:center;margin-bottom:11px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(14px);opacity:0;pointer-events:none;transition:.24s;
+  background:var(--page-accent);color:#12250A;font-weight:640;font-size:13px;padding:10px 18px;border-radius:11px;z-index:99;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.note-list{margin:0;padding-left:18px;color:var(--page-fg2);font-size:12.5px}
+.note-list li{margin:4px 0}
+.divider{height:1px;background:var(--page-line);margin:8px 0}
+.mini{font-size:12px;color:var(--page-fg2)}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="head-inner">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <div>
+        <h1>油迹 · 界面风格挑选台 <span class="muted" style="font-weight:400;font-size:13px">Fuel Track · Style Lab</span></h1>
+        <p class="sub">为 Kotlin + Jetpack Compose 版「油迹」挑选新的界面语言。卡片上的手机样机可以点击底部/顶部标签切换页面；选定风格后可在下方微调，并复制生成的提示词交给编码助手实施。</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="seg-label">预览明暗</span>
+      <div class="seg" id="modeSeg">
+        <button data-mode="auto" class="on">跟随风格</button>
+        <button data-mode="light">浅色</button>
+        <button data-mode="dark">深色</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="steps">
+    <div class="step"><span class="step-n">1</span><div><b>对比六套风格</b><br><span>每张卡片都是同一份真实数据（平均油耗 7.42 L/100km、46 条记录）渲染的样式样机，切换标签可看概览 / 记录 / 车辆 / 设置四个页面。</span></div></div>
+    <div class="step"><span class="step-n">2</span><div><b>选定并微调</b><br><span>点「选择此风格」后，可在下方替换强调色、圆角、数字字体、导航位置与信息密度。</span></div></div>
+    <div class="step"><span class="step-n">3</span><div><b>复制提示词</b><br><span>下方会按你的选择生成一份可直接交给编码助手（或我自己）的完整实施提示词。</span></div></div>
+  </div>
+
+  <div class="presets" id="presets"></div>
+  <div class="grid" id="grid"></div>
+  <div class="detail" id="detail"></div>
+</main>
+
+<div class="toast" id="toast">已复制到剪贴板</div>
+
+<script>
+/* =========================================================
+   1. 令牌与风格定义
+   ========================================================= */
+const ACCENTS = [
+  { id:'auto',  name:'跟随风格', c:null },
+  { id:'lime',  name:'荧光黄绿', c:'#C6F04A', ink:'#12250A' },
+  { id:'mint',  name:'薄荷绿',   c:'#5FD8A8', ink:'#04281C' },
+  { id:'sky',   name:'晴空蓝',   c:'#5CB8F0', ink:'#04202E' },
+  { id:'amber', name:'琥珀橙',   c:'#F0A93A', ink:'#2E1D02' },
+  { id:'coral', name:'珊瑚红',   c:'#F2706A', ink:'#2E0B09' },
+  { id:'violet',name:'雾紫',     c:'#A78BFA', ink:'#1B1033' }
+];
+const RADII = { sharp:'4px', sm:'8px', md:'16px', lg:'24px', xl:'32px' };
+const RADIUS_NAMES = { sharp:'直角 4dp', sm:'小 8dp', md:'中 16dp', lg:'大 24dp', xl:'超大 32dp' };
+const DENSITY = {
+  compact:{ pad:'12px', gap:'8px',  row:'10px', name:'紧凑' },
+  normal: { pad:'16px', gap:'12px', row:'13px', name:'标准' },
+  comfy:  { pad:'20px', gap:'16px', row:'17px', name:'宽松' }
+};
+/* 注意：这些值会写进行内 style="..." 属性，因此一律使用单引号，避免提前闭合属性。 */
+const FONTS = {
+  auto:   null,
+  system: "system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",
+  serif:  "Georgia,'Songti SC','Noto Serif SC',serif",
+  mono:   "ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace"
+};
+const FONT_NAMES = { auto:'跟随风格', system:'系统无衬线', serif:'衬线数字', mono:'等宽数字' };
+
+const STYLES = [
+  {
+    id:'pine', name:'松间仪表盘', en:'Pine Cockpit',
+    tagline:'延续现在的品牌基因：深松绿顶栏配荧光黄绿强调色，稳重、可信，信息密度适中。改动最小、风险最低。',
+    tags:['品牌延续','圆角 16','低阴影','顶部标签'],
+    defaultMode:'light', radius:'md', font:'system', nav:'top',
+    light:{ bg:'#EDF1EB', surface:'#FFFFFF', surface2:'#F6F8F4', text:'#0C241D', text2:'#5E6E64', line:'#E0E6DC',
+      headerBg:'#173F34', headerInk:'#F6F8F4', chipBg:'#E0E6DC', chipInk:'#173F34', brand:'#173F34', brandInk:'#F6F8F4',
+      accent:'#9BC42B', accentInk:'#12250A',
+      shadow:'0 1px 2px rgba(12,36,29,.05), 0 10px 24px rgba(12,36,29,.06)',
+      bannerBg:'#E4F9A8', bannerLine:'#C9E47A', bannerInk:'#2A3A03' },
+    dark:{ bg:'#0C1A16', surface:'#14302A', surface2:'#0F2620', text:'#E9F2EB', text2:'#9BB0A5', line:'#1E4238',
+      headerBg:'#0C241D', headerInk:'#E9F2EB', chipBg:'#1E4238', chipInk:'#CFE3D8', brand:'#C6F04A', brandInk:'#0C241D',
+      accent:'#C6F04A', accentInk:'#0C241D',
+      shadow:'0 1px 2px rgba(0,0,0,.45)',
+      bannerBg:'rgba(198,240,74,.14)', bannerLine:'rgba(198,240,74,.28)', bannerInk:'#E9F2EB' },
+    points:[
+      '顶栏使用深松绿实色（#173F34），标题与标签页处于同一色域，页面顶部形成一条稳定的品牌带。',
+      '荧光黄绿只出现在关键位置：平均油耗数字、选中标签的下划线、主按钮。',
+      '卡片 16dp 圆角 + 1dp 描边 + 极低阴影，靠留白与描边分层，而不是靠投影。',
+      '统计卡改成 2×2 网格：标签小字在上，数字 SemiBold 在下。'
+    ],
+    navPlan:'保留顶部 CenterAlignedTopAppBar + PrimaryTabRow 结构，只换配色：顶栏深松绿、标题与标签反白、指示器荧光黄绿。',
+    heroPlan:'新增「平均油耗」主卡：大号数字 + 单位 + 近三次满箱区间的迷你折线图。'
+  },
+  {
+    id:'glass', name:'晨雾玻璃', en:'Mist Glass',
+    tagline:'柔和渐变背景 + 半透明毛玻璃卡片，悬浮胶囊底部导航。通透、现代，接近 iOS 的观感。',
+    tags:['玻璃拟态','圆角 32','底部导航','低对比'],
+    defaultMode:'light', radius:'xl', font:'system', nav:'bottom',
+    light:{ bg:'#E9F0EA', bgImg:'radial-gradient(120% 78% at 12% 0%, #C9E7D6 0%, rgba(201,231,214,0) 58%), radial-gradient(100% 66% at 100% 6%, #E8F3B8 0%, rgba(232,243,184,0) 52%), linear-gradient(180deg,#F1F6F2 0%,#E2EAE3 100%)',
+      surface:'rgba(255,255,255,.64)', surface2:'rgba(255,255,255,.4)', text:'#0F2A22', text2:'#5A6E66', line:'rgba(255,255,255,.8)',
+      headerBg:'rgba(255,255,255,.42)', headerInk:'#0F2A22', chipBg:'rgba(255,255,255,.62)', chipInk:'#173F34', brand:'#173F34', brandInk:'#F6F8F4',
+      accent:'#33B98A', accentInk:'#04281C',
+      shadow:'0 10px 30px rgba(15,42,34,.10)',
+      bannerBg:'rgba(51,185,138,.14)', bannerLine:'rgba(51,185,138,.3)', bannerInk:'#0F2A22' },
+    dark:{ bg:'#0A1512', bgImg:'radial-gradient(120% 78% at 12% 0%, #1C4A3C 0%, rgba(28,74,60,0) 58%), radial-gradient(100% 66% at 100% 4%, #3B4A12 0%, rgba(59,74,18,0) 52%), linear-gradient(180deg,#0D1C18 0%,#081110 100%)',
+      surface:'rgba(255,255,255,.08)', surface2:'rgba(255,255,255,.05)', text:'#EAF4EE', text2:'#9DB3A8', line:'rgba(255,255,255,.15)',
+      headerBg:'rgba(255,255,255,.06)', headerInk:'#EAF4EE', chipBg:'rgba(255,255,255,.12)', chipInk:'#D6E7DD', brand:'#7CE7B4', brandInk:'#04281C',
+      accent:'#7CE7B4', accentInk:'#04281C',
+      shadow:'0 10px 30px rgba(0,0,0,.35)',
+      bannerBg:'rgba(124,231,180,.12)', bannerLine:'rgba(124,231,180,.26)', bannerInk:'#EAF4EE' },
+    points:[
+      '页面背景改为渐变 + 两团高光色斑，卡片使用 rgba 白 + backdrop-filter 模糊（Compose 用 Modifier.blur 不可行，需用半透明叠加 + 渐变模拟）。',
+      '圆角统一放大到 32dp，接近胶囊感；描边改用高亮白 1dp 模拟玻璃边缘。',
+      '导航从顶部标签行改为悬浮胶囊底部导航，顶部只保留标题。',
+      '弱化数字与背景的对比，靠字重而不是颜色区分层次。'
+    ],
+    navPlan:'把 PrimaryTabRow 从顶栏移除，改为 Scaffold 的 bottomBar：一个左右留白 10dp、圆角 26dp 的胶囊容器，内含 4 个图标 + 文字导航项。',
+    heroPlan:'「平均油耗」主卡改为半透明玻璃卡，数字加大到 40sp，折线图用强调色渐变描边。'
+  },
+  {
+    id:'paper', name:'素纸极简', en:'Paper Editorial',
+    tagline:'米白纸感底色、细线分隔、衬线大数字。几乎没有卡片与阴影，安静、克制，像一份数据杂志。',
+    tags:['无卡片','细线分隔','衬线数字','顶部标签'],
+    defaultMode:'light', radius:'sharp', font:'serif', nav:'top',
+    light:{ bg:'#FAF7F0', surface:'#FFFDF8', surface2:'#F3EFE5', text:'#1B1A17', text2:'#79736A', line:'#E3DED2',
+      headerBg:'#FAF7F0', headerInk:'#1B1A17', chipBg:'#EFEADF', chipInk:'#3A362E', brand:'#1B1A17', brandInk:'#FAF7F0',
+      accent:'#1E5346', accentInk:'#F2F7F3',
+      shadow:'none',
+      bannerBg:'#F1EEE4', bannerLine:'#DDD6C6', bannerInk:'#3A362E' },
+    dark:{ bg:'#141310', surface:'#1B1A16', surface2:'#232019', text:'#F0EBE0', text2:'#A79F92', line:'#332F27',
+      headerBg:'#141310', headerInk:'#F0EBE0', chipBg:'#26231C', chipInk:'#DCD5C7', brand:'#F0EBE0', brandInk:'#141310',
+      accent:'#D8E8A8', accentInk:'#1B1A17',
+      shadow:'none',
+      bannerBg:'#22201A', bannerLine:'#3A362C', bannerInk:'#E5DFD2' },
+    points:[
+      '完全去掉卡片投影与描边，列表项之间只用 1dp 细线分隔，卡片左右内边距归零，内容与页面同宽。',
+      '区域标题改成全大写 + 0.22em 字距的小字，下方一条细线，形成杂志式分节。',
+      '大数字改用衬线字体（Compose 中可用 FontFamily.Serif），字重降一档，靠字号而不是颜色突出。',
+      '唯一的强调色是深松绿 #1E5346，只用于关键数字、链接与细线强调。'
+    ],
+    navPlan:'保留顶部标签行，但去掉选中态的色块，改为标签下方 2dp 短横线 + 文字变深。',
+    heroPlan:'主卡改成通栏排版：上方一条细线，左侧小写标签，下方超大衬线数字，右侧对齐单位。'
+  },
+  {
+    id:'midnight', name:'夜航座舱', en:'Midnight Drive',
+    tagline:'近黑底 + 荧光绿光晕，默认深色。夜间开车看数据不刺眼，科技感和仪表盘气质最强。',
+    tags:['默认深色','发光强调','圆角 24','底部导航'],
+    defaultMode:'dark', radius:'lg', font:'system', nav:'bottom',
+    light:{ bg:'#E9EEE9', surface:'#FFFFFF', surface2:'#F3F6F2', text:'#0B1F1A', text2:'#5B6E66', line:'#DCE4DC',
+      headerBg:'#FFFFFF', headerInk:'#0B1F1A', chipBg:'#E3EAE3', chipInk:'#173F34', brand:'#5C8F1E', brandInk:'#FFFFFF',
+      accent:'#5C8F1E', accentInk:'#FFFFFF',
+      shadow:'0 1px 2px rgba(11,31,26,.06), 0 8px 20px rgba(11,31,26,.05)',
+      bannerBg:'#EEF5DC', bannerLine:'#D6E5AE', bannerInk:'#2A3A03' },
+    dark:{ bg:'#080C0B', surface:'#101A17', surface2:'#0B1512', text:'#EAF3EE', text2:'#8FA79C', line:'#1D3A31',
+      headerBg:'#0A1210', headerInk:'#EAF3EE', chipBg:'#16302A', chipInk:'#BFE6D2', brand:'#C6F04A', brandInk:'#0C241D',
+      accent:'#C6F04A', accentInk:'#0C241D',
+      shadow:'0 0 0 1px rgba(198,240,74,.10), 0 10px 30px rgba(0,0,0,.5)',
+      bannerBg:'rgba(198,240,74,.12)', bannerLine:'rgba(198,240,74,.26)', bannerInk:'#EAF3EE' },
+    points:[
+      '默认深色：背景 #080C0B，面板 #101A17，形成两层极暗底。',
+      '主数字带荧光绿光晕（Compose 可用两层 Text 叠加或 shadow + ambientColor 模拟），强调色只做「发光」不做「填充」。',
+      '圆角 24dp，卡片描边使用 rgba(198,240,74,.10) 的极淡荧光边。',
+      '仍然保留一套日间模式：低饱和橄榄绿强调色，避免白天看不清。'
+    ],
+    navPlan:'改为底部导航，选中项用荧光绿图标 + 文字，并带轻微发光；顶栏只留标题。',
+    heroPlan:'主卡做成「仪表盘」：环形进度（Canvas 绘制）+ 中心大数字，下方一行区间说明。'
+  },
+  {
+    id:'pebble', name:'圆润亲和', en:'Soft Pebble',
+    tagline:'超大圆角、柔和彩色投影、大字号与大按钮。友好、好点、好读，对长辈用户和单手操作最友好。',
+    tags:['圆角 32','大按钮','高可读','底部导航'],
+    defaultMode:'light', radius:'xl', font:'system', nav:'bottom',
+    light:{ bg:'#F2F6F1', surface:'#FFFFFF', surface2:'#EDF4EC', text:'#123027', text2:'#5F7268', line:'#E4EDE3',
+      headerBg:'#FFFFFF', headerInk:'#123027', chipBg:'#E6F1E4', chipInk:'#1E5346', brand:'#173F34', brandInk:'#FFFFFF',
+      accent:'#4FB877', accentInk:'#06230F',
+      shadow:'0 6px 18px rgba(23,63,52,.10)',
+      bannerBg:'#E6F1E4', bannerLine:'#CFE4CC', bannerInk:'#1E5346' },
+    dark:{ bg:'#0E1A17', surface:'#172925', surface2:'#122320', text:'#E9F3EE', text2:'#9BB0A6', line:'#22403A',
+      headerBg:'#122320', headerInk:'#E9F3EE', chipBg:'#1E3B34', chipInk:'#CFE7DC', brand:'#9BE07F', brandInk:'#0E2310',
+      accent:'#9BE07F', accentInk:'#0E2310',
+      shadow:'0 8px 22px rgba(0,0,0,.35)',
+      bannerBg:'rgba(155,224,127,.12)', bannerLine:'rgba(155,224,127,.26)', bannerInk:'#E9F3EE' },
+    points:[
+      '所有卡片圆角 32dp，投影改用带品牌色相的柔和投影（而不是黑色投影）。',
+      '正文字号整体 +1sp，行高放宽；数字加大到 40sp，减少一次读数成本。',
+      '按钮加高到 48dp 以上，主按钮整行铺满，「记一笔」始终是页面上最显眼的元素。',
+      '底部导航选中项带一个圆角色块背景，提供更强的触控反馈暗示。'
+    ],
+    navPlan:'改为底部导航，4 个导航项字号 11sp、图标 22dp，选中项加圆角色块。',
+    heroPlan:'主卡加大内边距，数字 40sp，附一句「近三次满箱区间」的人话说明。'
+  },
+  {
+    id:'hud', name:'硬朗座舱', en:'Sharp HUD',
+    tagline:'直角、1dp 硬描边、等宽数字、左对齐标签。密度高、信息精确，像车载仪表与终端界面。',
+    tags:['直角 4','等宽数字','高密度','顶部标签'],
+    defaultMode:'light', radius:'sharp', font:'mono', nav:'top',
+    light:{ bg:'#E9ECEA', surface:'#FFFFFF', surface2:'#F2F4F3', text:'#0F1416', text2:'#5A6469', line:'#C9D1CC',
+      headerBg:'#101517', headerInk:'#F2F4F3', chipBg:'#DDE3E0', chipInk:'#101517', brand:'#101517', brandInk:'#F2F4F3',
+      accent:'#D9821A', accentInk:'#1A1206',
+      shadow:'none',
+      bannerBg:'#FDF0DC', bannerLine:'#EFCF9E', bannerInk:'#4A2F05' },
+    dark:{ bg:'#0E1214', surface:'#161C1F', surface2:'#121A1C', text:'#E6EDEF', text2:'#8A979C', line:'#2A3438',
+      headerBg:'#0A0E10', headerInk:'#E6EDEF', chipBg:'#1E2629', chipInk:'#C9D6DA', brand:'#F0A93A', brandInk:'#1A1206',
+      accent:'#F0A93A', accentInk:'#1A1206',
+      shadow:'none',
+      bannerBg:'rgba(240,169,58,.12)', bannerLine:'rgba(240,169,58,.28)', bannerInk:'#E6EDEF' },
+    points:[
+      '圆角收缩到 4dp，所有容器使用 1dp 实描边，去掉一切投影。',
+      '数字统一改用等宽字体并开启 tabular figures，保证列表内小数点对齐。',
+      '顶栏标题改为左对齐大写 + 0.14em 字距，标签页之间用 1dp 竖线分隔。',
+      '区域标题前缀 "// "，记录行左侧加 3dp 强调色竖条标出「最近一条」。'
+    ],
+    navPlan:'保留顶部标签行，改为左对齐、标签间竖线分隔、选中项用 3dp 底部实心条。',
+    heroPlan:'主卡改为左对齐数据块：超大等宽数字 + 右侧上下排列的对比值（较上月 / 近三次区间）。'
+  }
+];
+
+const TITLES = { overview:'油迹', records:'加油记录', vehicles:'车辆', settings:'设置', editor:'新增加油记录' };
+const LABELS = { overview:'概览', records:'记录', vehicles:'车辆', settings:'设置' };
+const NAV_ORDER = ['overview','records','vehicles','settings'];
+const SCREENS = [
+  { id:'overview', name:'概览' }, { id:'records', name:'记录' },
+  { id:'vehicles', name:'车辆' }, { id:'settings', name:'设置' }, { id:'editor', name:'记录编辑器' }
+];
+
+const PRESETS = [
+  { name:'稳重通勤',   style:'pine',     accent:'auto',  radius:'md',    font:'system', nav:'top',    density:'normal' },
+  { name:'夜间驾驶',   style:'midnight', accent:'lime',  radius:'lg',    font:'mono',   nav:'bottom', density:'normal' },
+  { name:'清爽现代',   style:'glass',    accent:'mint',  radius:'xl',    font:'system', nav:'bottom', density:'comfy'  },
+  { name:'数据控',     style:'hud',      accent:'amber', radius:'sharp', font:'mono',   nav:'top',    density:'compact' }
+];
+
+/* =========================================================
+   2. 状态
+   ========================================================= */
+const state = {
+  globalMode:'auto',
+  selected:'pine',
+  tune:{ accent:'auto', radius:'auto', font:'auto', nav:'auto', density:'normal' },
+  detailScreen:'overview'
+};
+
+function styleById(id){ return STYLES.find(s => s.id === id) || STYLES[0]; }
+function resolveMode(st){ return state.globalMode === 'auto' ? st.defaultMode : state.globalMode; }
+function resolveAccent(st){
+  if(state.tune.accent === 'auto') return { c:null, ink:null };
+  const a = ACCENTS.find(x => x.id === state.tune.accent);
+  return a ? a : { c:null, ink:null };
+}
+function tuneFor(st){
+  const t = state.selected === st.id ? state.tune : { accent:'auto', radius:'auto', font:'auto', nav:'auto', density:'normal' };
+  return {
+    accent: resolveAccent(st).c ? resolveAccent(st) : null,
+    radius: t.radius === 'auto' ? st.radius : t.radius,
+    font:   t.font   === 'auto' ? st.font   : t.font,
+    nav:    t.nav    === 'auto' ? st.nav    : t.nav,
+    density:t.density
+  };
+}
+function tokens(st, mode){
+  const p = st[mode];
+  const t = tuneFor(st);
+  const acc = t.accent ? t.accent : { c:p.accent, ink:p.accentInk };
+  const rad = RADII[t.radius] || '16px';
+  const rnum = parseInt(rad, 10) || 16;
+  const rsm = (rnum >= 24 ? 14 : (rnum <= 8 ? 4 : 10)) + 'px';
+  const d = DENSITY[t.density] || DENSITY.normal;
+  const map = {
+    '--bg':p.bg, '--bg-img':p.bgImg || 'none',
+    '--surface':p.surface, '--surface-2':p.surface2,
+    '--text':p.text, '--text-2':p.text2, '--line':p.line,
+    '--header-bg':p.headerBg, '--header-ink':p.headerInk,
+    '--chip-bg':p.chipBg, '--chip-ink':p.chipInk,
+    '--brand':p.brand, '--brand-ink':p.brandInk,
+    '--accent':acc.c, '--accent-ink':acc.ink,
+    '--shadow':p.shadow || 'none',
+    '--radius':rad, '--radius-sm':rsm,
+    '--num-font': (t.font === 'system' || t.font === 'serif' || t.font === 'mono') ? FONTS[t.font] : FONTS[st.font],
+    '--pad':d.pad, '--gap':d.gap, '--row-pad':d.row,
+    '--banner-bg':p.bannerBg, '--banner-line':p.bannerLine, '--banner-ink':p.bannerInk
+  };
+  return map;
+}
+function cssVars(map){
+  return Object.keys(map).map(k => k + ':' + map[k]).join(';');
+}
+
+/* =========================================================
+   3. 样机渲染
+   ========================================================= */
+const D = {
+  vehicleChips:[{n:'家用车', on:true},{n:'公司车', on:false}],
+  hero:{ label:'平均油耗', value:'7.42', unit:'L/100km', sub:'近 3 次满箱区间 · 家用车 · 2,146 km' },
+  stats:[
+    { k:'累计花费', v:'¥8,642.30', c:'较上月 +¥412.10' },
+    { k:'记录数',   v:'46 条',     c:'本月 4 条' },
+    { k:'当前里程', v:'52,180 km', c:'上次 51,568 km' },
+    { k:'本月油费', v:'¥1,306.10', c:'268.2 L' }
+  ],
+  intervals:[
+    { d:'2026-05-18', s:'612 km · 45.20 L', v:'7.39' },
+    { d:'2026-04-02', s:'588 km · 44.10 L', v:'7.50' },
+    { d:'2026-03-15', s:'640 km · 47.80 L', v:'7.47' }
+  ],
+  records:[
+    { d:'2026-06-01', s:'52,180 km · 中石化 · 城北站 · 7.35 L/100km', a:'¥388.60', l:'46.80 L' },
+    { d:'2026-05-18', s:'51,568 km · 壳牌 · 环城南路 · 7.39 L/100km', a:'¥362.40', l:'43.90 L' },
+    { d:'2026-05-02', s:'50,940 km · 中石油 · 服务区 · 未满箱',       a:'¥200.00', l:'24.30 L' },
+    { d:'2026-04-20', s:'50,352 km · — · 7.44 L/100km',                a:'¥355.10', l:'42.60 L' }
+  ],
+  vehicles:[
+    { n:'家用车', p:'粤A·8K2Z9', f:'92#', i:'48,200 km', c:'52,180 km', s:'46 条记录 · 累计 ¥8,642.30' },
+    { n:'公司车', p:'粤B·3F7L1', f:'95#', i:'12,000 km', c:'18,940 km', s:'28 条记录 · 累计 ¥3,180.50' }
+  ]
+};
+
+function icon(name){
+  const paths = {
+    overview:'<path d="M3.2 12.6a6.8 6.8 0 1 1 13.6 0" class="st"/><path d="M10 12.6l3.6-3" class="st"/><circle cx="10" cy="12.6" r="1.5" class="fl"/>',
+    records:'<rect x="3.2" y="3.2" width="13.6" height="13.6" rx="3" class="st"/><path d="M6.6 7.6h6.8M6.6 10.4h6.8M6.6 13.2h4.2" class="st"/>',
+    vehicles:'<path d="M3.4 12.4l1.6-4.1A2 2 0 0 1 6.9 7h6.2a2 2 0 0 1 1.9 1.3l1.6 4.1v3.4h-2v-1.5H5.4v1.5h-2z" class="st"/><circle cx="7" cy="12.4" r="1" class="fl"/><circle cx="13" cy="12.4" r="1" class="fl"/>',
+    settings:'<path d="M4 6.8h12M4 13.2h12" class="st"/><circle cx="7.8" cy="6.8" r="1.9" class="st"/><circle cx="12.4" cy="13.2" r="1.9" class="st"/>'
+  };
+  return '<svg class="m-ico" viewBox="0 0 20 20" fill="none" stroke-linecap="round" stroke-linejoin="round" style="stroke:currentColor;fill:none">'
+    + paths[name].replace(/class="st"/g, 'stroke="currentColor" stroke-width="1.5" fill="none"')
+                  .replace(/class="fl"/g, 'fill="currentColor"') + '</svg>';
+}
+
+function sparkHTML(){
+  const pts = [[0,26],[17,21],[34,28],[51,15],[68,20],[85,9],[102,14],[110,7]];
+  const line = pts.map((p,i) => (i ? 'L' : 'M') + p[0] + ',' + p[1]).join(' ');
+  const area = line + ' L110,34 L0,34 Z';
+  return '<svg class="m-spark" viewBox="0 0 110 34" preserveAspectRatio="none">'
+    + '<path class="sp-area" d="' + area + '"/>'
+    + '<path class="sp-grid" d="M0,30 H110"/>'
+    + '<path class="sp-line" d="' + line + '"/>'
+    + '<circle class="sp-dot" cx="110" cy="7" r="2.6"/></svg>';
+}
+
+function chipsHTML(){
+  return '<div class="m-chips">' + D.vehicleChips.map(c =>
+    '<span class="m-chip' + (c.on ? ' is-on' : '') + '">' + c.n + '</span>').join('') + '</div>';
+}
+
+function heroHTML(){
+  return '<div class="m-hero"><div class="m-hero-label">' + D.hero.label + '</div>'
+    + '<div class="m-hero-value">' + D.hero.value + '<span class="m-unit">' + D.hero.unit + '</span></div>'
+    + '<div class="m-hero-sub">' + D.hero.sub + '</div>' + sparkHTML() + '</div>';
+}
+
+function statsHTML(){
+  return '<div class="m-stats">' + D.stats.map(s =>
+    '<div class="m-stat"><div class="m-stat-k">' + s.k + '</div><div class="m-stat-v">' + s.v + '</div>'
+    + '<div class="m-stat-c">' + s.c + '</div></div>').join('') + '</div>';
+}
+
+function recordRows(list){
+  return list.map(r =>
+    '<div class="m-card m-rec"><div class="m-rec-l"><div class="m-rec-d">' + r.d + '</div>'
+    + '<div class="m-rec-s">' + r.s + '</div></div>'
+    + '<div class="m-rec-r"><div class="m-rec-amt">' + r.a + '</div><div class="m-rec-lit">' + r.l + '</div></div></div>'
+  ).join('');
+}
+
+function screenHTML(screen){
+  if(screen === 'overview'){
+    return heroHTML()
+      + chipsHTML()
+      + '<div class="m-banner"><span>有 2 条同步冲突待处理</span><span class="m-link">处理</span></div>'
+      + statsHTML()
+      + '<div class="m-sec">最近油耗</div>'
+      + D.intervals.map(i =>
+          '<div class="m-card m-interval"><div class="m-int-l"><div class="m-int-d">' + i.d + '</div>'
+          + '<div class="m-int-s">' + i.s + '</div></div><div class="m-int-v">' + i.v + '</div></div>').join('')
+      + '<div class="m-sec">最近记录</div>'
+      + recordRows(D.records.slice(0,3));
+  }
+  if(screen === 'records'){
+    return '<div class="m-btn m-primary m-block">记一笔</div>'
+      + chipsHTML()
+      + '<div class="m-field"><span class="m-flabel">搜索</span><span class="m-fval m-fplaceholder">加油站 / 备注 / 日期</span></div>'
+      + '<div class="m-field"><span class="m-flabel">月份</span><span class="m-fval">2026-06</span></div>'
+      + '<div class="m-btnrow"><span class="m-link" style="text-align:center">本月</span><span class="m-link" style="text-align:center">清除筛选</span></div>'
+      + '<div class="m-card m-switchrow"><span>本月 4 次 · ¥1,306.10</span><span class="m-note">268.2 L</span></div>'
+      + recordRows(D.records)
+      + '<div class="m-btn m-outline m-block">加载更多</div>';
+  }
+  if(screen === 'vehicles'){
+    return '<div class="m-sec">我的车辆</div>'
+      + D.vehicles.map(v =>
+        '<div class="m-card"><div class="m-rec-d">' + v.n + '</div>'
+        + '<div class="m-rec-s">' + v.p + ' · ' + v.f + '</div>'
+        + '<div class="m-stats" style="margin-top:11px">'
+        + '<div class="m-stat"><div class="m-stat-k">初始里程</div><div class="m-stat-v">' + v.i + '</div></div>'
+        + '<div class="m-stat"><div class="m-stat-k">当前里程</div><div class="m-stat-v">' + v.c + '</div></div></div>'
+        + '<div class="m-hint" style="margin-top:9px">' + v.s + '</div>'
+        + '<div class="m-btnrow" style="margin-top:9px"><span class="m-link" style="text-align:right">编辑</span>'
+        + '<span class="m-link" style="text-align:right">删除</span></div></div>').join('')
+      + '<div class="m-btn m-primary m-block">添加车辆</div>';
+  }
+  if(screen === 'settings'){
+    return '<div class="m-sec">同步</div>'
+      + '<div class="m-card m-form">'
+      + '<div class="m-field"><span class="m-flabel">WebDAV 地址</span><span class="m-fval">https://dav.jianguoyun.com/dav/</span></div>'
+      + '<div class="m-field"><span class="m-flabel">用户名</span><span class="m-fval">youhao@example.com</span></div>'
+      + '<div class="m-field"><span class="m-flabel">应用密码</span><span class="m-fval">••••••••••</span></div>'
+      + '<div class="m-field"><span class="m-flabel">同步文件名</span><span class="m-fval">fuel-track.json</span></div></div>'
+      + '<div class="m-card m-switchrow"><span>记住密码以便后台同步</span><span class="m-switch is-on"></span></div>'
+      + '<div class="m-hint">开启后密码会加密保存在 Android Keystore 中，每 6 小时的后台同步才有凭据可用。</div>'
+      + '<div class="m-card m-switchrow"><span>启用端到端加密</span><span class="m-switch"></span></div>'
+      + '<div class="m-btnrow"><span class="m-btn m-primary">保存设置</span><span class="m-btn">测试连接</span><span class="m-btn">立即同步</span></div>'
+      + '<div class="m-sec">数据</div>'
+      + '<div class="m-stat m-stat-wide"><div class="m-stat-k">本地数据库</div><div class="m-stat-v">v7</div><div class="m-stat-c">SQLite / Room</div></div>'
+      + '<div class="m-hint">设备标识：8f3c1d…a92d</div>'
+      + '<div class="m-sec">备份与导出</div>'
+      + '<div class="m-btnrow"><span class="m-btn m-outline">导出 CSV</span><span class="m-btn m-outline">导出备份</span></div>'
+      + '<div class="m-btnrow"><span class="m-btn m-outline">导入备份</span><span class="m-btn m-outline">导出诊断</span></div>'
+      + '<div class="m-hint">导入会与本地数据合并：较新的记录优先，删除标记同样保留。</div>'
+      + '<div class="m-sec">同步冲突</div>'
+      + '<div class="m-card m-switchrow"><span>2 条冲突待处理</span><span class="m-link">查看冲突</span></div>';
+  }
+  /* editor */
+  return '<div class="m-banner err"><span>里程 50,900 km 小于上一条 51,568 km</span><span class="m-link">知道了</span></div>'
+    + '<div class="m-field"><span class="m-flabel">日期</span><span class="m-fval">2026-06-08</span></div>'
+    + '<div class="m-field"><span class="m-flabel">里程 (km)</span><span class="m-fval">52,780</span></div>'
+    + '<div class="m-sec">油量与金额</div>'
+    + '<div class="m-form">'
+    + '<div class="m-field"><span class="m-flabel">加油量 (L)</span><span class="m-fval">46.20</span></div>'
+    + '<div class="m-field"><span class="m-flabel">实付金额 (¥)</span><span class="m-fval">372.80</span></div>'
+    + '<div class="m-field"><span class="m-flabel">表显金额 (¥)</span><span class="m-fval m-fplaceholder">留空则与实付金额相同</span></div>'
+    + '<div class="m-field"><span class="m-flabel">表显单价 (¥/L)</span><span class="m-fval">8.27</span></div></div>'
+    + '<div class="m-note">实付单价 ¥8.07/L · 表显单价 ¥8.27/L · 优惠 ¥9.24</div>'
+    + '<div class="m-card m-switchrow"><span>这次加满了</span><span class="m-switch is-on"></span></div>'
+    + '<div class="m-sec">其他</div>'
+    + '<div class="m-form">'
+    + '<div class="m-field"><span class="m-flabel">加油站</span><span class="m-fval">中石化 · 城北站</span></div>'
+    + '<div class="m-field"><span class="m-flabel">备注</span><span class="m-fval">加满后跑了趟高速</span></div></div>'
+    + '<div class="m-card" style="font-size:11.5px">本次油耗 7.28 L/100km，比上区间低 0.11</div>'
+    + '<div class="m-btn m-primary m-block">保存</div>'
+    + '<div class="m-btn m-outline m-block">删除这条记录</div>';
+}
+
+function tabRowHTML(screen){
+  return '<div class="m-tabs">' + NAV_ORDER.map(k =>
+    '<span class="m-tab' + (k === screen ? ' is-on' : '') + '" data-nav="' + k + '">' + LABELS[k] + '</span>').join('') + '</div>';
+}
+function bottomNavHTML(screen){
+  return '<div class="m-botnav">' + NAV_ORDER.map(k =>
+    '<span class="m-navitem' + (k === screen ? ' is-on' : '') + '" data-nav="' + k + '">'
+    + icon(k) + '<span>' + LABELS[k] + '</span></span>').join('') + '</div>';
+}
+
+function phoneHTML(st, screen){
+  const mode = resolveMode(st);
+  const t = tuneFor(st);
+  const vars = cssVars(tokens(st, mode));
+  const appbar = '<div class="m-status"><span>9:41</span><span class="m-status-r"><span>5G</span><span>▮▮▮</span></span></div>'
+    + '<div class="m-appbar"><div class="m-title">' + TITLES[screen] + '</div>'
+    + (t.nav === 'top' ? tabRowHTML(screen) : '') + '</div>';
+  const bot = t.nav === 'bottom' ? bottomNavHTML(screen) : '';
+  return '<div class="phone" data-style="' + st.id + '" data-mode="' + mode + '" style="' + vars + '">'
+    + '<div class="phone-screen">' + appbar
+    + '<div class="m-body">' + screenHTML(screen) + '</div>' + bot
+    + '</div></div>';
+}
+
+function paint(holder){
+  const st = styleById(holder.dataset.sid);
+  const screen = holder.dataset.screen || 'overview';
+  holder.innerHTML = phoneHTML(st, screen);
+}
+
+/* =========================================================
+   4. 页面构建
+   ========================================================= */
+const gridEl = document.getElementById('grid');
+const detailEl = document.getElementById('detail');
+const presetsEl = document.getElementById('presets');
+
+/** 卡片上的样机只认四个顶层区段；详情页选中「记录编辑器」时回落到「记录」。 */
+function cardScreen(){
+  return NAV_ORDER.indexOf(state.detailScreen) >= 0 ? state.detailScreen : 'records';
+}
+
+function cardHTML(st){
+  const sel = state.selected === st.id;
+  return '<div class="card' + (sel ? ' sel' : '') + '" data-card="' + st.id + '">'
+    + '<div class="card-head"><div><h3 class="card-title" style="text-transform:none;letter-spacing:0;color:var(--page-fg);font-size:16px">'
+    + st.name + ' <em>' + st.en + '</em></h3><p class="card-tagline">' + st.tagline + '</p></div>'
+    + (sel ? '<span class="badge pick">已选</span>' : '<span class="badge">' + (st.defaultMode === 'dark' ? '默认深色' : '默认浅色') + '</span>')
+    + '</div>'
+    + '<div class="tags">' + st.tags.map(t => '<span class="tag">' + t + '</span>').join('') + '</div>'
+    + '<div class="phone-wrap"><div class="phone-holder" data-sid="' + st.id + '" data-screen="' + (sel ? cardScreen() : 'overview') + '"></div></div>'
+    + '<div class="card-foot"><button class="btn primary wide" data-pick="' + st.id + '">' + (sel ? '已在下方微调' : '选择此风格') + '</button></div>'
+    + '</div>';
+}
+
+function renderGrid(){
+  gridEl.innerHTML = STYLES.map(cardHTML).join('');
+  gridEl.querySelectorAll('.phone-holder').forEach(paint);
+}
+
+function renderPresets(){
+  presetsEl.innerHTML = '<span class="lbl">推荐组合</span>' + PRESETS.map((p,i) => {
+    const st = styleById(p.style);
+    return '<button class="preset" data-preset="' + i + '"><i style="background:' + st.light.accent + '"></i>' + p.name + '</button>';
+  }).join('');
+}
+
+function swatch(label, color){
+  return '<div class="sw"><i style="background:' + color + '"></i><b>' + label + '</b><span>' + color + '</span></div>';
+}
+
+function renderDetail(){
+  const st = styleById(state.selected);
+  const mode = resolveMode(st);
+  const p = st[mode];
+  const t = tuneFor(st);
+  const acc = t.accent ? t.accent.c : p.accent;
+  const nav = t.nav === 'top' ? '顶部标签行' : '底部导航';
+
+  const opt = (group, value, label) => {
+    return '<option value="' + value + '"' + (state.tune[group] === value ? ' selected' : '') + '>' + label + '</option>';
+  };
+  const autoOpt = (group, label) => opt(group, 'auto', label);
+
+  detailEl.innerHTML =
+  '<h2 style="margin-bottom:6px">当前选择：' + st.name + ' <span class="muted" style="font-weight:400;font-size:13px">' + st.en + '</span></h2>'
+  + '<p class="mini" style="margin:0 0 22px">' + st.tagline + '</p>'
+  + '<div class="detail-grid">'
+  +   '<div class="detail-col" style="align-items:center">'
+  +     '<div class="seg" id="screenSeg" style="flex-wrap:wrap;justify-content:center">'
+  +       SCREENS.map(s => '<button data-screen="' + s.id + '"' + (state.detailScreen === s.id ? ' class="on"' : '') + '>' + s.name + '</button>').join('')
+  +     '</div>'
+  +     '<div class="zoom"><div class="phone-holder" id="bigPhone" data-sid="' + st.id + '" data-screen="' + state.detailScreen + '"></div></div>'
+  +   '</div>'
+  +   '<div class="detail-col">'
+  +     '<div class="panel"><h3>微调（只作用于当前选择）</h3><div class="ctrls">'
+  +       '<div class="ctrl"><label>强调色</label><select data-tune="accent">'
+  +          ACCENTS.map(a => opt('accent', a.id, a.name + (a.c ? '（' + a.c + '）' : '（本风格默认 ' + acc + '）'))).join('') + '</select></div>'
+  +       '<div class="ctrl"><label>圆角</label><select data-tune="radius">'
+  +          autoOpt('radius', '跟随风格（' + RADIUS_NAMES[st.radius] + '）')
+  +          Object.keys(RADII).map(k => opt('radius', k, RADIUS_NAMES[k])).join('') + '</select></div>'
+  +       '<div class="ctrl"><label>数字字体</label><select data-tune="font">'
+  +          autoOpt('font', '跟随风格（' + FONT_NAMES[st.font] + '）')
+  +          opt('font', 'system', '系统无衬线')
+  +          opt('font', 'serif', '衬线数字')
+  +          opt('font', 'mono', '等宽数字') + '</select></div>'
+  +       '<div class="ctrl"><label>导航位置</label><select data-tune="nav">'
+  +          autoOpt('nav', '跟随风格（' + (st.nav === 'top' ? '顶部标签行' : '底部导航') + '）')
+  +          opt('nav', 'top', '顶部标签行')
+  +          opt('nav', 'bottom', '底部导航') + '</select></div>'
+  +       '<div class="ctrl"><label>信息密度</label><select data-tune="density">'
+  +          Object.keys(DENSITY).map(k => opt('density', k, DENSITY[k].name)).join('') + '</select></div>'
+  +     '</div></div>'
+  +     '<div class="panel"><h3>设计令牌（' + (mode === 'dark' ? '深色' : '浅色') + '）</h3><div class="swatches">'
+  +       swatch('背景', p.bg) + swatch('卡片面', p.surface) + swatch('正文', p.text) + swatch('次要文字', p.text2)
+  +       + swatch('分隔线', p.line) + swatch('强调色', acc) + swatch('顶栏', p.headerBg) + swatch('标签底', p.chipBg)
+  +     '</div>'
+  +     '<div class="divider"></div>'
+  +     '<ul class="note-list">' + st.points.map(x => '<li>' + x + '</li>').join('') + '</ul>'
+  +     '<div class="divider"></div>'
+  +     '<div class="mini">圆角：' + RADIUS_NAMES[t.radius] + '　·　数字字体：' + FONT_NAMES[state.tune.font] + '　·　导航：' + nav + '　·　密度：' + DENSITY[t.density].name + '</div>'
+  +     '</div>'
+  +     '<div class="panel"><h3>生成的提示词</h3>'
+  +       '<div class="prompt-actions">'
+  +         '<button class="btn primary" id="copyFull">复制完整提示词</button>'
+  +         '<button class="btn" id="copyShort">复制一句话版</button>'
+  +         '<span class="mini">贴回对话即可开始实施</span>'
+  +       '</div>'
+  +       '<div class="prompt-box"><pre id="promptOut"></pre></div>'
+  +     '</div>'
+  +   '</div>'
+  + '</div>';
+
+  const big = document.getElementById('bigPhone');
+  paint(big);
+  document.getElementById('promptOut').textContent = buildPrompt();
+}
+
+/* =========================================================
+   5. 提示词生成
+   ========================================================= */
+function quoteList(arr){ return arr.map(x => '- ' + x).join('\n'); }
+
+function buildPrompt(){
+  const st = styleById(state.selected);
+  const t = tuneFor(st);
+  const L = st.light, K = st.dark;
+  const acc = t.accent ? t.accent.c : L.accent;
+  const accK = t.accent ? t.accent.c : K.accent;
+  const nav = t.nav === 'top' ? '保留顶部标签行（CenterAlignedTopAppBar + PrimaryTabRow）' : '改为底部导航（Scaffold 的 bottomBar + NavigationBar）';
+  const dens = DENSITY[t.density].name;
+  const fontDesc = { auto:'跟随风格默认', system:'系统无衬线（system-ui / FontFamily.SansSerif）',
+    serif:'衬线数字（FontFamily.Serif，用于大号数字）', mono:'等宽数字（FontFamily.Monospace，用于所有数值）' }[state.tune.font];
+  const tuneLines = [];
+  if(state.tune.accent !== 'auto') tuneLines.push('强调色统一替换为 ' + acc + '（覆盖风格默认强调色）。');
+  if(state.tune.radius !== 'auto') tuneLines.push('卡片圆角统一为 ' + RADIUS_NAMES[t.radius] + '。');
+  if(state.tune.font !== 'auto') tuneLines.push('数字字体统一为' + fontDesc + '，并开启 tabular figures（tnum）。');
+  if(state.tune.nav !== 'auto') tuneLines.push('导航结构改为' + (t.nav === 'top' ? '顶部标签行' : '底部导航') + '。');
+  if(state.tune.density !== 'normal') tuneLines.push('信息密度统一为「' + dens + '」：页面内边距 ' + DENSITY[t.density].pad + '、元素间距 ' + DENSITY[t.density].gap + '、卡片内边距 ' + DENSITY[t.density].row + '。');
+
+  return [
+'# 任务：把 Android 应用「油迹」(Fuel Track) 的界面重做为「' + st.name + ' / ' + st.en + '」风格',
+'',
+'你是这个仓库的界面工程师。目标是把现有 Material 3 默认观感，改造成下文描述的视觉语言。**只改 UI 表现层，不改业务逻辑。**',
+'',
+'## 一、项目事实（先读，不要臆测）',
+'- 仓库根目录：D:\\Study\\YouHao；技术栈 Kotlin + Jetpack Compose + Material 3，纯原生，无 WebView。',
+'- 模块：`:app`（Compose UI）与 `:domain`（纯 Kotlin 领域层）。**本次完全不动 `:domain`。**',
+'- 导航壳：`app/src/main/kotlin/com/youhao/fueltrack/ui/YouHaoApp.kt` —— 单个 Scaffold，顶部 CenterAlignedTopAppBar + PrimaryTabRow（概览 / 记录 / 车辆 / 设置）+ NavHost；枚举 MainSection 定义四个顶层区段。',
+'- 主题：`app/src/main/kotlin/com/youhao/fueltrack/ui/theme/Color.kt`（Pine / Mist / Lime 调色板）、`Type.kt`（YouHaoTypography）、`Theme.kt`（lightColorScheme / darkColorScheme + isSystemInDarkTheme）。',
+'- 复用组件：`app/src/main/kotlin/com/youhao/fueltrack/ui/components/Common.kt`（StatCard / SectionTitle / EmptyHint / MessageCard）、`.../components/RecordRow.kt`。',
+'- 屏幕：`ui/overview/OverviewScreen.kt`、`ui/records/RecordsScreen.kt`、`ui/records/RecordEditorScreen.kt`、`ui/vehicles/VehiclesScreen.kt`、`ui/settings/SettingsScreen.kt`、`ui/conflicts/ConflictsScreen.kt`。',
+'- 格式化：`app/src/main/kotlin/com/youhao/fueltrack/ui/Formatters.kt`（formatMoney / formatLiters / formatConsumption / formatOdometer / formatDate / orDash）。',
+'',
+'## 二、硬约束（违反即返工）',
+'1. 不引入任何图标字体或 material-icons 依赖 —— 见 `Formatters.kt` 顶部注释里已有的决定。若新设计需要图标，自绘 XML vector drawable 放到 `app/src/main/res/drawable/`，或继续使用中文文字标签。',
+'2. 不改动 `:domain` 模块、Room 实体/DAO、同步引擎、ViewModel 的状态字段与业务方法签名；UI 只消费已有的 UiState。',
+'3. 界面文案保持中文，不新增英文界面文案（代码注释可中文）。',
+'4. 必须同时支持浅色与深色，并跟随 `isSystemInDarkTheme()`；两套都要单独检查对比度。',
+'5. 只用 Compose + Material 3 已有能力实现效果；需要特殊视觉（渐变、模糊、环形进度、折线图）时用 Canvas / DrawScope / Brush 自己画，不引入第三方 UI 库。',
+'6. 结束后 `./gradlew :app:assembleDebug` 与 `./gradlew :app:lintDebug` 必须通过。',
+'',
+'## 三、目标风格：' + st.name + '（' + st.en + '）',
+st.tagline,
+'',
+'风格要点：',
+quoteList(st.points),
+'',
+'## 四、设计令牌（用于重写 Color.kt 与 Theme.kt）',
+'',
+'| 语义 | 浅色 | 深色 |',
+'| --- | --- | --- |',
+'| background 背景 | ' + L.bg + ' | ' + K.bg + ' |',
+'| surface 卡片面 | ' + L.surface + ' | ' + K.surface + ' |',
+'| onSurface 正文 | ' + L.text + ' | ' + K.text + ' |',
+'| onSurfaceVariant 次要文字 | ' + L.text2 + ' | ' + K.text2 + ' |',
+'| outline / 分隔线 | ' + L.line + ' | ' + K.line + ' |',
+'| primary 顶栏/品牌 | ' + L.headerBg + ' | ' + K.headerBg + ' |',
+'| onPrimary 顶栏文字 | ' + L.headerInk + ' | ' + K.headerInk + ' |',
+'| 标签/徽章底 | ' + L.chipBg + ' | ' + K.chipBg + ' |',
+'| tertiary / 强调色 | ' + acc + ' | ' + accK + ' |',
+'| 提示条背景 | ' + L.bannerBg + ' | ' + K.bannerBg + ' |',
+'| 提示条描边 | ' + L.bannerLine + ' | ' + K.bannerLine + ' |',
+'',
+'- 圆角：卡片 ' + RADIUS_NAMES[t.radius] + '，输入框与按钮取更小一档。',
+'- 阴影：' + (L.shadow === 'none' ? '不使用投影，靠描边与留白分层。' : '浅色 `' + L.shadow + '`；深色 `' + K.shadow + '`。'),
+'- 数字字体：' + fontDesc + '；颜色：' + acc + '。',
+'- 导航结构：' + nav + '。',
+'- 信息密度：' + dens + '。',
+'',
+(tuneLines.length ? '### 用户在挑选台里额外指定的微调（优先级高于风格默认）\n' + quoteList(tuneLines) + '\n' : ''),
+'## 五、逐文件改造清单',
+'1. `ui/theme/Color.kt` —— 用上表替换调色板常量。保留语义化命名（例如 Pine900 / Mist50 / Lime400 这类），新增本次需要的条目；不要留下未被引用的旧常量。',
+'2. `ui/theme/Theme.kt` —— 重写 `lightColorScheme` / `darkColorScheme` 的字段映射，覆盖 background / surface / surfaceVariant / outline / primary / onPrimary / tertiary / error 等所有会被用到的槽位；如风格需要页面级渐变或色斑背景，新增一个 `RootBackground` composable 供 Scaffold 的 containerColor 使用。',
+'3. `ui/theme/Type.kt` —— 调整字号、字重与字距；大号数字按上面的数字字体方案设置，并加 `fontFeatureSettings = "tnum"` 保证数字对齐。',
+'4. `ui/YouHaoApp.kt` —— ' + st.navPlan,
+'5. `ui/components/Common.kt` —— 重做 StatCard / SectionTitle / EmptyHint / MessageCard 的容器样式（圆角、描边、阴影、内边距、字重），保持函数签名与参数名不变。',
+'6. `ui/components/RecordRow.kt` —— 重做记录行：左侧日期与副标题、右侧金额与油量的层级关系按新风格调整，保持参数不变。',
+'7. `ui/overview/OverviewScreen.kt` —— ' + st.heroPlan + ' 统计卡改为 2×2 网格，冲突提示条与同步失败提示条沿用 MessageCard 但换成新令牌。',
+'8. `ui/records/RecordsScreen.kt` —— 「记一笔」按钮改为整行主按钮；搜索 / 月份输入框与「本月 / 清除筛选」按新风格重排；可在列表上方新增一条本月汇总（次数 / 金额 / 油量）。',
+'9. `ui/records/RecordEditorScreen.kt`、`ui/vehicles/VehiclesScreen.kt`、`ui/settings/SettingsScreen.kt`、`ui/conflicts/ConflictsScreen.kt` —— 套用同一套令牌与组件，重点检查开关、输入框、对话框在深色下的可读性。',
+'',
+'## 六、验收标准',
+'- 四个顶层页面在浅色与深色下都不出现「文字压色」「描边消失」「对比度不足」的问题。',
+'- 所有数字使用规定的字体并开启 tnum，多行金额小数点垂直对齐。',
+'- 未新增任何图标依赖；未修改 `:domain`；未改动任何 ViewModel 的业务方法。',
+'- `./gradlew :app:assembleDebug`、`./gradlew :app:testDebugUnitTest`、`./gradlew :app:lintDebug` 全部通过。',
+'- 交付时给出改动文件清单，并说明每个文件改了什么。',
+'',
+'## 七、交付顺序',
+'1. 先给出改造后的 `Color.kt`、`Type.kt`、`Theme.kt` 三个文件的**完整内容**；',
+'2. 再给出 `YouHaoApp.kt`、`Common.kt`、`RecordRow.kt`；',
+'3. 最后逐个屏幕文件；',
+'4. 每个文件都给完整可编译内容，不要用「…略…」省略。'
+  ].join('\n');
+}
+
+function buildShortPrompt(){
+  const st = styleById(state.selected);
+  const t = tuneFor(st);
+  const acc = t.accent ? t.accent.c : st.light.accent;
+  return '把「油迹」(Fuel Track, Kotlin + Jetpack Compose + Material 3) 的界面重做成「' + st.name + '」风格：' + st.tagline
+    + ' 关键令牌：背景 ' + st.light.bg + '、卡片面 ' + st.light.surface + '、正文 ' + st.light.text + '、强调色 ' + acc
+    + '、卡片圆角 ' + RADIUS_NAMES[t.radius] + '、导航 ' + (t.nav === 'top' ? '顶部标签行' : '底部导航') + '。'
+    + '只改 UI 层：ui/theme/(Color|Type|Theme).kt、ui/YouHaoApp.kt、ui/components/、各 Screen；'
+    + '不动 :domain、Room、同步与 ViewModel 逻辑；不引入图标字体或第三方 UI 库；必须同时支持浅色与深色。';
+}
+
+/* =========================================================
+   6. 交互
+   ========================================================= */
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('on'), 1600);
+}
+function copyText(text, okMsg){
+  const done = () => toast(okMsg || '已复制到剪贴板');
+  if(navigator.clipboard && window.isSecureContext !== false){
+    navigator.clipboard.writeText(text).then(done).catch(() => fallback());
+  } else { fallback(); }
+  function fallback(){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch(e){ toast('复制失败，请手动选中'); }
+    document.body.removeChild(ta);
+  }
+}
+
+document.getElementById('modeSeg').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-mode]');
+  if(!b) return;
+  state.globalMode = b.dataset.mode;
+  document.querySelectorAll('#modeSeg button').forEach(x => x.classList.toggle('on', x === b));
+  renderGrid(); renderDetail();
+});
+
+presetsEl.addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-preset]');
+  if(!b) return;
+  const p = PRESETS[+b.dataset.preset];
+  state.selected = p.style;
+  state.tune = { accent:p.accent, radius:p.radius, font:p.font, nav:p.nav, density:p.density };
+  state.detailScreen = 'overview';
+  renderGrid(); renderDetail();
+  detailEl.scrollIntoView({ behavior:'smooth', block:'start' });
+});
+
+document.addEventListener('click', (e) => {
+  const nav = e.target.closest('[data-nav]');
+  if(nav){
+    const holder = nav.closest('.phone-holder');
+    if(holder){ holder.dataset.screen = nav.dataset.nav; paint(holder); }
+    return;
+  }
+  const pick = e.target.closest('button[data-pick]');
+  if(pick){
+    state.selected = pick.dataset.pick;
+    state.tune = { accent:'auto', radius:'auto', font:'auto', nav:'auto', density:'normal' };
+    state.detailScreen = 'overview';
+    renderGrid(); renderDetail();
+    detailEl.scrollIntoView({ behavior:'smooth', block:'start' });
+    return;
+  }
+  const scr = e.target.closest('#screenSeg button[data-screen]');
+  if(scr){
+    state.detailScreen = scr.dataset.screen;
+    renderDetail();
+    return;
+  }
+  if(e.target.closest('#copyFull')) { copyText(buildPrompt(), '完整提示词已复制'); return; }
+  if(e.target.closest('#copyShort')){ copyText(buildShortPrompt(), '一句话版已复制'); return; }
+});
+
+document.addEventListener('change', (e) => {
+  const s = e.target.closest('select[data-tune]');
+  if(!s) return;
+  state.tune[s.dataset.tune] = s.value;
+  const holder = document.getElementById('bigPhone');
+  if(holder) paint(holder);
+  const cardHolder = document.querySelector('.phone-holder[data-sid="' + state.selected + '"]');
+  if(cardHolder){ cardHolder.dataset.screen = state.detailScreen; paint(cardHolder); }
+  document.getElementById('promptOut').textContent = buildPrompt();
+  renderDetailMeta();
+});
+
+function renderDetailMeta(){
+  const st = styleById(state.selected);
+  const t = tuneFor(st);
+  const nodes = detailEl.querySelectorAll('.panel .mini');
+  if(nodes.length){
+    nodes[nodes.length - 1].textContent = '圆角：' + RADIUS_NAMES[t.radius]
+      + '　·　数字字体：' + FONT_NAMES[state.tune.font]
+      + '　·　导航：' + (t.nav === 'top' ? '顶部标签行' : '底部导航')
+      + '　·　密度：' + DENSITY[t.density].name;
+  }
+}
+
+renderPresets();
+renderGrid();
+renderDetail();
+</script>
+</body>
+</html>

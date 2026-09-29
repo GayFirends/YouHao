@@ -21,12 +21,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -34,22 +28,15 @@ jobs:
           java-version: 21
           cache: gradle
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Test and sync Android
-        run: |
-          npm test
-          npm run android:sync
-
-      - name: Build debug APK
-        run: |
-          chmod +x android/gradlew
-          ./android/gradlew -p android --no-daemon assembleDebug
+      - name: Test and build debug APK
+        run: ./gradlew --no-daemon :domain:test :app:testDebugUnitTest :app:assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: fuel-track-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error

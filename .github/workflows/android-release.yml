@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: 'App version name; must match package.json'
+        description: 'App version name; must match app/build.gradle.kts'
         required: true
         default: '0.2.0'
       version_code:
         description: 'Android version code'
         required: true
-        default: '100'
+        default: '200'
   push:
     tags: ['v*']
 
@@ -29,18 +29,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
           cache: gradle
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Resolve and validate release version
         shell: bash
@@ -49,19 +46,22 @@ jobs:
           INPUT_VERSION_CODE: ${{ github.event.inputs.version_code }}
         run: |
           set -euo pipefail
-          package_version="$(node -p "require('./package.json').version")"
+          # The build file is the single source of truth for the version; the release must not
+          # drift from what the APK actually reports.
+          app_version="$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)"
+          echo "app/build.gradle.kts versionName: $app_version"
 
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             release_version="${INPUT_VERSION_NAME}"
             version_code="${INPUT_VERSION_CODE}"
           else
             release_version="${GITHUB_REF_NAME#v}"
-            IFS=. read -r major minor patch <<< "$package_version"
+            IFS=. read -r major minor patch <<< "$app_version"
             version_code=$((major * 10000 + minor * 100 + patch))
           fi
 
-          if [ "$release_version" != "$package_version" ]; then
-            echo "::error::Release version $release_version does not match package.json version $package_version"
+          if [ "$release_version" != "$app_version" ]; then
+            echo "::error::Release version $release_version does not match app/build.gradle.kts version $app_version"
             exit 1
           fi
           if ! [[ "$version_code" =~ ^[1-9][0-9]*$ ]]; then
@@ -83,71 +83,32 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/fuel-track-upload.jks"
           test -s "$RUNNER_TEMP/fuel-track-upload.jks"
 
-      - name: Install, test and sync
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
-          npm run check
-          npm audit --audit-level=high
-          npm run size:check
-          npm run test:e2e
-          npm run android:sync
+      - name: Verify tests before releasing
+        run: ./gradlew --no-daemon :domain:test :app:testDebugUnitTest
 
       - name: Build signed APK and AAB
         env:
           ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/fuel-track-upload.jks
-        run: |
-          chmod +x android/gradlew
-          ./android/gradlew -p android --no-daemon assembleRelease bundleRelease
+        run: ./gradlew --no-daemon :app:assembleRelease :app:bundleRelease
 
       - name: Verify signed artifacts
         run: |
           set -euo pipefail
           apksigner_path="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
           test -n "$apksigner_path"
-          "$apksigner_path" verify --verbose android/app/build/outputs/apk/release/app-universal-release.apk
-          jarsigner -verify android/app/build/outputs/bundle/release/app-release.aab
-
-      - name: Install and launch release APK
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          arch: x86_64
-          target: google_apis
-          disable-animations: true
-          script: |
-            adb install -r android/app/build/outputs/apk/release/app-universal-release.apk
-            adb shell am start -W -n com.youhao.fueltrack/.MainActivity
-            adb shell pidof com.youhao.fueltrack
+          "$apksigner_path" verify --verbose app/build/outputs/apk/release/app-release.apk
+          jarsigner -verify app/build/outputs/bundle/release/app-release.aab
 
       - name: Rename release packages
         shell: bash
         run: |
           set -euo pipefail
-          version="${ANDROID_VERSION_NAME#v}"
+          version="${ANDROID_VERSION_NAME}"
           output_dir="release-artifacts"
           mkdir -p "$output_dir"
 
-          for apk in android/app/build/outputs/apk/release/*.apk; do
-            file_name="$(basename "$apk")"
-            case "$file_name" in
-              app-*-release.apk)
-                architecture="${file_name#app-}"
-                architecture="${architecture%-release.apk}"
-                ;;
-              app-release.apk)
-                architecture="universal"
-                ;;
-              *)
-                echo "::error::Unknown APK output name: $file_name"
-                exit 1
-                ;;
-            esac
-            cp "$apk" "$output_dir/FuelTrack-${version}-${architecture}.apk"
-          done
-
-          cp android/app/build/outputs/bundle/release/app-release.aab \
-            "$output_dir/FuelTrack-${version}-universal.aab"
+          cp app/build/outputs/apk/release/app-release.apk "$output_dir/FuelTrack-${version}.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "$output_dir/FuelTrack-${version}.aab"
 
       - name: Upload signed artifacts
         uses: actions/upload-artifact@v4

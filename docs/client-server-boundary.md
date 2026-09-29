@@ -8,8 +8,8 @@
 
 | 当前客户端仓库 `YouHao` | 后续独立服务端仓库 |
 | --- | --- |
-| Vue、Capacitor、Web 和 Android 界面 | TypeScript、Fastify 与 PostgreSQL |
-| 本地 SQLite、迁移、离线录入、客户端写入一致性 | 账号认证、用户数据隔离、服务端数据迁移 |
+| Kotlin、Jetpack Compose 与 Android 应用 | TypeScript、Fastify 与 PostgreSQL |
+| 本地 SQLite（Room）、迁移、离线录入、客户端写入一致性 | 账号认证、用户数据隔离、服务端数据迁移 |
 | 本地备份、恢复、WebDAV 兼容 | 服务端版本、增量变更、操作去重、冲突历史 |
 | 后续 API 客户端、同步状态、离线待提交操作 | 官方实例与自建实例共用的 API |
 | 客户端构建、回归测试与 Android 发布 | Docker 部署、数据库备份恢复与服务监控 |
@@ -18,10 +18,9 @@
 
 ## 当前客户端基础
 
-- `src/services/database-adapter.ts` 是客户端 Web／Android 本地存储接口，不是网络 API 协议。
-- `src/types/index.ts` 中的 `Vehicle`、`FuelRecord` 描述现有客户端实体，可作为未来协议设计的领域参考。
-- `SyncPayload.version = 1` 是现有 JSON 备份与 WebDAV 快照格式；继续保持旧备份兼容，不把它直接改成服务端增量协议。
-- 本地 SQLite 结构版本、IndexedDB 存储版本、备份格式版本、未来 API 版本分别演进。
+- `domain/src/main/kotlin/com/youhao/fueltrack/domain/model/Models.kt` 中的 `Vehicle`、`FuelRecord` 描述现有客户端实体，可作为未来协议设计的领域参考。
+- `SyncPayloadV1.version = 1` 是现有 JSON 备份与 WebDAV 快照格式；`EncryptedSyncEnvelopeV2.version = 2` 是可选的加密容器。继续保持旧备份兼容，不把它直接改成服务端增量协议。
+- 本地 Room 数据库版本、备份格式版本、WebDAV 快照版本与未来 API 版本分别演进。
 - 在专用后端可对接之前，现有 WebDAV 同步继续提供服务。迁移为独立备份渠道需要配套导入与切换流程。
 
 ## 后续需要双方共同确定的同步约定

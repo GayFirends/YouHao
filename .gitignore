@@ -1,14 +1,18 @@
-node_modules/
-dist/
-playwright-report/
-test-results/
-.idea/
-.vscode/
-*.log
-android/.gradle/
-android/local.properties
-android/app/build/
-android/build/
+# --- Gradle / Android ---
+.gradle/
+build/
+captures/
+local.properties
 .gradle-user/
 *.jks
 *.keystore
+
+# --- IDE ---
+.idea/
+.vscode/
+*.iml
+.kotlin/
+
+# --- misc ---
+*.log
+.DS_Store
