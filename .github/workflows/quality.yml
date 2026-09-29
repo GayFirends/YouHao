@@ -32,7 +32,7 @@ jobs:
           cache: gradle
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Unit tests
         run: ./gradlew --no-daemon :domain:test :app:testDebugUnitTest
