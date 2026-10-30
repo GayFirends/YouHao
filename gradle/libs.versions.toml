@@ -13,7 +13,7 @@ datastore = "1.2.1"
 work = "2.12.0"
 securityCrypto = "1.1.0"
 
-okhttp = "5.5.0"
+okhttp = "5.5.1"
 serializationJson = "1.11.0"
 coroutines = "1.11.0"
 
